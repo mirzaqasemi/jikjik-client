@@ -20,20 +20,8 @@ export default function Chats({ navigateTo }) {
 
 
     useEffect(() => {
-        console.log("Adding listener");
-
-        const id = session.addListener((newValue) => {
-            console.log("user changed to: ", newValue);
-            user = newValue;
-        });
-        return ()=>{
-            session.removeListener(id);
-        }
+        return session.addListener((newValue: User) => user = newValue);
     }, []);
-
-    function searchUser(e) {
-        setSearchedUser(e.target.value);
-    }
 
     function clickHandler() {
         session.logoutUser();
@@ -54,7 +42,7 @@ export default function Chats({ navigateTo }) {
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
-                    <input onChange={searchUser} type="text" placeholder="Search messages or users..."></input>
+                    <input onChange={(e) => setSearchedUser(e.target.value)} type="text" placeholder="Search messages or users..."></input>
                 </div>
             </div>
 

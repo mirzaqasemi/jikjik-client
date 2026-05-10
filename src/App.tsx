@@ -11,20 +11,12 @@ import * as session from './session.ts';
 function App() {
   const [userInfo, setUserInfo] = useState<User>(session.getUser());
   const [chat, setChat] = useState<Chat>();
-  // const currentUser = session.getUser();
-
-  // useEffect(() => {
-  //   setUserInfo(currentUser);
-  // }, [currentUser?.username]);
-
-  // function loginHandler() {
-  //   setUserInfo(session.getUser());
-  // }
 
   useEffect(() => {
-    session.addListener((user) => {
+    const cleanup = session.addListener((user) => {
       setUserInfo(user);
     });
+    return cleanup;
   }, []);
 
 
