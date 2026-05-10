@@ -1,13 +1,14 @@
+import { useEffect, useState } from "react";
 import type { User } from "./backend";
 
-export type Listener = (newValue: User) => void;
+export type Listener = () => void;
 
 
 const displayNameKey = 'displayName';
 const usernameKey = 'username';
 
 let currentUser: User = null;
-let listeners: Listener[] = [];
+let listeners = new Set<Listener>();
 
 export function getUser(): User {
     if (currentUser == null) {
@@ -42,15 +43,27 @@ export function logoutUser(): void {
 }
 
 export function addListener(listener: Listener): () => void {
-    listeners.push(listener);
+    listeners.add(listener);
     return () => removeListener(listener);
 }
 
 function removeListener(listener: Listener): void {
-    const index = listeners.indexOf(listener);
-    listeners.splice(index, 1);
+    listeners.delete(listener);
 }
 
 function callListeners() {
-    listeners.forEach((listener) => listener(currentUser));
+    listeners.forEach((listener) => listener());
+}
+
+
+
+export function useSession(): User {
+    const [userInfo, setUserInfo] = useState<User>(getUser());
+    useEffect(() => {
+        const cleanup = addListener(() => {
+            setUserInfo(getUser());
+        });
+        return cleanup;
+    }, []);
+    return userInfo;
 }

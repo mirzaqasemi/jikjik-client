@@ -1,25 +1,15 @@
-import './App.css'
+import './App.css';
 // import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
-import Login from './components/login/Login.tsx';
-import Chats from "./components/chats/Chats.tsx";
+import { useState } from "react";
+import type { Chat } from './backend.ts';
 import ChatComponent from "./components/chat/Chat.tsx";
-import { useEffect, useState } from "react";
-import type { Chat, User } from './backend.ts';
+import Chats from "./components/chats/Chats.tsx";
+import Login from './components/login/Login.tsx';
 import * as session from './session.ts';
 
-
 function App() {
-  const [userInfo, setUserInfo] = useState<User>(session.getUser());
+  const userInfo = session.useSession();
   const [chat, setChat] = useState<Chat>();
-
-  useEffect(() => {
-    const cleanup = session.addListener((user) => {
-      setUserInfo(user);
-    });
-    return cleanup;
-  }, []);
-
-
 
   let content: React.ReactNode;
   if (userInfo == null) {

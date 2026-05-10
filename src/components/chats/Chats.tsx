@@ -7,7 +7,7 @@ import * as session from '../../session.ts';
 export default function Chats({ navigateTo }) {
     const [searchedUser, setSearchedUser] = useState("");
     const [allChats, setAllChats] = useState([]);
-    let user: User = session.getUser();
+    const user: User = session.useSession();
     useEffect(() => {
         async function fetchChats() {
             try {
@@ -17,11 +17,6 @@ export default function Chats({ navigateTo }) {
         }
         fetchChats();
     }, [user.username, searchedUser]);
-
-
-    useEffect(() => {
-        return session.addListener((newValue: User) => user = newValue);
-    }, []);
 
     function clickHandler() {
         session.logoutUser();
