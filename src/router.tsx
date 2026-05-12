@@ -6,10 +6,13 @@ import Chats from './pages/chats/Chats';
 import Chat from './pages/chat/Chat';
 import { loginLoader, protectedLoader } from './loaders';
 
+export const LOGIN_ROUTE = "/";
+export const CHATS_ROUTE = "/chats";
+export const CHAT_ROUTE = "/chats/:chatId";
 
 export const router = createBrowserRouter([
   {
-    path: "/",
+    path: LOGIN_ROUTE,
     element: <RootLayout />,
     errorElement: <ErrorPage />,
     children: [
@@ -19,12 +22,12 @@ export const router = createBrowserRouter([
         element: <Login />,
       },
       {
-        path: "chats",
+        path: CHATS_ROUTE,
         loader: protectedLoader,
         element: <Chats />,
       },
       {
-        path: "chats/:chatId",
+        path: CHAT_ROUTE,
         loader: protectedLoader,
         element: <Chat />,
       },

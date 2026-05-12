@@ -1,8 +1,10 @@
 import React, { useRef, useState } from 'react';
 import { login } from '../../backend.ts';
 import * as session from '../../session.ts';
+import { useNavigate } from 'react-router-dom';
 
 export default function Login() {
+    const navigate = useNavigate();
     const [warning, setWarning] = useState("");
     const usernameRef = useRef<HTMLInputElement>(null);
     const passRef = useRef<HTMLInputElement>(null);
@@ -12,6 +14,7 @@ export default function Login() {
         let user = await login(usernameRef.current.value, passRef.current.value);
         if (user != null) {
             session.setUser(user.username, user.displayName);
+            navigate("/chats");
         } else {
             setWarning("This username is not found!");
         }

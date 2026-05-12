@@ -3,11 +3,13 @@ import { getChats, type User } from "../../backend.ts";
 import { getDate, getTitle } from "../../utilities.js";
 import { useEffect, useState } from "react";
 import * as session from '../../session.ts';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { LOGIN_ROUTE } from '../../router.tsx';
 
 export default function Chats() {
     const [searchedUser, setSearchedUser] = useState("");
     const [allChats, setAllChats] = useState([]);
+    const navigate = useNavigate();
     const user: User = session.useSession();
     useEffect(() => {
         async function fetchChats() {
@@ -16,15 +18,24 @@ export default function Chats() {
             } catch (error) {
             }
         }
-        fetchChats();
-    }, [user.username, searchedUser]);
+        if (user != null) {
+            fetchChats();
+        }
+    }, [user?.username, searchedUser]);
 
+    function logout() {
+        session.logoutUser();
+        navigate(LOGIN_ROUTE);
+    }
+    if (user == null) {
+        return;
+    }
     return (
         <div id="page-inbox" className="chats-page">
             <div className="chats-header">
                 <div className='d-flex justify-content-between align-items-center header-info'>
                     <h2>{user.displayName}</h2>
-                    <button className="d-flex logout-btn" aria-label="More options" onClick={() => session.logoutUser()}>
+                    <button className="d-flex logout-btn" aria-label="More options" onClick={logout}>
                         <svg className='logout-icon' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                             <path d="M48 256C48 141.1 141.1 48 256 48c13.3 0 24-10.7 24-24s-10.7-24-24-24C114.6 0 0 114.6 0 256S114.6 512 256 512c13.3 0 24-10.7 24-24s-10.7-24-24-24C141.1 464 48 370.9 48 256zM392.3 134.4c-9.7-9-24.9-8.5-33.9 1.3s-8.5 24.9 1.3 33.9L426.9 232 184 232c-13.3 0-24 10.7-24 24s10.7 24 24 24l242.9 0-67.2 62.4c-9.7 9-10.3 24.2-1.3 33.9s24.2 10.3 33.9 1.3l112-104c4.9-4.5 7.7-10.9 7.7-17.6s-2.8-13-7.7-17.6l-112-104z" />
                         </svg>
