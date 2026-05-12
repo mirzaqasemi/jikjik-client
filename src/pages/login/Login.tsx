@@ -1,4 +1,3 @@
-import '../../App.css';
 import React, { useRef, useState } from 'react';
 import { login } from '../../backend.ts';
 import * as session from '../../session.ts';

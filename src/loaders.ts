@@ -1,0 +1,18 @@
+import { redirect } from "react-router-dom";
+import * as session from "./session";
+
+// Loader for protected routes
+export function protectedLoader() {
+  if (session.getUser() == null) {
+    // If the user is not logged in, redirect them to the login page
+    return redirect("/");
+  }
+}
+
+// Loader for the login page
+export function loginLoader() {
+  if (session.getUser() != null) {
+    // If the user is already logged in, redirect them to the chats page
+    return redirect("/chats");
+  }
+}
