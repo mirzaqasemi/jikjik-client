@@ -1,10 +1,10 @@
 import { createBrowserRouter } from 'react-router-dom';
 import RootLayout from './components/root-layout/RootLayout';
+import { chatLoader, loginLoader, protectedLoader } from './loaders';
+import Chat from './pages/chat/Chat';
+import Chats from './pages/chats/Chats';
 import ErrorPage from './pages/error/ErrorPage';
 import Login from './pages/login/Login';
-import Chats from './pages/chats/Chats';
-import Chat from './pages/chat/Chat';
-import { loginLoader, protectedLoader } from './loaders';
 
 export const LOGIN_ROUTE = "/";
 export const CHATS_ROUTE = "/chats";
@@ -28,7 +28,7 @@ export const router = createBrowserRouter([
       },
       {
         path: CHAT_ROUTE,
-        loader: protectedLoader,
+        loader: chatLoader,
         element: <Chat />,
       },
     ],
