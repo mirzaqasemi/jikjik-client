@@ -21,8 +21,10 @@ export function loginLoader() {
 }
 
 export async function chatLoader({ params }) {
-  if (protectedLoader() == null) {
+  const protectedLoaderResult = protectedLoader();
+  if (protectedLoaderResult == null) {
     const chatId = params.chatId;
-    return backend.getMesseges(chatId);
+    return backend.getChat(chatId);
   }
+  return protectedLoaderResult;
 }

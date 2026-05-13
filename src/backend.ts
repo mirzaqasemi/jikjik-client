@@ -258,7 +258,7 @@ function delay(ms: number): Promise<void> {
 // -----------------------------------------
 // API Functions
 // -----------------------------------------
-export async function login(username: string, pass: string): Promise<User | null> {
+export async function login(username: string, _: string): Promise<User | null> {
   await delay(500);
   return users.find(user => user.username === username) || null;
 }
@@ -278,6 +278,12 @@ export async function getChats(username: string, displayName?: string): Promise<
     ) != null;
   });
   return result;
+}
+
+export async function getChat(chatId: string) {
+  await delay(100);
+  return chats.find(chat => chat.id === chatId) || null;
+
 }
 
 export async function getMesseges(chatId: string): Promise<Message[]> {

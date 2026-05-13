@@ -1,65 +1,3 @@
-#root {
-  width: 100vw;
-  height: 100vh;
-}
-
-/* =========================================
-   2. GLOBAL RESET & TYPOGRAPHY
-   ========================================= */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-    font-family: var(--font-family);
-    background-color: var(--bg-app);
-    color: var(--text-main);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    -webkit-font-smoothing: antialiased;
-}
-
-/* Custom Scrollbar for a polished feel */
-::-webkit-scrollbar {
-    width: 6px;
-}
-
-::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #CBD5E1;
-    border-radius: 10px;
-}
-
-
-.multi-line-truncation {
-    display: -webkit-box;
-    line-clamp: 1;
-    -webkit-line-clamp: 1;
-    /* number of lines to show */
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* Main App Container simulating a mobile/desktop-sidebar view */
-.app-container {
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  width: 100%;
-  height: 100%;
-  align-items: center;
-}
-
-
-
 /* =========================================
    1. CSS VARIABLES & COLOR PALETTE
    ========================================= */
@@ -94,10 +32,78 @@ body {
     --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
+h1,
+h2 {
+    color: var(--text-main);
+    letter-spacing: normal;
+}
+
+/* =========================================
+2. GLOBAL RESET & TYPOGRAPHY
+========================================= */
+#root {
+    width: 100vw;
+    height: 100vh;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family);
+    color: var(--text-main);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Scrollbar for a polished feel */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 10px;
+}
+
+
+.multi-line-truncation {
+    display: -webkit-box;
+    line-clamp: 1;
+    -webkit-line-clamp: 1;
+    /* number of lines to show */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Main App Container simulating a mobile/desktop-sidebar view */
+.app-container {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+}
+
 /* =========================================
    3. FORMS, INPUTS & BUTTONS
    ========================================= */
-
+button {
+    border: 0px;
+    background-color: transparent;
+}
 
 /* =========================================
    4. LOGIN PAGE SPECIFICS
@@ -138,7 +144,7 @@ body {
     margin-bottom: 32px;
 }
 
-#login-form{
+#login-form {
     width: 350px;
     margin-top: 20px;
 }
@@ -223,16 +229,16 @@ input::placeholder {
 }
 
 #btn-signin:active {
-  transform: scale(0.98);
+    transform: scale(0.98);
 }
 
-.btn-primary{
+.btn-primary {
     background-color: var(--color-primary);
     color: white;
 }
 
 .btn-primary:hover {
-  background-color: var(--color-primary-hover);
+    background-color: var(--color-primary-hover);
 }
 
 /* =========================================

@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLoaderData, useParams } from 'react-router-dom';
 import { getMesseges, sendMessage } from "../../backend.ts";
 import * as session from '../../session.ts';
-import { getDate } from "../../utilities.ts";
+import * as utilities from "../../utilities.ts";
 import './Chat.css';
 
 export default function Chat() {
     const { chatId } = useParams();
+    const selectedChat = useLoaderData();
     const user = session.getUser();
     const [messages, setMessages] = useState([]);
     const [inputStr, setinputStr] = useState("");
@@ -15,34 +16,36 @@ export default function Chat() {
     let classStr = "";
 
     useEffect(() => {
-        const id = setInterval(async () => {
-            if (loadingPromise.current != null) {
-                await loadingPromise.current;
-                loadingPromise.current = null;
-            }
+        //TODO Optimize 
+        const id = setInterval(
+            async () => {
+                if (loadingPromise.current != null) {
+                    await loadingPromise.current;
+                    loadingPromise.current = null;
+                }
 
-            async function load() {
-                const msgs = await getMesseges(chatId);
-                setMessages([...msgs]);
-            }
-            loadingPromise.current = load();
-        }, 1000);
+                async function load() {
+                    const msgs = await getMesseges(chatId);
+                    setMessages([...msgs]);
+                }
+                loadingPromise.current = load();
+            }, 1000);
         return () => {
             clearInterval(id);
         }
     }, [chatId]);
 
-    // function getMessageSender(message) {
-    //     if (selectedChat.users.length > 2 && message.sender.username != user.username) { //In group
-    //         classStr = "received"
-    //         return <div className="d-flex sender-title">{message.sender.displayName}</div>
-    //     } else if (message.sender.username === user.username) {
-    //         classStr = "sent";
-    //         return;
-    //     }
-    //     classStr = "received";
-    //     return;
-    // }
+    function getMessageSender(message) {
+        if (selectedChat.users.length > 2 && message.sender.username != user.username) { //In group
+            classStr = "received"
+            return <div className="d-flex sender-title">{message.sender.displayName}</div>
+        } else if (message.sender.username === user.username) {
+            classStr = "sent";
+            return;
+        }
+        classStr = "received";
+        return;
+    }
 
     async function addToMessages() {
         if (loadingPromise.current != null) {
@@ -65,7 +68,7 @@ export default function Chat() {
         <div className="d-flex flex-column chat-page">
             {/* <!-- Top: Header Section --> */}
             <div className="d-flex align-items-center conversation-header">
-                <Link to={"/chats"} className="btn-back">
+                <Link to={"../"} className="btn-back">
                     <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path>
                     </svg>
@@ -75,7 +78,7 @@ export default function Chat() {
                         <img src="https://i.pravatar.cc/150?img=32" alt="" className="avatar" />
                     </div>
                     <div className="d-flex flex-column user-details">
-                        {/* <span className="user-name">{getTitle(user.username, selectedChat)}</span> */}
+                        <span className="user-name">{utilities.getTitle(user.username, selectedChat)}</span>
                         <span className="user-status">Online</span>
                     </div>
                 </div>
@@ -93,15 +96,15 @@ export default function Chat() {
                 <div className="date-separator">TODAY</div>
                 {
                     messages.map((message, index) => {
-                        // let messageSender = getMessageSender(message);
+                        let messageSender = getMessageSender(message);
                         return <div key={index} className={"d-flex flex-column message-wrapper" + " " + classStr}>
                             <div className="d-flex flex-column message-bubble">
                                 {
-                                    //   messageSender
+                                    messageSender
                                 }
                                 <div>{message.content}</div>
                             </div>
-                            <div className="d-flex message-meta">{getDate(message.date)}</div>
+                            <div className="d-flex message-meta">{utilities.getDate(message.date)}</div>
                         </div>
                     })
                 }

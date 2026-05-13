@@ -1,14 +1,14 @@
-import './Chats.css';
-import { getChats, type User } from "../../backend.ts";
-import { getDate, getTitle } from "../../utilities.js";
 import { useEffect, useState } from "react";
-import * as session from '../../session.ts';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { getChats, type Chat, type User } from "../../backend.ts";
 import { LOGIN_ROUTE } from '../../router.tsx';
+import * as session from '../../session.ts';
+import { getDate, getTitle } from "../../utilities.js";
+import './Chats.css';
 
 export default function Chats() {
     const [searchedUser, setSearchedUser] = useState("");
-    const [allChats, setAllChats] = useState([]);
+    const [allChats, setAllChats] = useState<Chat[]>([]);
     const navigate = useNavigate();
     const user: User = session.useSession();
     useEffect(() => {
@@ -52,7 +52,7 @@ export default function Chats() {
             <div className="chats-list">
                 {
                     allChats.map(chat => (
-                        <Link to={`/chats/${chat.id}`} key={chat.id} className="d-flex chat-item">
+                        <button onClick={() => navigate(`/chats/${chat.id}`)} key={chat.id} className="d-flex chat-item">
                             <div className="d-flex avatar-container">
                                 <img src="https://i.pravatar.cc/150?img=11" alt="David" className="avatar" />
                                 {/* {username.img != null && <img src={username.img} alt="David" class="avatar"/>} */}
@@ -69,7 +69,7 @@ export default function Chats() {
                                     <div className="unread-badge">2</div>
                                 </div>
                             </div>
-                        </Link>
+                        </button>
                     ))
                 }
             </div>

@@ -91,6 +91,7 @@
 }
 
 .chat-item {
+    width: 100%;
     padding: 16px 20px;
     border-bottom: 1px solid var(--surface-hover);
     cursor: pointer;
@@ -131,6 +132,7 @@
     flex: 1;
     min-width: 0;
     /* Prevents text overflow breaking flex layout */
+    color: var(--text-main);
 }
 
 .label-row {

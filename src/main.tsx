@@ -2,8 +2,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
-import './index.css';
 import { router } from './router.tsx';
+import './index.css';
 import './App.css';
 
 // Mount the App
