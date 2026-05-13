@@ -1,20 +1,28 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLoaderData, useParams } from 'react-router-dom';
-import { getMesseges, sendMessage } from "../../backend.ts";
-import * as session from '../../session.ts';
-import * as utilities from "../../utilities.ts";
+import * as backend from "../../services/backend.ts";
+import * as session from '../../services/session.ts';
+import * as utilities from "../../utilities/utilities.ts";
 import './Chat.css';
 
 export default function Chat() {
-    const { chatId } = useParams();
+    // const { chatId } = useParams<{ chatId: string }>();
+    const params = useParams<{ chatId: string }>();
+
     const selectedChat = useLoaderData();
     const user = session.getUser();
-    const [messages, setMessages] = useState([]);
+    const [messages, setMessages] = useState<backend.Message[]>([]);
     const [inputStr, setinputStr] = useState("");
     const loadingPromise = useRef<Promise<any>>(null);
 
     let classStr = "";
 
+
+    if (params?.chatId == null) {
+        throw new Error("Missing chatId");
+    }
+    const chatId = params.chatId;
+    
     useEffect(() => {
         //TODO Optimize 
         const id = setInterval(
@@ -25,7 +33,7 @@ export default function Chat() {
                 }
 
                 async function load() {
-                    const msgs = await getMesseges(chatId);
+                    const msgs = await backend.getMesseges(chatId);
                     setMessages([...msgs]);
                 }
                 loadingPromise.current = load();
@@ -35,10 +43,10 @@ export default function Chat() {
         }
     }, [chatId]);
 
-    function getMessageSender(message) {
+    function getMessageSender(message: backend.Message) {
         if (selectedChat.users.length > 2 && message.sender.username != user.username) { //In group
             classStr = "received"
-            return <div className="d-flex sender-title">{message.sender.displayName}</div>
+            return <div className="flex sender-title">{message.sender.displayName}</div>
         } else if (message.sender.username === user.username) {
             classStr = "sent";
             return;
@@ -61,29 +69,29 @@ export default function Chat() {
         }
         setMessages(prev => [...prev, msgObj]);
         setinputStr("");
-        loadingPromise.current = sendMessage({ username: user.username, chatId: chatId, content: inputStr });
+        loadingPromise.current = backend.sendMessage({ username: user.username, chatId: chatId, content: inputStr });
     }
 
     return (
-        <div className="d-flex flex-column chat-page">
+        <div className="flex flex-col chat-page">
             {/* <!-- Top: Header Section --> */}
-            <div className="d-flex align-items-center conversation-header">
+            <div className="flex align-center conversation-header">
                 <Link to={"../"} className="btn-back">
                     <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path>
                     </svg>
                 </Link>
-                <div className="d-flex">
+                <div className="flex">
                     <div className="avatar-container">
                         <img src="https://i.pravatar.cc/150?img=32" alt="" className="avatar" />
                     </div>
-                    <div className="d-flex flex-column user-details">
+                    <div className="flex flex-col user-details">
                         <span className="user-name">{utilities.getTitle(user.username, selectedChat)}</span>
                         <span className="user-status">Online</span>
                     </div>
                 </div>
                 {/* <!-- Right Side: Three Dots (Kebab Menu) --> */}
-                <button className="d-flex icon-btn more-options-btn" aria-label="More options">
+                <button className="flex icon-btn more-options-btn" aria-label="More options">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round">
                         <circle cx="12" cy="5" r="1"></circle>
                         <circle cx="12" cy="12" r="1"></circle>
@@ -92,32 +100,32 @@ export default function Chat() {
                 </button>
             </div>
             {/* <!-- Middle: Messages Section --> */}
-            <div className="d-flex flex-column message-area">
+            <div className="flex flex-col message-area">
                 <div className="date-separator">TODAY</div>
                 {
                     messages.map((message, index) => {
                         let messageSender = getMessageSender(message);
-                        return <div key={index} className={"d-flex flex-column message-wrapper" + " " + classStr}>
-                            <div className="d-flex flex-column message-bubble">
+                        return <div key={index} className={"flex flex-col message-wrapper" + " " + classStr}>
+                            <div className="flex flex-col message-bubble">
                                 {
                                     messageSender
                                 }
                                 <div>{message.content}</div>
                             </div>
-                            <div className="d-flex message-meta">{utilities.getDate(message.date)}</div>
+                            <div className="flex message-meta">{utilities.getDate(message.date)}</div>
                         </div>
                     })
                 }
             </div>
             {/* <!-- Bottom: Input Section --> */}
-            <div className="d-flex chat-input-area">
+            <div className="flex chat-input-area">
                 <input value={inputStr} type="text" placeholder="Type a message..." onChange={(e) => setinputStr(e.target.value)}
                     onKeyDown={(e) => {
                         if (e.key === "Enter") {
                             addToMessages();
                         }
                     }} />
-                <button onClick={addToMessages} className="d-flex justify-content-center align-items-center btn-send">
+                <button onClick={addToMessages} className="flex justify-center align-center btn-send">
                     <svg style={{ transform: "rotate(90deg)" }} width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinejoin="round" strokeLinecap="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
                     </svg>

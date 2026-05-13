@@ -1,4 +1,4 @@
-import type { User } from "./backend";
+import type * as backend from "../services/backend";
 
 export function getDate(date: Date): string {
     let hourNum = date.getHours();
@@ -11,7 +11,7 @@ export function getDate(date: Date): string {
 
 interface Chat {
     title?: string | null;
-    users: User[];
+    users: backend.User[];
 }
 
 export function getTitle(username: string, chat: Chat): string {

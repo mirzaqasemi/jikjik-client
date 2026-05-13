@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { User } from "./backend";
+import type { User } from "../services/backend";
 
 export type Listener = () => void;
 
@@ -7,16 +7,17 @@ export type Listener = () => void;
 const displayNameKey = 'displayName';
 const usernameKey = 'username';
 
-let currentUser: User = null;
+let currentUser: User | null = null;
 let listeners = new Set<Listener>();
 
-export function getUser(): User {
+export function getUser(): User | null{
     if (currentUser == null) {
         const username = localStorage.getItem(usernameKey);
-        if (username != null) {
+        const displayName = localStorage.getItem(displayNameKey)
+        if (username != null && displayName != null) {
             currentUser = {
-                username: username,
-                displayName: localStorage.getItem(displayNameKey)
+                username,
+                displayName
             }
         }
     }
@@ -57,8 +58,8 @@ function callListeners() {
 
 
 
-export function useSession(): User {
-    const [userInfo, setUserInfo] = useState<User>(getUser());
+export function useSession(): User | null{
+    const [userInfo, setUserInfo] = useState<User | null>(getUser());
     useEffect(() => {
         const cleanup = addListener(() => {
             setUserInfo(getUser());

@@ -1,10 +1,10 @@
 import { createBrowserRouter } from 'react-router-dom';
 import RootLayout from './components/root-layout/RootLayout';
-import { chatLoader, loginLoader, protectedLoader } from './loaders';
-import Chat from './pages/chat/Chat';
-import Chats from './pages/chats/Chats';
-import ErrorPage from './pages/error/ErrorPage';
+import * as loaders from './loaders/loaders';
 import Login from './pages/login/Login';
+import ErrorPage from './pages/error/ErrorPage';
+import Chats from './pages/chats/Chats';
+import Chat from './pages/chat/Chat';
 
 export const LOGIN_ROUTE = "/";
 export const CHATS_ROUTE = "/chats";
@@ -18,17 +18,17 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        loader: loginLoader, // Protects login page from logged-in users
+        loader: loaders.loginLoader, // Protects login page from logged-in users
         element: <Login />,
       },
       {
         path: CHATS_ROUTE,
-        loader: protectedLoader,
+        loader: loaders.protectedLoader,
         element: <Chats />,
       },
       {
         path: CHAT_ROUTE,
-        loader: chatLoader,
+        loader: loaders.chatLoader,
         element: <Chat />,
       },
     ],

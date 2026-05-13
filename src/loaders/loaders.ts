@@ -1,7 +1,7 @@
-import { redirect } from "react-router-dom";
-import * as session from "./session";
-import * as backend from "./backend";
-import { CHATS_ROUTE, LOGIN_ROUTE } from "./router";
+import { redirect, type LoaderFunctionArgs } from "react-router-dom";
+import * as session from "../services/session";
+import * as backend from "../services/backend";
+import { CHATS_ROUTE, LOGIN_ROUTE } from "../router";
 
 
 // Loader for protected routes
@@ -20,10 +20,13 @@ export function loginLoader() {
   }
 }
 
-export async function chatLoader({ params }) {
+export async function chatLoader({ params }: LoaderFunctionArgs) {
   const protectedLoaderResult = protectedLoader();
   if (protectedLoaderResult == null) {
     const chatId = params.chatId;
+    if (!chatId) {
+      throw new Error("Missing chatId");
+    }
     return backend.getChat(chatId);
   }
   return protectedLoaderResult;
