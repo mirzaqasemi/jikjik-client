@@ -1,3 +1,4 @@
+import './login.css'
 import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as backend from '../../services/backend.ts';
@@ -26,14 +27,14 @@ export default function Login() {
     }
 
     return (
-        <div className='flex flex-col items-center login-page'>
-            <div className='flex brand-logo'>C</div>
+        <div className='flex flex-col items-center justify-center h-full login-page'>
+            <div className='flex items-center justify-center w-12 h-12 mb-6 text-white font-bold brand-logo'>C</div>
             <div className='login-header'>
-                <h1>Welcome back</h1>
-                <p>Enter your details to access your chats.</p>
+                <h1 className='mb-1.5 text-center font-black text-5xl'>Welcome back</h1>
+                <p className='mb-8'>Enter your details to access your chats.</p>
             </div>
 
-            <form onSubmit={handleSubmit} className='flex flex-col' id='login-form'>
+            <form onSubmit={handleSubmit} className='flex flex-col mt-5' id='login-form'>
                 <div className='flex flex-col input-group'>
                     <label>Email or Username</label>
                     <input defaultValue="alex92" id='username' ref={usernameRef} type="text" placeholder="e.g. alex@company.com" />
@@ -54,7 +55,7 @@ export default function Login() {
                     </div>
                 }
 
-                <button type='submit' className='btn-primary' id="btn-signin">Login</button>
+                <button type='submit' className='btn-reset btn-primary' id="btn-signin">Login</button>
             </form>
         </div>
     );
