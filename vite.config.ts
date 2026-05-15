@@ -1,3 +1,4 @@
+import path from 'path'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
@@ -13,10 +14,11 @@ export default defineConfig({
     preserveSymlinks: true,
     alias: {
       scheduler: 'scheduler/index.js',
+      "@": path.resolve(__dirname, "./src"),
     },
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'scheduler'],
+    include: ['react', 'react-dom', 'scheduler', 'tslib'],
     rolldownOptions: {
       resolve: {
         mainFields: ['module', 'main'],

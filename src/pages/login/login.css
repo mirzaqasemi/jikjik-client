@@ -16,8 +16,8 @@
     color: var(--text-muted);
 }
 
-#login-form {
-    width: 350px;
+.form-field-label {
+    font-size: 16px;
 }
 
 .input-group {
@@ -31,20 +31,6 @@
     color: var(--text-main);
     margin-right: auto;
     margin-left: 3px;
-}
-
-.login-page input[type="text"],
-.login-page input[type="password"] {
-    width: 100%;
-    padding: 12px 14px;
-    font-size: 16px;
-    border: 1px solid var(--border-light);
-    border-radius: 12px !important;
-    outline: none;
-    transition: all 0.2s ease;
-    font-family: inherit;
-    background-color: var(--surface-hover);
-    color: var(--text-main) !important;
 }
 
 .login-page input[type="text"]:focus,
@@ -87,7 +73,7 @@ input::placeholder {
     color: #94a3b8;
 }
 
-#btn-signin {
+/* #btn-signin {
     font-size: 16px !important;
     font-weight: 600;
     padding: 12px;
@@ -103,7 +89,7 @@ input::placeholder {
 
 #btn-signin:active {
     transform: scale(0.98);
-}
+} */
 
 .btn-primary {
     background-color: var(--color-primary);

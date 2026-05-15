@@ -3,6 +3,15 @@ import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as backend from '../../services/backend.ts';
 import * as session from '../../services/session.ts';
+import { Button } from "@/components/ui/button"
+import {
+    Field,
+    FieldDescription,
+    FieldGroup,
+    FieldLabel,
+} from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+
 
 export default function Login() {
     const navigate = useNavigate();
@@ -30,11 +39,11 @@ export default function Login() {
         <div className='flex flex-col items-center justify-center h-full login-page'>
             <div className='flex items-center justify-center w-12 h-12 mb-6 text-white font-bold brand-logo'>C</div>
             <div className='login-header'>
-                <h1 className='mb-1.5 text-center font-black text-5xl'>Welcome back</h1>
-                <p className='mb-8'>Enter your details to access your chats.</p>
+                <h1 className='mb-1.5 text-center font-semibold tracking-tight text-5xl'>Welcome back</h1>
+                <p className='mb-8 font-medium tracking-wider'>Enter your details to access your chats.</p>
             </div>
 
-            <form onSubmit={handleSubmit} className='flex flex-col mt-5' id='login-form'>
+            {/* <form onSubmit={handleSubmit} className='flex flex-col mt-5' id='login-form'>
                 <div className='flex flex-col input-group'>
                     <label>Email or Username</label>
                     <input defaultValue="alex92" id='username' ref={usernameRef} type="text" placeholder="e.g. alex@company.com" />
@@ -42,10 +51,10 @@ export default function Login() {
                 <div className='flex flex-col input-group'>
                     <label>Password</label>
                     <input name='password' ref={passRef} type="password" placeholder="••••••••" />
-                </div>
+                </div> */}
 
-                {/* Error Message Container */}
-                {
+            {/* Error Message Container */}
+            {/* {
                     warning != "" &&
                     <div className='flex error-message' id="login-error">
                         <svg viewBox="0 0 20 20">
@@ -54,9 +63,36 @@ export default function Login() {
                         <span>{warning}</span>
                     </div>
                 }
-
-                <button type='submit' className='btn-reset btn-primary' id="btn-signin">Login</button>
+                <Button type='submit' className='btn-reset btn-primary'>Login</Button>
+            </form> */}
+            <form onSubmit={handleSubmit} className='flex flex-col mt-5 w-full form-group'>
+                <FieldGroup>
+                    <Field className='gap-2'>
+                        <FieldLabel htmlFor="fieldgroup-username" className='form-field-label'>Email or Username</FieldLabel>
+                        <Input
+                            defaultValue={"alex92"}
+                            id="fieldgroup-username"
+                            type='text'
+                            placeholder="Jordan Lee"
+                            ref={usernameRef}
+                        />
+                    </Field>
+                    <Field className='gap-2'>
+                        <FieldLabel htmlFor="fieldgroup-pass" className='form-field-label'>Password</FieldLabel>
+                        <Input
+                            id="fieldgroup-pass"
+                            type="password"
+                            placeholder="name@example.com"
+                            ref={passRef}
+                        />
+                    </Field>
+                    <Field orientation="horizontal">
+                        <Button className='w-full btn-primary' type="submit">Login</Button>
+                    </Field>
+                </FieldGroup>
             </form>
+
+
         </div>
     );
 }
