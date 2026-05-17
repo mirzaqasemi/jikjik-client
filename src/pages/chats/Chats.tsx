@@ -66,7 +66,7 @@ export default function Chats() {
                                 </div>
                                 <div className="flex label-row">
                                     <div className="chat-preview unread-text">{chat.lastMsg.content}</div>
-                                    <div className="unread-badge">2</div>
+                                    <div className="w-5 h-5 flex justify-center unread-badge">2</div>
                                 </div>
                             </div>
                         </button>

@@ -42,29 +42,6 @@ export default function Login() {
                 <h1 className='mb-1.5 text-center font-semibold tracking-tight text-5xl'>Welcome back</h1>
                 <p className='mb-8 font-medium tracking-wider'>Enter your details to access your chats.</p>
             </div>
-
-            {/* <form onSubmit={handleSubmit} className='flex flex-col mt-5' id='login-form'>
-                <div className='flex flex-col input-group'>
-                    <label>Email or Username</label>
-                    <input defaultValue="alex92" id='username' ref={usernameRef} type="text" placeholder="e.g. alex@company.com" />
-                </div>
-                <div className='flex flex-col input-group'>
-                    <label>Password</label>
-                    <input name='password' ref={passRef} type="password" placeholder="••••••••" />
-                </div> */}
-
-            {/* Error Message Container */}
-            {/* {
-                    warning != "" &&
-                    <div className='flex error-message' id="login-error">
-                        <svg viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"></path>
-                        </svg>
-                        <span>{warning}</span>
-                    </div>
-                }
-                <Button type='submit' className='btn-reset btn-primary'>Login</Button>
-            </form> */}
             <form onSubmit={handleSubmit} className='flex flex-col mt-5 w-full form-group'>
                 <FieldGroup>
                     <Field className='gap-2'>
@@ -86,13 +63,17 @@ export default function Login() {
                             ref={passRef}
                         />
                     </Field>
+                    {warning != "" && <div className='flex error-message' id="login-error">
+                        <svg viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"></path>
+                        </svg>
+                        <span>{warning}</span>
+                    </div>}
                     <Field orientation="horizontal">
                         <Button className='w-full btn-primary' type="submit">Login</Button>
                     </Field>
                 </FieldGroup>
             </form>
-
-
         </div>
     );
 }

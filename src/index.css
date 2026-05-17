@@ -1,8 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/figtree";
-
+@import "@fontsource/inter";
 @custom-variant dark (&:is(.dark *));
 
 /* =========================================
@@ -35,11 +34,6 @@
   --color-error: #ef4444;
   --color-error-bg: #fef2f2;
   --color-error-border: #f87171;
-
-  /* Typography */
-  /* --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-   */
-   /* --font-family: "Roboto", -apple-system, apple color emoji, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif; */
 
 
   font: 18px/145% var(--sans);
@@ -95,7 +89,6 @@ body,
 }
 
 #root {
-  width: 1126px;
   max-width: 100%;
   margin: 0 auto;
   text-align: center;
@@ -125,18 +118,11 @@ body {
 
 h1,
 h2 {
-  /* font-family: var(--font-family); */
   color: var(--text-main);
 }
 
 h1 {
-  /* font-size: 56px; */
   margin: 32px 0;
-}
-
-h2 {
-  /* font-size: 24px; */
-  /* margin: 0 0 8px; */
 }
 
 @media (max-width: 1024px) {

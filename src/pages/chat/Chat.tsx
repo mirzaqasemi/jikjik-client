@@ -22,7 +22,7 @@ export default function Chat() {
         throw new Error("Missing chatId");
     }
     const chatId = params.chatId;
-    
+
     useEffect(() => {
         //TODO Optimize 
         const id = setInterval(
@@ -118,14 +118,14 @@ export default function Chat() {
                 }
             </div>
             {/* <!-- Bottom: Input Section --> */}
-            <div className="flex chat-input-area">
+            <div className="flex justify-center chat-input-area">
                 <input value={inputStr} type="text" placeholder="Type a message..." onChange={(e) => setinputStr(e.target.value)}
                     onKeyDown={(e) => {
                         if (e.key === "Enter") {
                             addToMessages();
                         }
                     }} />
-                <button onClick={addToMessages} className="flex justify-center align-center btn-send">
+                <button onClick={addToMessages} className="flex justify-center btn-send">
                     <svg style={{ transform: "rotate(90deg)" }} width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinejoin="round" strokeLinecap="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
                     </svg>
