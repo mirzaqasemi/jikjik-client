@@ -6,17 +6,19 @@ import * as utilities from "../../utilities/utilities.ts";
 import './Chat.css';
 
 export default function Chat() {
-    // const { chatId } = useParams<{ chatId: string }>();
     const params = useParams<{ chatId: string }>();
-
-    const selectedChat = useLoaderData();
-    const user = session.getUser();
+    const selectedChat = useLoaderData<backend.Chat>();
+    const rawUser = session.getUser();
     const [messages, setMessages] = useState<backend.Message[]>([]);
     const [inputStr, setinputStr] = useState("");
-    const loadingPromise = useRef<Promise<any>>(null);
+    const loadingPromise = useRef<Promise<any> | null>(null);
 
     let classStr = "";
 
+    if (rawUser == null) {
+        throw new Error("User not authenticated");
+    }
+    const user = rawUser;
 
     if (params?.chatId == null) {
         throw new Error("Missing chatId");

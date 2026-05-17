@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
+import * as router from '../../router.tsx';
 import { getChats, type Chat, type User } from "../../services/backend.ts";
 import * as session from '../../services/session.ts';
-import * as router from '../../router.tsx';
 import { getDate, getTitle } from "../../utilities/utilities.ts";
 import './Chats.css';
 
@@ -10,7 +10,13 @@ export default function Chats() {
     const [searchedUser, setSearchedUser] = useState("");
     const [allChats, setAllChats] = useState<Chat[]>([]);
     const navigate = useNavigate();
-    const user: User = session.useSession();
+    const rawUser: User | null = session.useSession();
+
+    if (!rawUser) {
+        throw new Error("User not authenticated");
+    }
+    const user = rawUser;
+
     useEffect(() => {
         async function fetchChats() {
             try {
