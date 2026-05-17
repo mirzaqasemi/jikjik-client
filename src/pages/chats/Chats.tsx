@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import * as router from '../../router.tsx';
@@ -5,6 +6,8 @@ import { getChats, type Chat, type User } from "../../services/backend.ts";
 import * as session from '../../services/session.ts';
 import { getDate, getTitle } from "../../utilities/utilities.ts";
 import './Chats.css';
+import ComposeDialog from "@/components/compose-dialog/ComposeDialog.tsx";
+
 
 export default function Chats() {
     const [searchedUser, setSearchedUser] = useState("");
@@ -79,6 +82,7 @@ export default function Chats() {
                     ))
                 }
             </div>
+            <ComposeDialog/>
         </div>
     );
 }

@@ -1,0 +1,15 @@
+
+/* =========================================
+    CONTACTS + BUTTON
+   ========================================= */
+.dialog-btn {
+    border: 0px;
+    color: var(--surface-hover);
+    background-color: var(--color-primary);
+    transition: background-color 0.3s ease;
+}
+
+.dialog-btn:hover {
+    background-color: var(--color-primary-hover);
+
+}

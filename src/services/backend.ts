@@ -1,3 +1,5 @@
+import * as session from './session';
+
 // -----------------------------------------
 // Types
 // -----------------------------------------
@@ -84,6 +86,36 @@ const users: User[] = [
     lastSeen: new Date("2026-03-11T11:05:00").getHours().toString()
   }
 ];
+
+let contacts: Record<string, User[]> = {
+  "alex92": [
+    users[1],
+    users[2],
+    users[3],
+    users[4],
+    users[4],
+    users[4],
+    users[4],
+    users[4],
+    users[4],
+    users[4],
+    users[4],
+    users[4],
+    users[4],
+    users[4],
+    users[5],
+    users[6],
+    users[7],
+  ],
+  "maria_dev": [
+    users[0],
+    users[2],
+    users[3],
+    users[5],
+    users[6],
+    users[7],
+  ]
+};
 
 let chats: Chat[] = [
   {
@@ -317,4 +349,14 @@ export async function sendMessage({
 
   msgs.push(newMessage);
   return msgs;
+}
+
+export async function getContacts(): Promise<User[]> {
+  await delay(100);
+  const user = session.getUser();
+  if (user == null) {
+    throw new Error('User Not Logged in');
+  }
+  const contactsList = contacts[user.username];
+  return contactsList;
 }
