@@ -42,7 +42,6 @@
     "typescript-eslint": "^8.58.0",
     "vite": "^8.0.4"
   },
-  "packageManager": "pnpm@10",
   "engines": {
     "npm": "please-use-pnpm"
   }

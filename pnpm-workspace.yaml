@@ -1,0 +1,5 @@
+shamefullyHoist: true
+nodeLinker: hoisted
+packageManager: pnpm
+allowBuilds:
+  msw: true
