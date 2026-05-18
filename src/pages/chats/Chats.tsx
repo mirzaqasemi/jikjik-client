@@ -1,43 +1,56 @@
 
-import { useEffect, useState } from "react";
-import { useNavigate } from 'react-router-dom';
-import * as router from '../../router.tsx';
-import { getChats, type Chat, type User } from "../../services/backend.ts";
-import * as session from '../../services/session.ts';
-import { getDate, getTitle } from "../../utilities/utilities.ts";
-import './Chats.css';
 import ComposeDialog from "@/components/compose-dialog/ComposeDialog.tsx";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { Navigate, useNavigate } from 'react-router-dom';
+import * as router from '../../router.tsx';
+import * as backend from '../../services/backend.ts';
+import { type Chat, type User } from "../../services/backend.ts";
+import * as session from '../../services/session.ts';
+import * as utils from "../../utilities/utilities.ts";
+import './Chats.css';
 
 
 export default function Chats() {
     const [searchedUser, setSearchedUser] = useState("");
-    const [allChats, setAllChats] = useState<Chat[]>([]);
+    // const [allChats, setAllChats] = useState<Chat[]>([]);
     const navigate = useNavigate();
     const user: User | null = session.useSession();
 
-    useEffect(() => {
-        async function fetchChats() {
-            try {
-                setAllChats(await getChats(user!.username, searchedUser));
-            } catch (error) {
-            }
-        }
-        if (user != null) {
-            fetchChats();
-        }
-    }, [user?.username, searchedUser]);
+    const {
+        data: allChats = [],
+        isLoading,
+        isError
+    } = useQuery<Chat[]>({
+        queryKey: ["allChats", user?.username],
+        queryFn: () => backend.getChats(user!.username, user!.displayName),
+    });
 
-    if (!user) {
-        return;
+    if (user == null) {
+        return <Navigate to={router.LOGIN_ROUTE} replace />;
     }
 
     function logout() {
         session.logoutUser();
         navigate(router.LOGIN_ROUTE);
     }
-    if (user == null) {
-        return;
+
+    if (isLoading) {
+        return (
+            <div className="flex justify-center items-center h-full">
+                <div className="animate-spin rounded-full h-10 w-10 border-4 border-gray-300 border-t-indigo-700" />
+            </div>
+        );
     }
+
+    if (isError) {
+        return (
+            <div className="flex justify-center items-center h-full">
+                Failed to load chats.
+            </div>
+        );
+    }
+
     return (
         <div id="page-inbox" className="chats-page">
             <div className="chats-header">
@@ -69,8 +82,8 @@ export default function Chats() {
                             </div>
                             <div className="chat-info">
                                 <div className="flex label-row">
-                                    <div className="chat-name">{getTitle(user.username, chat)}</div>
-                                    <div className="chat-meta unread-time">{getDate(chat.lastMsg.date)}</div>
+                                    <div className="chat-name">{utils.getTitle(user.username, chat)}</div>
+                                    <div className="chat-meta unread-time">{utils.getDate(chat.lastMsg.date)}</div>
                                 </div>
                                 <div className="flex label-row">
                                     <div className="chat-preview unread-text">{chat.lastMsg.content}</div>
