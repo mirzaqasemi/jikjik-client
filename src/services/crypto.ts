@@ -15,13 +15,49 @@ const ENC_PRIV = "enc_priv";
 const SIGN_PUB_B64 = "sign_pub_b64";
 const ENC_PUB_B64 = "enc_pub_b64";
 
-const SIGN_GEN = {
+type StoredKeyName =
+    | typeof SIGN_PRIV
+    | typeof ENC_PRIV
+    | typeof SIGN_PUB_B64
+    | typeof ENC_PUB_B64;
+
+type StoredKeys = {
+    signPrivKey: CryptoKey | null;
+    encPrivKey: CryptoKey | null;
+    signPub: string | null;
+    encPub: string | null;
+};
+
+type CompleteStoredKeys = {
+    signPrivKey: CryptoKey;
+    encPrivKey: CryptoKey;
+    signPub: string;
+    encPub: string;
+};
+
+type JsonValue =
+    | null
+    | string
+    | number
+    | boolean
+    | JsonValue[]
+    | { [key: string]: JsonValue };
+
+type SignedHeaders = {
+    "X-Signature": string;
+    "X-Timestamp": string;
+    "X-Username": string;
+};
+
+type BinaryKeyFormat = Exclude<KeyFormat, "jwk">;
+
+const SIGN_GEN: RsaHashedKeyGenParams = {
     name: "RSASSA-PKCS1-v1_5",
     modulusLength: 2048,
     publicExponent: new Uint8Array([1, 0, 1]),
     hash: "SHA-256"
 };
-const ENC_GEN = {
+const ENC_GEN: RsaHashedKeyGenParams = {
     name: "RSA-OAEP",
     modulusLength: 2048,
     publicExponent: new Uint8Array([1, 0, 1]),
@@ -30,11 +66,16 @@ const ENC_GEN = {
 
 // ─── Encoding helpers ──────────────────────────────────────────────────────────
 
-function b64ToBytes(b64) {
-    return Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+function b64ToBytes(b64: string): Uint8Array<ArrayBuffer> {
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i += 1) {
+        bytes[i] = bin.charCodeAt(i);
+    }
+    return bytes;
 }
 
-function bytesToB64(buf) {
+function bytesToB64(buf: ArrayBuffer | Uint8Array<ArrayBufferLike>): string {
     const u8 = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
     let s = "";
     const BLOCK = 0x8000;
@@ -45,17 +86,21 @@ function bytesToB64(buf) {
 
 // ─── IndexedDB ─────────────────────────────────────────────────────────────────
 
-function idbOpen() {
+function idbOpen(dbName = DB_NAME): Promise<IDBDatabase> {
     return new Promise((resolve, reject) => {
-        const req = indexedDB.open(DB_NAME, 1);
-        req.onupgradeneeded = () => req.result.createObjectStore(STORE);
+        const req = indexedDB.open(dbName, 1);
+        req.onupgradeneeded = () => {
+            if (!req.result.objectStoreNames.contains(STORE)) {
+                req.result.createObjectStore(STORE);
+            }
+        };
         req.onsuccess = () => resolve(req.result);
         req.onerror = () => reject(req.error);
     });
 }
 
-async function idbGet(key) {
-    const db = await idbOpen();
+async function idbGet<T>(key: StoredKeyName, dbName = DB_NAME): Promise<T | undefined> {
+    const db = await idbOpen(dbName);
     return new Promise((resolve, reject) => {
         const tx = db.transaction(STORE, "readonly");
         const req = tx.objectStore(STORE).get(key);
@@ -64,7 +109,7 @@ async function idbGet(key) {
     });
 }
 
-async function idbPut(key, value) {
+async function idbPut(key: StoredKeyName, value: CryptoKey | string): Promise<void> {
     const db = await idbOpen();
     return new Promise((resolve, reject) => {
         const tx = db.transaction(STORE, "readwrite");
@@ -76,13 +121,38 @@ async function idbPut(key, value) {
 
 // ─── Cached private CryptoKeys (lazy-loaded from IDB) ─────────────────────────
 
-let signPrivKey = null;
-let encPrivKey = null;
+let signPrivKey: CryptoKey | null = null;
+let encPrivKey: CryptoKey | null = null;
 
 // ─── Public-key import (for recipients' SPKI base64 strings) ──────────────────
 
-async function importRsaKey(b64, format, usages, alg) {
+async function importRsaKey(
+    b64: string,
+    format: BinaryKeyFormat,
+    usages: KeyUsage[],
+    alg: AlgorithmIdentifier
+): Promise<CryptoKey> {
     return crypto.subtle.importKey(format, b64ToBytes(b64), alg, true, usages);
+}
+
+async function loadStoredKeys(dbName = DB_NAME): Promise<StoredKeys> {
+    return {
+        signPrivKey: await idbGet<CryptoKey>(SIGN_PRIV, dbName) ?? null,
+        encPrivKey: await idbGet<CryptoKey>(ENC_PRIV, dbName) ?? null,
+        signPub: await idbGet<string>(SIGN_PUB_B64, dbName) ?? null,
+        encPub: await idbGet<string>(ENC_PUB_B64, dbName) ?? null
+    };
+}
+
+function hasCompleteKeySet(keys: StoredKeys): keys is CompleteStoredKeys {
+    return Boolean(keys.signPrivKey && keys.encPrivKey && keys.signPub && keys.encPub);
+}
+
+async function saveStoredKeys(keys: CompleteStoredKeys): Promise<void> {
+    await idbPut(SIGN_PRIV, keys.signPrivKey);
+    await idbPut(ENC_PRIV, keys.encPrivKey);
+    await idbPut(SIGN_PUB_B64, keys.signPub);
+    await idbPut(ENC_PUB_B64, keys.encPub);
 }
 
 // ─── Key setup ─────────────────────────────────────────────────────────────────
@@ -92,61 +162,62 @@ async function importRsaKey(b64, format, usages, alg) {
 // halves are exported to SPKI base64 once and cached alongside for sending to
 // the server at registration time.
 
-async function setupKeys() {
-    signPrivKey = await idbGet(SIGN_PRIV);
-    encPrivKey = await idbGet(ENC_PRIV);
-    let signPub = await idbGet(SIGN_PUB_B64);
-    let encPub = await idbGet(ENC_PUB_B64);
+async function setupKeys(): Promise<{ signPublicKey: string; encPublicKey: string }> {
+    const storedKeys = await loadStoredKeys();
+    let keys: CompleteStoredKeys | null = hasCompleteKeySet(storedKeys) ? storedKeys : null;
 
-    if (!signPrivKey || !encPrivKey || !signPub || !encPub) {
+    if (!keys) {
         const signKp = await crypto.subtle.generateKey(SIGN_GEN, false, ["sign", "verify"]);
         const encKp = await crypto.subtle.generateKey(ENC_GEN, false, ["encrypt", "decrypt"]);
 
-        signPrivKey = signKp.privateKey;
-        encPrivKey = encKp.privateKey;
-        signPub = bytesToB64(await crypto.subtle.exportKey("spki", signKp.publicKey));
-        encPub = bytesToB64(await crypto.subtle.exportKey("spki", encKp.publicKey));
+        keys = {
+            signPrivKey: signKp.privateKey,
+            encPrivKey: encKp.privateKey,
+            signPub: bytesToB64(await crypto.subtle.exportKey("spki", signKp.publicKey)),
+            encPub: bytesToB64(await crypto.subtle.exportKey("spki", encKp.publicKey))
+        };
 
-        await idbPut(SIGN_PRIV, signPrivKey);
-        await idbPut(ENC_PRIV, encPrivKey);
-        await idbPut(SIGN_PUB_B64, signPub);
-        await idbPut(ENC_PUB_B64, encPub);
+        await saveStoredKeys(keys);
     }
 
-    return {signPublicKey: signPub, encPublicKey: encPub};
+    signPrivKey = keys.signPrivKey;
+    encPrivKey = keys.encPrivKey;
+
+    return {signPublicKey: keys.signPub, encPublicKey: keys.encPub};
 }
 
-async function getDecryptKey() {
-    if (!encPrivKey) encPrivKey = await idbGet(ENC_PRIV);
+async function getDecryptKey(): Promise<CryptoKey | null> {
+    if (!encPrivKey) encPrivKey = await idbGet<CryptoKey>(ENC_PRIV) ?? null;
     return encPrivKey || null;
 }
 
 // ─── Request signing ───────────────────────────────────────────────────────────
 
-async function signRequest(data) {
-    if (!signPrivKey) signPrivKey = await idbGet(SIGN_PRIV);
-    const username_val = localStorage.getItem("USERNAME");
+function canonicalize(value: JsonValue): JsonValue {
+    if (Array.isArray(value)) {
+        return value.map(canonicalize);
+    }
+
+    if (typeof value !== "object" || value === null) {
+        return value;
+    }
+
+    return Object.keys(value).sort().reduce<{ [key: string]: JsonValue }>((res, key) => {
+        res[key] = canonicalize(value[key]);
+        return res;
+    }, {});
+}
+
+async function signRequest(data: JsonValue, method: string): Promise<SignedHeaders> {
+    if (!signPrivKey) signPrivKey = await idbGet<CryptoKey>(SIGN_PRIV) ?? null;
+    const username_val = localStorage.getItem("username") ?? localStorage.getItem("USERNAME");
     if (!signPrivKey || !username_val) throw new Error("Missing keys or username");
 
     const timestamp = Date.now();
     const expirationTime = timestamp + SIGNATURE_VALIDITY_MS;
 
-    // Canonical JSON helper for consistent signature payload
-    const sortedJson = (obj) => {
-        const allKeys = Object.keys(obj).sort();
-        const res = {};
-        allKeys.forEach(k => {
-            if (typeof obj[k] === 'object' && obj[k] !== null && !Array.isArray(obj[k])) {
-                res[k] = sortedJson(obj[k]);
-            } else {
-                res[k] = obj[k];
-            }
-        });
-        return res;
-    };
-
-    const fullObj = {data: data, expirationTime: expirationTime};
-    const jsonStr = JSON.stringify(sortedJson(fullObj), null, 0);
+    const fullObj = {data: data, expirationTime: expirationTime, method: method};
+    const jsonStr = JSON.stringify(canonicalize(fullObj), null, 0);
 
     const sig = await crypto.subtle.sign(
         {name: "RSASSA-PKCS1-v1_5"},
@@ -161,18 +232,6 @@ async function signRequest(data) {
     };
 }
 
-async function signedFetch(url, data) {
-    const headers = await signRequest(data);
-    return fetch(url, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            ...headers
-        },
-        body: JSON.stringify(data)
-    });
-}
-
 // ─── Exports ───────────────────────────────────────────────────────────────────
 
 export {
@@ -182,6 +241,5 @@ export {
     setupKeys,
     getDecryptKey,
     signRequest,
-    signedFetch,
     SIGNATURE_VALIDITY_MS
 };
