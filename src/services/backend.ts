@@ -295,18 +295,20 @@ export async function login(username: string, _: string): Promise<User | null> {
   return users.find(user => user.username === username) || null;
 }
 
-export async function getChats(username: string, displayName?: string): Promise<Chat[]> {
+export async function getChats(username: string, searchQuery?: string): Promise<Chat[]> {
   await delay(500);
   const result = chats.filter(chat => {
     const hasUser = chat.users.find(user => user.username === username) != null;
     if (!hasUser) {
       return false;
     }
-    if (!displayName || displayName === "") {
+    // if no filter provided, accept the chat
+    if (!searchQuery || searchQuery === "") {
       return true;
     }
+    // 
     return chat.users.find(user =>
-      user.displayName.toLowerCase().includes(displayName.toLowerCase())
+      user.displayName.toLowerCase().includes(searchQuery.toLowerCase())
     ) != null;
   });
   return result;

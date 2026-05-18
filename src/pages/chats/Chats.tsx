@@ -1,4 +1,3 @@
-
 import ComposeDialog from "@/components/compose-dialog/ComposeDialog.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -12,8 +11,7 @@ import './Chats.css';
 
 
 export default function Chats() {
-    const [searchedUser, setSearchedUser] = useState("");
-    // const [allChats, setAllChats] = useState<Chat[]>([]);
+    const [searchQuery, setSearchQuery] = useState("");
     const navigate = useNavigate();
     const user: User | null = session.useSession();
 
@@ -22,8 +20,8 @@ export default function Chats() {
         isLoading,
         isError
     } = useQuery<Chat[]>({
-        queryKey: ["allChats", user?.username],
-        queryFn: () => backend.getChats(user!.username, user!.displayName),
+        queryKey: ["allChats", user?.username, searchQuery],
+        queryFn: () => backend.getChats(user!.username, searchQuery),
     });
 
     if (user == null) {
@@ -33,14 +31,6 @@ export default function Chats() {
     function logout() {
         session.logoutUser();
         navigate(router.LOGIN_ROUTE);
-    }
-
-    if (isLoading) {
-        return (
-            <div className="flex justify-center items-center h-full">
-                <div className="animate-spin rounded-full h-10 w-10 border-4 border-gray-300 border-t-indigo-700" />
-            </div>
-        );
     }
 
     if (isError) {
@@ -66,11 +56,13 @@ export default function Chats() {
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
-                    <input onChange={(e) => setSearchedUser(e.target.value)} type="text" placeholder="Search messages or users..."></input>
+                    <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} type="text" placeholder="Search messages or users..."></input>
                 </div>
             </div>
 
-            <div className="chats-list">
+            {isLoading ? <div className="flex justify-center items-center h-full">
+                <div className="animate-spin rounded-full h-10 w-10 border-4 border-gray-300 border-t-indigo-700" />
+            </div> : <div className="chats-list">
                 {
                     allChats.map(chat => (
                         <button onClick={() => navigate(`/chats/${chat.id}`)} key={chat.id} className="flex chat-item">
@@ -93,7 +85,7 @@ export default function Chats() {
                         </button>
                     ))
                 }
-            </div>
+            </div>}
             <ComposeDialog />
         </div>
     );
