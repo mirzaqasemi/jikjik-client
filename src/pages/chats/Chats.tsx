@@ -2,9 +2,9 @@ import ComposeDialog from "@/components/compose-dialog/ComposeDialog.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Navigate, useNavigate } from 'react-router-dom';
+import * as hooks from '../../hooks/useDebounce.ts';
 import * as router from '../../router.tsx';
 import * as backend from '../../services/backend.ts';
-import { type Chat, type User } from "../../services/backend.ts";
 import * as session from '../../services/session.ts';
 import * as utils from "../../utilities/utilities.ts";
 import './Chats.css';
@@ -12,16 +12,17 @@ import './Chats.css';
 
 export default function Chats() {
     const [searchQuery, setSearchQuery] = useState("");
+    const debouncedSearchQuery = hooks.useDebounce(searchQuery, 300);
     const navigate = useNavigate();
-    const user: User | null = session.useSession();
+    const user: backend.User | null = session.useSession();
 
     const {
         data: allChats = [],
         isLoading,
         isError
-    } = useQuery<Chat[]>({
-        queryKey: ["allChats", user?.username, searchQuery],
-        queryFn: () => backend.getChats(user!.username, searchQuery),
+    } = useQuery<backend.Chat[]>({
+        queryKey: ["allChats", user?.username, debouncedSearchQuery],
+        queryFn: () => backend.getChats(user!.username, debouncedSearchQuery),
     });
 
     if (user == null) {
