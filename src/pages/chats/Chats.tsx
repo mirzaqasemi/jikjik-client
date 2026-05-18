@@ -13,17 +13,12 @@ export default function Chats() {
     const [searchedUser, setSearchedUser] = useState("");
     const [allChats, setAllChats] = useState<Chat[]>([]);
     const navigate = useNavigate();
-    const rawUser: User | null = session.useSession();
-
-    if (!rawUser) {
-        throw new Error("User not authenticated");
-    }
-    const user = rawUser;
+    const user: User | null = session.useSession();
 
     useEffect(() => {
         async function fetchChats() {
             try {
-                setAllChats(await getChats(user.username, searchedUser));
+                setAllChats(await getChats(user!.username, searchedUser));
             } catch (error) {
             }
         }
@@ -31,6 +26,10 @@ export default function Chats() {
             fetchChats();
         }
     }, [user?.username, searchedUser]);
+
+    if (!user) {
+        return;
+    }
 
     function logout() {
         session.logoutUser();
@@ -82,7 +81,7 @@ export default function Chats() {
                     ))
                 }
             </div>
-            <ComposeDialog/>
+            <ComposeDialog />
         </div>
     );
 }
