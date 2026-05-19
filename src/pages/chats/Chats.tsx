@@ -25,6 +25,7 @@ export default function Chats() {
         queryFn: () => backend.getChats(user!.username, debouncedSearchQuery),
     });
 
+
     if (user == null) {
         return <Navigate to={router.LOGIN_ROUTE} replace />;
     }
@@ -61,32 +62,34 @@ export default function Chats() {
                 </div>
             </div>
 
-            {isLoading ? <div className="flex justify-center items-center h-full">
-                <div className="animate-spin rounded-full h-10 w-10 border-4 border-gray-300 border-t-indigo-700" />
-            </div> : <div className="chats-list">
-                {
-                    allChats.map(chat => (
-                        <button onClick={() => navigate(`/chats/${chat.id}`)} key={chat.id} className="flex chat-item">
-                            <div className="flex avatar-container">
-                                <img src="https://i.pravatar.cc/150?img=11" alt="David" className="avatar" />
-                                {/* {username.img != null && <img src={username.img} alt="David" class="avatar"/>} */}
-                                {/* {chat.img != null && <img src={chat.img} alt="David" class="avatar" />} */}
-                                <div className="online-dot"></div>
-                            </div>
-                            <div className="chat-info">
-                                <div className="flex label-row">
-                                    <div className="chat-name">{utils.getTitle(user.username, chat)}</div>
-                                    <div className="chat-meta unread-time">{utils.getDate(chat.lastMsg.date)}</div>
+            {isLoading ?
+                <div className="flex justify-center items-center h-full">
+                    <div className="animate-spin rounded-full h-10 w-10 border-4 border-gray-300 border-t-indigo-700" />
+                </div>
+                : <div className="chats-list">
+                    {
+                        allChats.map(chat => (
+                            <button onClick={() => navigate(`/chats/${chat.id}`)} key={chat.id} className="flex chat-item">
+                                <div className="flex avatar-container">
+                                    <img src="https://i.pravatar.cc/150?img=11" alt="David" className="avatar" />
+                                    {/* {username.img != null && <img src={username.img} alt="David" class="avatar"/>} */}
+                                    {/* {chat.img != null && <img src={chat.img} alt="David" class="avatar" />} */}
+                                    <div className="online-dot"></div>
                                 </div>
-                                <div className="flex label-row">
-                                    <div className="chat-preview unread-text">{chat.lastMsg.content}</div>
-                                    <div className="w-5 h-5 flex justify-center unread-badge">2</div>
+                                <div className="chat-info">
+                                    <div className="flex label-row">
+                                        <div className="chat-name">{utils.getTitle(user.username, chat)}</div>
+                                        <div className="chat-meta unread-time">{utils.getDate(chat.lastMsg.date)}</div>
+                                    </div>
+                                    <div className="flex label-row">
+                                        <div className="chat-preview unread-text">{chat.lastMsg.content}</div>
+                                        <div className="w-5 h-5 flex justify-center unread-badge">2</div>
+                                    </div>
                                 </div>
-                            </div>
-                        </button>
-                    ))
-                }
-            </div>}
+                            </button>
+                        ))
+                    }
+                </div>}
             <ComposeDialog />
         </div>
     );
