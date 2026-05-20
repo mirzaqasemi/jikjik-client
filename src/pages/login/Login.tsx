@@ -51,7 +51,9 @@ export default function Login() {
         loginMutation.mutate({
             username: usernameInput.value,
             password: passwordInput.value
-        });
+        }); // React Query internally does something like:
+        // const data = await mutationFn({username: usernameInput.value, password: passwordInput.value})
+        // storeResultInsideReactQuery(data) Which stores data in "mutation.data"
 //      mutate(...)
 //          ↓
 //      mutationFn runs

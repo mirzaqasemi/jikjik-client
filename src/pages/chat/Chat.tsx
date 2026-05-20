@@ -28,7 +28,7 @@ export default function Chat() {
 
     // Fetching data from backend
     const {
-        data: messages = [],
+        data: messages = [], // Rename "data" to "message" 
         isLoading,
         isError,
     } = useQuery<backend.Message[]>({
@@ -45,6 +45,7 @@ export default function Chat() {
         );
     }
 
+    //FIXME
     function getMessageSender(message: backend.Message) {
         if (selectedChat.users.length > 2 && message.sender.username != user.username) { //In group
             classStr = "received"
