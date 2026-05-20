@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { Link, useLoaderData, useParams } from 'react-router-dom';
 import * as backend from "../../services/backend.ts";
 import * as session from '../../services/session.ts';
@@ -8,11 +9,11 @@ import './Chat.css';
 export default function Chat() {
     const params = useParams<{ chatId: string }>();
     const selectedChat = useLoaderData<backend.Chat>();
-    const rawUser = session.getUser();
-    const [messages, setMessages] = useState<backend.Message[]>([]);
     const [inputStr, setinputStr] = useState("");
-    const loadingPromise = useRef<Promise<any> | null>(null);
+    const queryClient = useQueryClient(); // Give access to the big cache/storage room
+    const rawUser = session.getUser();
 
+    //FIXME
     let classStr = "";
 
     if (rawUser == null) {
@@ -25,25 +26,24 @@ export default function Chat() {
     }
     const chatId = params.chatId;
 
-    useEffect(() => {
-        //TODO Optimize 
-        const id = setInterval(
-            async () => {
-                if (loadingPromise.current != null) {
-                    await loadingPromise.current;
-                    loadingPromise.current = null;
-                }
+    // Fetching data from backend
+    const {
+        data: messages = [],
+        isLoading,
+        isError,
+    } = useQuery<backend.Message[]>({
+        queryKey: ["messagesId", chatId],
+        queryFn: () => backend.getMesseges(chatId),
+        enabled: !!user && !!chatId
+    });
 
-                async function load() {
-                    const msgs = await backend.getMesseges(chatId);
-                    setMessages([...msgs]);
-                }
-                loadingPromise.current = load();
-            }, 1000);
-        return () => {
-            clearInterval(id);
-        }
-    }, [chatId]);
+    if (isError) {
+        return (
+            <div className="flex justify-center items-center h-full">
+                Failed to load chats.
+            </div>
+        );
+    }
 
     function getMessageSender(message: backend.Message) {
         if (selectedChat.users.length > 2 && message.sender.username != user.username) { //In group
@@ -57,21 +57,38 @@ export default function Chat() {
         return;
     }
 
-    async function addToMessages() {
-        if (loadingPromise.current != null) {
-            await loadingPromise.current;
-            loadingPromise.current = null;
-        }
+    const sendMessageMutation = useMutation({
+        mutationFn: (params:  { username: string, chatId: string, content: string }) => {
+            return backend.sendMessage(params);
+        },
+        onMutate: ({ content }) => {
+            const msgObj = {
+                sender: user,
+                content,
+                date: new Date()
+            }
+            // Before sending to backend, update UI immediately
+            queryClient.setQueryData<backend.Message[] /*The data stored under this key is Message[]*/>(
+                ["messagesId", chatId], // Go find cached messages for this chat
+                oldMessages => [
+                    ...(oldMessages ?? []), //If oldMessages is undefined, use empty array instead
+                    msgObj
+                ] // Replace cached data, UI instantly rerenders
+            )
+        },
+    });
 
+    async function addToMessages() {
         if (!inputStr.trim()) return;
-        let msgObj = {
-            sender: user,
-            content: inputStr,
-            date: new Date()
-        }
-        setMessages(prev => [...prev, msgObj]);
+
+        const content = inputStr; // Save inputStr before clearing
+
         setinputStr("");
-        loadingPromise.current = backend.sendMessage({ username: user.username, chatId: chatId, content: inputStr });
+        sendMessageMutation.mutate({
+            username: user.username,
+            chatId: chatId,
+            content: content
+        });
     }
 
     return (
@@ -102,23 +119,30 @@ export default function Chat() {
                 </button>
             </div>
             {/* <!-- Middle: Messages Section --> */}
-            <div className="flex flex-col message-area">
-                <div className="date-separator">TODAY</div>
-                {
-                    messages.map((message, index) => {
-                        let messageSender = getMessageSender(message);
-                        return <div key={index} className={"flex flex-col message-wrapper" + " " + classStr}>
-                            <div className="flex flex-col message-bubble">
-                                {
-                                    messageSender
-                                }
-                                <div>{message.content}</div>
-                            </div>
-                            <div className="flex message-meta">{utilities.getDate(message.date)}</div>
-                        </div>
-                    })
-                }
-            </div>
+            {
+                isLoading ?
+                    <div className="flex justify-center items-center h-full">
+                        <div className="animate-spin rounded-full h-10 w-10 border-4 border-gray-300 border-t-indigo-700" />
+                    </div>
+                    :
+                    <div className="flex flex-col message-area">
+                        <div className="date-separator">TODAY</div>
+                        {
+                            messages.map((message, index) => {
+                                let messageSender = getMessageSender(message);
+                                return <div key={index} className={"flex flex-col message-wrapper" + " " + classStr}>
+                                    <div className="flex flex-col message-bubble">
+                                        {
+                                            messageSender
+                                        }
+                                        <div>{message.content}</div>
+                                    </div>
+                                    <div className="flex message-meta">{utilities.getDate(message.date)}</div>
+                                </div>
+                            })
+                        }
+                    </div>
+            }
             {/* <!-- Bottom: Input Section --> */}
             <div className="flex justify-center chat-input-area">
                 <input value={inputStr} type="text" placeholder="Type a message..." onChange={(e) => setinputStr(e.target.value)}

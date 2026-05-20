@@ -1,16 +1,17 @@
-import './login.css'
+import { Button } from "@/components/ui/button";
+import {
+    Field,
+    FieldGroup,
+    FieldLabel
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { CHATS_ROUTE } from "@/router.tsx";
+import { useMutation } from "@tanstack/react-query";
 import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as backend from '../../services/backend.ts';
 import * as session from '../../services/session.ts';
-import { Button } from "@/components/ui/button"
-import {
-    Field,
-    FieldDescription,
-    FieldGroup,
-    FieldLabel,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+import './login.css';
 
 
 export default function Login() {
@@ -19,20 +20,50 @@ export default function Login() {
     const usernameRef = useRef<HTMLInputElement>(null);
     const passRef = useRef<HTMLInputElement>(null);
 
+    const loginMutation = useMutation({
+        mutationFn: ({ username, password }: { username: string; password: string }) => {
+            return backend.login(username, password);
+        },
+        onSuccess: (user) => {
+            if (user != null) {
+                session.setUser(user.username, user.displayName);
+                navigate(CHATS_ROUTE);
+            } else {
+                setWarning("This username is not found!");
+            }
+        },
+        onError: () => {
+            setWarning("something went wrong!");
+        }
+    });
+
     async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
         e.preventDefault();
+
         const usernameInput = usernameRef.current;
         const passwordInput = passRef.current;
+
         if (!usernameInput || !passwordInput) {
             return;
         }
-        let user = await backend.login(usernameInput.value, usernameInput.value);
-        if (user != null) {
-            session.setUser(user.username, user.displayName);
-            navigate("/chats");
-        } else {
-            setWarning("This username is not found!");
-        }
+
+        setWarning("");
+        loginMutation.mutate({
+            username: usernameInput.value,
+            password: passwordInput.value
+        });
+//      mutate(...)
+//          ↓
+//      mutationFn runs
+//          ↓
+//      backend.login(...)
+//          ↓
+//      returns user
+//          ↓
+//      TanStack saves it to:
+//      loginMutation.data
+//          ↓
+//      calls onSuccess(user)
     }
 
     return (
