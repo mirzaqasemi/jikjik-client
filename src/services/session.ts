@@ -8,7 +8,7 @@ const displayNameKey = 'displayName';
 const usernameKey = 'username';
 
 let currentUser: User | null = null;
-let listeners = new Set<Listener>();
+const listeners = new Set<Listener>();
 
 export function getUser(): User | null{
     if (currentUser == null) {
@@ -22,6 +22,15 @@ export function getUser(): User | null{
         }
     }
     return currentUser;
+}
+
+// throws error if user is null
+export function mustGetUser(): User {
+    const user = getUser();
+    if (user == null){
+        throw Error("User not logged in");
+    }
+    return user;
 }
 
 export function setUser(username: string, displayName: string): void {
