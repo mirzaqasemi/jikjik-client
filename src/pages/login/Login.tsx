@@ -32,7 +32,8 @@ export default function Login() {
                 setWarning("This username is not found!");
             }
         },
-        onError: () => {
+        onError: (err) => {
+            console.error(err)
             setWarning("something went wrong!");
         }
     });

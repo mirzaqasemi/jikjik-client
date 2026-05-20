@@ -36,8 +36,9 @@ type SignedHeaders = {
     "X-Username": string;
 };
 
+const SIGN_ALGORITHM = "RSASSA-PKCS1-v1_5";
 const SIGN_GEN: RsaHashedKeyGenParams = {
-    name: "RSASSA-PKCS1-v1_5",
+    name: SIGN_ALGORITHM,
     modulusLength: 2048,
     publicExponent: new Uint8Array([1, 0, 1]),
     hash: "SHA-256"
@@ -78,8 +79,7 @@ export async function setupKeys(username: string, registerKeys: (keys: Keys) => 
     encPublicKey: string;
 }> {
     let keys = await loadKeys(username);
-    const generationRequired = keys == null;
-    if (generationRequired) {
+    if (keys == null) {
         const signKp = await crypto.subtle.generateKey(SIGN_GEN, false, ["sign", "verify"]);
         const encKp = await crypto.subtle.generateKey(ENC_GEN, false, ["encrypt", "decrypt"]);
 
@@ -94,10 +94,10 @@ export async function setupKeys(username: string, registerKeys: (keys: Keys) => 
         await storeKeys(username, keys);
     }
 
-    signPrivKey = keys!.signPrivKey;
-    encPrivKey = keys!.encPrivKey;
+    signPrivKey = keys.signPrivKey;
+    encPrivKey = keys.encPrivKey;
 
-    return {signPublicKey: keys!.signPub, encPublicKey: keys!.encPub};
+    return {signPublicKey: keys.signPub, encPublicKey: keys.encPub};
 }
 
 export async function getDecryptKey(): Promise<CryptoKey | null> {
@@ -137,7 +137,7 @@ export async function signRequest(username: string, data: {
     const jsonStr = JSON.stringify(canonicalize(fullObj), null, 0);
 
     const sig = await crypto.subtle.sign(
-        {name: "RSASSA-PKCS1-v1_5"},
+        {name: SIGN_ALGORITHM},
         signPrivateKey,
         new TextEncoder().encode(jsonStr)
     );
