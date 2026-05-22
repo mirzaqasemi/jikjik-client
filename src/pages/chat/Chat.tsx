@@ -28,7 +28,7 @@ export default function Chat() {
 
     // Fetching data from backend
     const {
-        data: messages = [], // Rename "data" to "message" 
+        data: messages = [], // Rename "data" to "messages" 
         isLoading,
         isError,
     } = useQuery<backend.Message[]>({
@@ -59,19 +59,20 @@ export default function Chat() {
     }
 
     const sendMessageMutation = useMutation({
-        mutationFn: (params:  { username: string, chatId: string, content: string }) => {
+        mutationFn: (params: { username: string, chatId: string, content: string }) => {
             return backend.sendMessage(params);
         },
-        onMutate: ({ content }) => {
+
+        onMutate: ({ content }) => { // useMutation is a lifecycle callback that runs immediately before mutationFn executes. Before sending to backend, update UI immediately
             const msgObj = {
                 sender: user,
                 content,
                 date: new Date()
             }
-            // Before sending to backend, update UI immediately
+            // queryClient.setQueryData(queryKey, updater)
             queryClient.setQueryData<backend.Message[] /*The data stored under this key is Message[]*/>(
                 ["messagesId", chatId], // Go find cached messages for this chat
-                oldMessages => [
+                oldMessages => [ //const oldMessages = queryClient.getQueryData(["messagesId", chatId]); Which TanStack internally does it and passes it automatically
                     ...(oldMessages ?? []), //If oldMessages is undefined, use empty array instead
                     msgObj
                 ] // Replace cached data, UI instantly rerenders
@@ -88,7 +89,7 @@ export default function Chat() {
         sendMessageMutation.mutate({
             username: user.username,
             chatId: chatId,
-            content: content
+            content: content,
         });
     }
 

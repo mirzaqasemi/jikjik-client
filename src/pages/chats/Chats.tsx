@@ -22,12 +22,15 @@ export default function Chats() {
         isError
     } = useQuery<backend.Chat[]>({
         queryKey: ["allChats", user?.username, debouncedSearchQuery],
-        queryFn: () => backend.getChats(user!.username, debouncedSearchQuery),
+        queryFn: () => backend.getChats(user!.username, debouncedSearchQuery), // ! means: “TypeScript, trust me — user is NOT null or undefined here.”
+        enabled: user != null ////Do not run queryFn until user exists.
     });
 
 
     if (user == null) {
-        return <Navigate to={router.LOGIN_ROUTE} replace />;
+        return <Navigate to={router.LOGIN_ROUTE} replace />;    // replace: The new webpage (login page) replaces the page you are currently viewing (chats page) in the history list. 
+        // Clicking the browser's "Back" button will skip the old page and take you to the page you visited before it.
+        // It avoids a weird back-button loop. [Login, Chats] -> Chats redirects you to login so: [Login] -> Notice Chats disappeared (Login replace).
     }
 
     function logout() {

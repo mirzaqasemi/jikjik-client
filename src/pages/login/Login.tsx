@@ -54,18 +54,18 @@ export default function Login() {
         }); // React Query internally does something like:
         // const data = await mutationFn({username: usernameInput.value, password: passwordInput.value})
         // storeResultInsideReactQuery(data) Which stores data in "mutation.data"
-//      mutate(...)
-//          ↓
-//      mutationFn runs
-//          ↓
-//      backend.login(...)
-//          ↓
-//      returns user
-//          ↓
-//      TanStack saves it to:
-//      loginMutation.data
-//          ↓
-//      calls onSuccess(user)
+        //      mutate(...)
+        //          ↓
+        //      mutationFn runs
+        //          ↓
+        //      backend.login(...)
+        //          ↓
+        //      returns user
+        //          ↓
+        //      TanStack saves it to:
+        //      loginMutation.data
+        //          ↓
+        //      calls onSuccess(user)
     }
 
     return (
@@ -103,7 +103,7 @@ export default function Login() {
                         <span>{warning}</span>
                     </div>}
                     <Field orientation="horizontal">
-                        <Button className='w-full btn-primary' type="submit">Login</Button>
+                        <Button className='w-full btn-primary' type="submit" disabled={loginMutation.isPending}>Login</Button>
                     </Field>
                 </FieldGroup>
             </form>
