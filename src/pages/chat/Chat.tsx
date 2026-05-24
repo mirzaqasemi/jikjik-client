@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLayoutEffect, useRef, useState } from "react";
 import { Link, useLoaderData, useParams } from 'react-router-dom';
+import LoadingSpinner from "@/components/loading-spinner/LoadingSpinner.tsx";
 import * as backend from "../../services/backend.ts";
 import * as session from '../../services/session.ts';
 import * as utilities from "../../utilities/utilities.ts";
@@ -135,10 +136,7 @@ export default function Chat() {
             {/* <!-- Middle: Messages Section --> */}
             {
                 isLoading ?
-                    <div className="flex justify-center items-center h-full">
-                        <div
-                            className="animate-spin rounded-full h-10 w-10 border-4 border-gray-300 border-t-indigo-700" />
-                    </div>
+                    <LoadingSpinner />
                     :
                     <div className="flex flex-col messages-area">
                         <div className="date-separator">TODAY</div>
