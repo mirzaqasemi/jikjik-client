@@ -63,10 +63,11 @@
 /* =========================================
     <!-- Middle: Messages Section -->
    ========================================= */
-.message-area {
+.messages-area {
     flex: 1;
     padding: 20px;
     overflow-y: auto;
+    height: 100%;
     gap: 16px;
     background-color: var(--surface-hover);
 }

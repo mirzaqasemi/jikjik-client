@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { Link, useLoaderData, useParams } from 'react-router-dom';
 import * as backend from "../../services/backend.ts";
 import * as session from '../../services/session.ts';
@@ -12,7 +12,7 @@ export default function Chat() {
     const [inputStr, setinputStr] = useState("");
     const queryClient = useQueryClient(); // Give access to the big cache/storage room
     const rawUser = session.getUser();
-
+    const bottomRef = useRef<HTMLDivElement>(null);
     //FIXME
     let classStr = "";
 
@@ -44,6 +44,12 @@ export default function Chat() {
             </div>
         );
     }
+    //At first: Chat component Render -> DOM updated -> useLayoutEffect runs -> scroll -> PAINT 🎨 (The browser actually draws pixels on the screen so the user can see something.)
+    useLayoutEffect(() => {
+        bottomRef.current?.scrollIntoView({
+            behavior: "auto"
+        })
+    }, [messages.length]);
 
     //FIXME
     function getMessageSender(message: backend.Message) {
@@ -62,7 +68,7 @@ export default function Chat() {
         mutationFn: (params: { username: string, chat: backend.Chat, content: string }) => {
             return backend.sendMessage(params);
         },
-        onMutate: ({content}) => {
+        onMutate: ({ content }) => {
             const msgObj = {
                 sender: user,
                 content,
@@ -107,7 +113,7 @@ export default function Chat() {
                 </Link>
                 <div className="flex">
                     <div className="avatar-container">
-                        <img src="https://i.pravatar.cc/150?img=32" alt="" className="avatar"/>
+                        <img src="https://i.pravatar.cc/150?img=32" alt="" className="avatar" />
                     </div>
                     <div className="flex flex-col user-details">
                         <span className="user-name">{utilities.getTitle(user.username, selectedChat)}</span>
@@ -117,7 +123,7 @@ export default function Chat() {
                 {/* <!-- Right Side: Three Dots (Kebab Menu) --> */}
                 <button className="flex icon-btn more-options-btn" aria-label="More options">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5"
-                         strokeLinejoin="round" strokeLinecap="round">
+                        strokeLinejoin="round" strokeLinecap="round">
                         <circle cx="12" cy="5" r="1"></circle>
                         <circle cx="12" cy="12" r="1"></circle>
                         <circle cx="12" cy="19" r="1"></circle>
@@ -129,10 +135,10 @@ export default function Chat() {
                 isLoading ?
                     <div className="flex justify-center items-center h-full">
                         <div
-                            className="animate-spin rounded-full h-10 w-10 border-4 border-gray-300 border-t-indigo-700"/>
+                            className="animate-spin rounded-full h-10 w-10 border-4 border-gray-300 border-t-indigo-700" />
                     </div>
                     :
-                    <div className="flex flex-col message-area">
+                    <div className="flex flex-col messages-area">
                         <div className="date-separator">TODAY</div>
                         {
                             messages.map((message, index) => {
@@ -148,22 +154,23 @@ export default function Chat() {
                                 </div>
                             })
                         }
+                        <div ref={bottomRef}></div>
                     </div>
             }
             {/* <!-- Bottom: Input Section --> */}
             <div className="flex justify-center chat-input-area">
                 <input value={inputStr} type="text" placeholder="Type a message..."
-                       onChange={(e) => setinputStr(e.target.value)}
-                       onKeyDown={(e) => {
-                           if (e.key === "Enter") {
-                               addToMessages();
-                           }
-                       }}/>
+                    onChange={(e) => setinputStr(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            addToMessages();
+                        }
+                    }} />
                 <button onClick={addToMessages} className="flex justify-center btn-send">
-                    <svg style={{transform: "rotate(90deg)"}} width="18" height="18" fill="none" stroke="currentColor"
-                         viewBox="0 0 24 24">
+                    <svg style={{ transform: "rotate(90deg)" }} width="18" height="18" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
                         <path strokeLinejoin="round" strokeLinecap="round" strokeWidth="2"
-                              d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                            d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
                     </svg>
                 </button>
             </div>
