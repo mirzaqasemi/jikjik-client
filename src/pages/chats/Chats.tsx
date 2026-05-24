@@ -19,10 +19,11 @@ export default function Chats() {
     const {
         data: allChats = [],
         isLoading,
-        isError
+        isError, 
+        error
     } = useQuery<backend.Chat[]>({
         queryKey: ["allChats", user?.username, debouncedSearchQuery],
-        queryFn: () => backend.getChats(user!.username, debouncedSearchQuery), // ! means: “TypeScript, trust me — user is NOT null or undefined here.”
+        queryFn: () => backend.getChats(debouncedSearchQuery), // ! means: “TypeScript, trust me — user is NOT null or undefined here.”
         enabled: user != null ////Do not run queryFn until user exists.
     });
 
@@ -39,6 +40,7 @@ export default function Chats() {
     }
 
     if (isError) {
+        console.error(error.message);
         return (
             <div className="flex justify-center items-center h-full">
                 Failed to load chats.

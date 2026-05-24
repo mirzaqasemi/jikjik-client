@@ -5,16 +5,14 @@ import { decryptTextMessage, encryptTextMessage, type Keys, setupKeys, signReque
 // -----------------------------------------
 // Types
 // -----------------------------------------
-export interface User
-{
+export interface User {
     username: string;
     displayName: string;
     lastSeen?: string;
     encPublicKey: string;
 }
 
-export interface Message
-{
+export interface Message {
     sender: User;
     content: string;
     date: Date;
@@ -22,22 +20,37 @@ export interface Message
 
 type EncryptedMsgContent = { [userId: string]: string };
 
-interface EncryptedMessage
-{
+interface EncryptedMessage {
     sender: User;
     content: EncryptedMsgContent;
     date: Date;
 }
 
-export interface Chat
-{
+export interface EncryptedChat {
     id: string;
     title?: string;
     users: User[];
-    lastMsg: {
-        sender: string;
-        content: string;
-        date: Date;
+    lastMsg: EncryptedMessage | null;
+}
+
+export interface Chat {
+    id: string;
+    title?: string;
+    users: User[];
+    lastMsg: Message | null;
+}
+
+async function decryptMessage(em: EncryptedMessage | null): Promise<Message | null> {
+    return em == null ? null : {
+        ...em,
+        content: await decryptTextMessage(em.content[mustGetUser().username]),
+    };
+}
+
+async function decryptChat(ec: EncryptedChat): Promise<Chat> {
+    return {
+        ...ec,
+        lastMsg: await decryptMessage(ec.lastMsg),
     };
 }
 
@@ -47,7 +60,7 @@ function handleFetchFailure<T>(r: Response): Promise<T> {
 }
 
 async function authorizedFetchJson<T>(method: string, data: any, input: RequestInfo | URL,
-                                      init?: RequestInit, username?: string, privateKey?: CryptoKey): Promise<T> {
+    init?: RequestInit, username?: string, privateKey?: CryptoKey): Promise<T> {
     if (username == null) {
         username = session.mustGetUser().username;
     }
@@ -55,7 +68,7 @@ async function authorizedFetchJson<T>(method: string, data: any, input: RequestI
 
     return fetch(input, {
         ...init,
-        headers: {"Content-Type": "application/json", ...(init?.headers || {}), ...authHeaders},
+        headers: { "Content-Type": "application/json", ...(init?.headers || {}), ...authHeaders },
     }).then(handleFetchFailure<T>);
 }
 
@@ -92,35 +105,28 @@ async function register(username: string, keys: Keys) {
 }
 
 export async function getChats(filter?: string): Promise<Chat[]> {
-    const body = {filter: filter || ""};
-    const response = await authorizedFetchJson<{ chats: Chat[] }>("getChats", body, "/api/chats", {
+    const body = { filter: filter || "" };
+    const response = await authorizedFetchJson<{ chats: EncryptedChat[] }>("getChats", body, "/api/chats", {
         method: "POST",
         body: JSON.stringify(body)
     });
-    return response.chats;
+    return Promise.all(response.chats.map(decryptChat));
 }
 
-export async function getChat(chatId: string) {
-    return await authorizedFetchJson<Chat>("getChat", {chatId}, `/api/chats/${chatId}`, {
+export async function getChat(chatId: string): Promise<Chat> {
+    return await authorizedFetchJson<EncryptedChat>("getChat", { chatId }, `/api/chats/${chatId}`, {
         method: "GET",
-    });
+    }).then(decryptChat);
 }
 
 export async function getMessages(chatId: string): Promise<Message[]> {
     const messages = (await authorizedFetchJson<{
         messages: EncryptedMessage[]
-    }>("getMessages", {chatId}, `/api/chats/${chatId}/messages`, {
+    }>("getMessages", { chatId }, `/api/chats/${chatId}/messages`, {
         method: "POST",
     })).messages;
 
-    const username = mustGetUser().username;
-
-    return Promise.all(messages.map(async em => {
-        return {
-            ...em,
-            content: await decryptTextMessage(em.content[username]),
-        }
-    }));
+    return Promise.all(messages.map(decryptMessage));
 }
 
 export async function sendMessage(req: {
@@ -136,7 +142,7 @@ export async function sendMessage(req: {
         msg[user.username] = await encryptTextMessage(req.content, user.encPublicKey);
     }
 
-    const data = {content: msg, chat_id: req.chat.id, uid: crypto.randomUUID()};
+    const data = { content: msg, chat_id: req.chat.id, uid: crypto.randomUUID() };
     await authorizedFetchJson("sendMessage", data, `/api/message`, {
         method: "POST",
         body: JSON.stringify(data),
