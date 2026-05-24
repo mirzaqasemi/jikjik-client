@@ -34,7 +34,8 @@ export default function Chat() {
     } = useQuery<backend.Message[]>({
         queryKey: ["messagesId", chatId],
         queryFn: () => backend.getMessages(chatId),
-        enabled: !!user && !!chatId
+        enabled: !!user && !!chatId,
+        refetchInterval: 500,
     });
 
     if (isError) {
@@ -68,6 +69,7 @@ export default function Chat() {
         mutationFn: (params: { username: string, chat: backend.Chat, content: string }) => {
             return backend.sendMessage(params);
         },
+        //onMutate() runs immediately before mutationFn executes
         onMutate: ({ content }) => {
             const msgObj = {
                 sender: user,
