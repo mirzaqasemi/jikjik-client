@@ -1,6 +1,7 @@
 import type * as backend from "../services/backend";
 
-export function getDate(date: Date): string {
+export function formatDate(date: Date): string {
+    if (date == null) return "";
     let hourNum = date.getHours();
     const minute = date.getMinutes().toString().padStart(2, '0');
     const ampm = hourNum >= 12 ? "PM" : "AM";
@@ -9,16 +10,11 @@ export function getDate(date: Date): string {
     return timeString + " " + ampm;
 }
 
-interface Chat {
-    title?: string | null;
-    users: backend.User[];
-}
-
-export function getTitle(username: string, chat: Chat): string {
+export function getTitle(username: string, chat: backend.Chat): string {
     const users = chat.users;
 
     let names: string[] = [];
-    if (chat.title != null) {
+    if (chat.title != null && chat.title != "") {
         return chat.title;
     }
     for (let index = 0; index < users.length; index++) {

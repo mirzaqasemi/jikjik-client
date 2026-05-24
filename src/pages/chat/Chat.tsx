@@ -33,7 +33,7 @@ export default function Chat() {
         isError,
     } = useQuery<backend.Message[]>({
         queryKey: ["messagesId", chatId],
-        queryFn: () => backend.getMesseges(chatId),
+        queryFn: () => backend.getMessages(chatId),
         enabled: !!user && !!chatId
     });
 
@@ -59,11 +59,10 @@ export default function Chat() {
     }
 
     const sendMessageMutation = useMutation({
-        mutationFn: (params: { username: string, chatId: string, content: string }) => {
+        mutationFn: (params: { username: string, chat: backend.Chat, content: string }) => {
             return backend.sendMessage(params);
         },
-
-        onMutate: ({ content }) => { // useMutation is a lifecycle callback that runs immediately before mutationFn executes. Before sending to backend, update UI immediately
+        onMutate: ({content}) => {
             const msgObj = {
                 sender: user,
                 content,
@@ -78,7 +77,11 @@ export default function Chat() {
                 ] // Replace cached data, UI instantly rerenders
             )
         },
+        onError: (err, params) => {
+            console.log("failed to send message", params, err)
+        },
     });
+
 
     async function addToMessages() {
         if (!inputStr.trim()) return;
@@ -88,8 +91,8 @@ export default function Chat() {
         setinputStr("");
         sendMessageMutation.mutate({
             username: user.username,
-            chatId: chatId,
-            content: content,
+            chat: selectedChat,
+            content: content
         });
     }
 
@@ -104,7 +107,7 @@ export default function Chat() {
                 </Link>
                 <div className="flex">
                     <div className="avatar-container">
-                        <img src="https://i.pravatar.cc/150?img=32" alt="" className="avatar" />
+                        <img src="https://i.pravatar.cc/150?img=32" alt="" className="avatar"/>
                     </div>
                     <div className="flex flex-col user-details">
                         <span className="user-name">{utilities.getTitle(user.username, selectedChat)}</span>
@@ -113,7 +116,8 @@ export default function Chat() {
                 </div>
                 {/* <!-- Right Side: Three Dots (Kebab Menu) --> */}
                 <button className="flex icon-btn more-options-btn" aria-label="More options">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5"
+                         strokeLinejoin="round" strokeLinecap="round">
                         <circle cx="12" cy="5" r="1"></circle>
                         <circle cx="12" cy="12" r="1"></circle>
                         <circle cx="12" cy="19" r="1"></circle>
@@ -124,7 +128,8 @@ export default function Chat() {
             {
                 isLoading ?
                     <div className="flex justify-center items-center h-full">
-                        <div className="animate-spin rounded-full h-10 w-10 border-4 border-gray-300 border-t-indigo-700" />
+                        <div
+                            className="animate-spin rounded-full h-10 w-10 border-4 border-gray-300 border-t-indigo-700"/>
                     </div>
                     :
                     <div className="flex flex-col message-area">
@@ -139,7 +144,7 @@ export default function Chat() {
                                         }
                                         <div>{message.content}</div>
                                     </div>
-                                    <div className="flex message-meta">{utilities.getDate(message.date)}</div>
+                                    <div className="flex message-meta">{utilities.formatDate(message.date)}</div>
                                 </div>
                             })
                         }
@@ -147,15 +152,18 @@ export default function Chat() {
             }
             {/* <!-- Bottom: Input Section --> */}
             <div className="flex justify-center chat-input-area">
-                <input value={inputStr} type="text" placeholder="Type a message..." onChange={(e) => setinputStr(e.target.value)}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                            addToMessages();
-                        }
-                    }} />
+                <input value={inputStr} type="text" placeholder="Type a message..."
+                       onChange={(e) => setinputStr(e.target.value)}
+                       onKeyDown={(e) => {
+                           if (e.key === "Enter") {
+                               addToMessages();
+                           }
+                       }}/>
                 <button onClick={addToMessages} className="flex justify-center btn-send">
-                    <svg style={{ transform: "rotate(90deg)" }} width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinejoin="round" strokeLinecap="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                    <svg style={{transform: "rotate(90deg)"}} width="18" height="18" fill="none" stroke="currentColor"
+                         viewBox="0 0 24 24">
+                        <path strokeLinejoin="round" strokeLinecap="round" strokeWidth="2"
+                              d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
                     </svg>
                 </button>
             </div>
