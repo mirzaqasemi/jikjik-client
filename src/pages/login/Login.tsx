@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import * as backend from '../../services/backend.ts';
 import * as session from '../../services/session.ts';
 import './login.css';
+import { CircleAlert } from "lucide-react";
 
 
 export default function Login() {
@@ -34,7 +35,7 @@ export default function Login() {
         },
         onError: (err) => {
             console.error(err)
-            setWarning("something went wrong!");
+            setWarning("Username or password is wrong!");
         }
     });
 
@@ -73,10 +74,10 @@ export default function Login() {
         <div className='flex flex-col items-center justify-center h-full login-page'>
             <div className='flex items-center justify-center w-12 h-12 mb-6 text-white font-bold brand-logo'>C</div>
             <div className='login-header'>
-                <h1 className='mb-1.5 text-center font-semibold tracking-tight text-5xl'>Welcome back</h1>
-                <p className='mb-8 font-medium tracking-wider'>Enter your details to access your chats.</p>
+                <h1 className='mb-4 text-center font-semibold tracking-tight text-5xl'>Welcome back</h1>
+                <div className="login-header-description">Enter your details to access your chats.</div>
             </div>
-            <form onSubmit={handleSubmit} className='flex flex-col mt-5 w-full form-group'>
+            <form onSubmit={handleSubmit} className='flex flex-col mt-16 w-full form-group'>
                 <FieldGroup>
                     <Field className='gap-2'>
                         <FieldLabel htmlFor="fieldgroup-username" className='form-field-label'>Email or Username</FieldLabel>
@@ -93,14 +94,12 @@ export default function Login() {
                         <Input
                             id="fieldgroup-pass"
                             type="password"
-                            placeholder="name@example.com"
+                            defaultValue="password123"
                             ref={passRef}
                         />
                     </Field>
                     {warning != "" && <div className='flex error-message' id="login-error">
-                        <svg viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"></path>
-                        </svg>
+                        <CircleAlert className="circle-alert-icon"/>
                         <span>{warning}</span>
                     </div>}
                     <Field orientation="horizontal">

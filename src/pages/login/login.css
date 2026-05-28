@@ -6,14 +6,14 @@
 }
 
 .brand-logo {
-    background: linear-gradient(135deg, var(--color-primary), #818CF8);
+    background: linear-gradient(135deg, var(--primary), var(--color-chart-2));
     border-radius: 12px;
     font-size: 24px;
 }
 
-.login-header p {
+.login-header-description {
     font-size: 16px;
-    color: var(--text-muted);
+    color: var(--color-muted-foreground);
 }
 
 .form-field-label {
@@ -26,78 +26,10 @@
 }
 
 .input-group label {
-    font-size: 16px;
+    font-size: var(--text-sm, .875rem);
     font-weight: 500;
-    color: var(--text-main);
     margin-right: auto;
     margin-left: 3px;
-}
-
-.login-page input[type="text"]:focus,
-.login-page input[type="password"]:focus {
-    border-color: var(--color-primary);
-    outline: 0px;
-    box-shadow: 0 0 10px 1px var(--color-primary-light);
-    background-color: transparent !important;
-    color: var(--text-main) !important;
-}
-
-/* Target autofilled inputs in all their states */
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus,
-input:-webkit-autofill:active {
-    /* 1. Override the background color using an inset box-shadow */
-    -webkit-box-shadow: 0 0 0 50px var(--surface-hover, #f8fafc) inset !important;
-
-    /* 2. Override the text color */
-    -webkit-text-fill-color: var(--text-main) !important;
-    /* Replace with your primary text color */
-
-    /* 3. Ensure the cursor (caret) matches the text color */
-    caret-color: var(--text-main) !important;
-
-    /* 4. Keep your border styling intact */
-    border: 1px solid var(--color-primary-light) !important;
-
-    /* Optional: Prevent text from being hidden behind the shadow */
-    background-clip: content-box !important;
-}
-
-/* If you want the background to change to your color when an autofilled input is clicked/focused */
-input:-webkit-autofill:focus {
-    -webkit-box-shadow: 0 0 0 50px var(--surface, var(--text-main)) inset !important;
-}
-
-input::placeholder {
-    color: #94a3b8;
-}
-
-/* #btn-signin {
-    font-size: 16px !important;
-    font-weight: 600;
-    padding: 12px;
-    border-radius: 12px !important;
-    border: none;
-    transition: background-color 0.2s ease, transform .1s ease;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-}
-
-#btn-signin:active {
-    transform: scale(0.98);
-} */
-
-.btn-primary {
-    /* background-color: var(--color-primary); */
-    color: white;
-}
-
-.btn-primary:hover {
-    background-color: var(--color-primary-hover);
 }
 
 /* =========================================
@@ -108,10 +40,12 @@ input::placeholder {
     align-items: center;
     gap: 8px;
     margin-bottom: 18px;
-    background-color: var(--color-error-bg);
+    background-color: color-mix(in oklab, var(--muted) 50%, transparent);
     color: var(--color-error);
     padding: 10px 14px;
-    border-radius: 12px;
+    border-radius: calc(var(--radius) * 1.8);
+    padding-inline: calc(var(--spacing, .25rem) * 4);
+    padding-block: calc(var(--spacing, .25rem) * 3.5);
     font-size: 14px;
     font-weight: 400;
     border: 1px solid var(--color-error-border);
@@ -139,9 +73,8 @@ input::placeholder {
     }
 }
 
-.error-message svg {
-    width: 16px;
+.circle-alert-icon {
+    color: var(--color-destructive);
     height: 16px;
-    flex-shrink: 0;
-    fill: currentColor;
+    width: 16px;
 }
