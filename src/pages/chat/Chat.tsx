@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLayoutEffect, useRef, useState } from "react";
 import { Link, useLoaderData, useParams } from 'react-router-dom';
-import LoadingSpinner from "@/components/loading-spinner/LoadingSpinner.tsx";
 import * as backend from "../../services/backend.ts";
 import * as session from '../../services/session.ts';
 import * as utilities from "../../utilities/utilities.ts";
 import './Chat.css';
+import { Spinner } from "@/components/ui/spinner.tsx";
 
 export default function Chat() {
     const params = useParams<{ chatId: string }>();
@@ -107,6 +107,8 @@ export default function Chat() {
 
     return (
         <div className="flex flex-col chat-page">
+
+            
             {/* <!-- Top: Header Section --> */}
             <div className="flex align-center conversation-header">
                 <Link to={"../"} className="btn-back">
@@ -133,10 +135,12 @@ export default function Chat() {
                     </svg>
                 </button>
             </div>
+
+
             {/* <!-- Middle: Messages Section --> */}
             {
                 isLoading ?
-                    <LoadingSpinner />
+                    <Spinner />
                     :
                     <div className="flex flex-col messages-area">
                         <div className="date-separator">TODAY</div>
@@ -157,6 +161,8 @@ export default function Chat() {
                         <div ref={bottomRef}></div>
                     </div>
             }
+
+
             {/* <!-- Bottom: Input Section --> */}
             <div className="flex justify-center chat-input-area">
                 <input value={inputStr} type="text" placeholder="Type a message..."

@@ -2,13 +2,13 @@ import ComposeDialog from "@/components/compose-dialog/ComposeDialog.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Navigate, useNavigate } from 'react-router-dom';
-import LoadingSpinner from "@/components/loading-spinner/LoadingSpinner.tsx";
 import * as hooks from '../../hooks/useDebounce.ts';
 import * as router from '../../router.tsx';
 import * as backend from '../../services/backend.ts';
 import * as session from '../../services/session.ts';
 import * as utils from "../../utilities/utilities.ts";
 import './Chats.css';
+import { Spinner } from "@/components/ui/spinner.tsx";
 
 
 export default function Chats() {
@@ -72,7 +72,7 @@ export default function Chats() {
             </div>
 
             {isLoading ?
-                <LoadingSpinner />
+                <Spinner />
                 : <div className="chats-list">
                     {
                         allChats.map(chat => (
