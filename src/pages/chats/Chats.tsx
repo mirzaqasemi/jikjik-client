@@ -1,4 +1,6 @@
 import ComposeDialog from "@/components/compose-dialog/ComposeDialog.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
+import { Search } from "lucide-react"
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Navigate, useNavigate } from 'react-router-dom';
@@ -8,8 +10,11 @@ import * as backend from '../../services/backend.ts';
 import * as session from '../../services/session.ts';
 import * as utils from "../../utilities/utilities.ts";
 import './Chats.css';
-import { Spinner } from "@/components/ui/spinner.tsx";
-
+import {
+    InputGroup,
+    InputGroupAddon,
+    InputGroupInput,
+} from "@/components/ui/input-group"
 
 export default function Chats() {
     const [searchQuery, setSearchQuery] = useState("");
@@ -61,14 +66,15 @@ export default function Chats() {
                         </svg>
                     </button>
                 </div>
-                <div className="search-bar">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                    <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} type="text"
-                        placeholder="Search messages or users..."></input>
-                </div>
+                {/* <div className="search-bar"> */}
+                <InputGroup className="">
+                    <InputGroupInput placeholder="Search..." />
+                    <InputGroupAddon>
+                        <Search />
+                    </InputGroupAddon>
+                    {/* <InputGroupAddon align="inline-end">12 results</InputGroupAddon> */}
+                </InputGroup>
+                {/* </div> */}
             </div>
 
             {isLoading ?

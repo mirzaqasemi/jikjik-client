@@ -1,8 +1,23 @@
 /* =========================================
    4. LOGIN PAGE SPECIFICS
    ========================================= */
+body {
+    background-color: var(--secondary);
+}
+
 .login-page {
-    padding: 32px 24px;
+    padding: 32px 40px;
+    margin-top: auto;
+    margin-bottom: auto;
+    height: 80%;
+    width: 600px;
+    max-width: 100%;
+    background-color: var(--background);
+    border-radius: var(--radius-2xl);
+    box-shadow:
+        0 24px 60px rgba(31, 31, 26, 0.08),
+        0 8px 20px rgba(31, 31, 26, 0.05);
+    backdrop-filter: blur(18px);
 }
 
 .brand-logo {
@@ -17,7 +32,8 @@
 }
 
 .form-field-label {
-    font-size: 16px;
+    font-size: 14px;
+    font-weight: 600;
 }
 
 .input-group {

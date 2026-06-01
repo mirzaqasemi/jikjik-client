@@ -1,10 +1,15 @@
+import { ChevronRight, EyeIcon, EyeOffIcon, LockKeyhole, UserRound } from "lucide-react"
 import { Button } from "@/components/ui/button";
 import {
     Field,
     FieldGroup,
     FieldLabel
 } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+import {
+    InputGroup,
+    InputGroupAddon,
+    InputGroupInput,
+} from "@/components/ui/input-group";
 import { CHATS_ROUTE } from "@/router.tsx";
 import { useMutation } from "@tanstack/react-query";
 import React, { useRef, useState } from 'react';
@@ -18,6 +23,7 @@ import { CircleAlert } from "lucide-react";
 export default function Login() {
     const navigate = useNavigate();
     const [warning, setWarning] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const usernameRef = useRef<HTMLInputElement>(null);
     const passRef = useRef<HTMLInputElement>(null);
 
@@ -72,34 +78,60 @@ export default function Login() {
 
     return (
         <div className='flex flex-col items-center justify-center h-full login-page'>
-            <div className='flex items-center justify-center w-12 h-12 mb-6 text-white font-bold brand-logo'>C</div>
+
+            <div className='flex items-center justify-center w-12 h-12 mb-6 text-white font-bold brand-logo'>J</div>
             <div className='login-header'>
-                <h1 className='mb-4 text-center font-semibold tracking-tight text-5xl'>Welcome back</h1>
+                <h1 className='mb-4 text-center font-bold tracking-tight text-4xl'>Welcome back</h1>
                 <div className="login-header-description">Enter your details to access your chats.</div>
             </div>
+
             <form onSubmit={handleSubmit} className='flex flex-col mt-16 w-full form-group'>
                 <FieldGroup>
                     <Field className='gap-2'>
                         <FieldLabel htmlFor="fieldgroup-username" className='form-field-label'>Email or Username</FieldLabel>
-                        <Input
-                            defaultValue={"alex92"}
-                            id="fieldgroup-username"
-                            type='text'
-                            placeholder="Jordan Lee"
-                            ref={usernameRef}
-                        />
+                        <InputGroup>
+                            <InputGroupAddon align="inline-start" className="pr-1.5">
+                                <UserRound />
+                            </InputGroupAddon>
+                            <InputGroupInput
+                                defaultValue={"diana"}
+                                id="fieldgroup-username"
+                                type='text'
+                                placeholder="Jordan Lee"
+                                ref={usernameRef}
+                            />
+                        </InputGroup>
                     </Field>
                     <Field className='gap-2'>
                         <FieldLabel htmlFor="fieldgroup-pass" className='form-field-label'>Password</FieldLabel>
-                        <Input
-                            id="fieldgroup-pass"
-                            type="password"
-                            defaultValue="password123"
-                            ref={passRef}
-                        />
+                        <InputGroup>
+                            <InputGroupAddon align="inline-start" className="pr-1.5">
+                                <LockKeyhole />
+                            </InputGroupAddon>
+                            <InputGroupInput
+                                type={showPassword ? "text" : "password"}
+                                id="fieldgroup-pass"
+                                defaultValue="password123"
+                                ref={passRef}
+                            />
+                            <InputGroupAddon align="inline-end">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword((prev) => !prev)}
+                                    aria-label={showPassword ? "Hide password" : "Show password"}
+                                >
+                                    {showPassword ?
+                                        <EyeOffIcon className="size-4" /> :
+                                        <EyeIcon className="size-4" />
+
+                                    }
+
+                                </button>
+                            </InputGroupAddon>
+                        </InputGroup>
                     </Field>
                     {warning != "" && <div className='flex error-message' id="login-error">
-                        <CircleAlert className="circle-alert-icon"/>
+                        <CircleAlert className="circle-alert-icon" />
                         <span>{warning}</span>
                     </div>}
                     <Field orientation="horizontal">
@@ -107,6 +139,21 @@ export default function Login() {
                     </Field>
                 </FieldGroup>
             </form>
+
+            <div className="flex w-full items-center my-6 gap-4">
+                <div className="h-px flex-1 bg-border"></div>
+                <span className="text-xs text-muted-foreground">or</span>
+                <div className="h-px flex-1 bg-border"></div>
+            </div>
+
+            <div className="flex items-center">
+                <span className="text-sm text-muted-foreground">Don't have an account?</span>
+                <Button variant="link" className="text-chart-2 text-sm gap-1 hover:no-underline">
+                    Sign up
+                    <ChevronRight className="text-chart-2 w-5 h-5" />
+                </Button>
+
+            </div>
         </div>
     );
 }
