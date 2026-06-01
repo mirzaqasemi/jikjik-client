@@ -6,18 +6,25 @@ body {
 }
 
 .login-page {
-    padding: 32px 40px;
-    margin-top: auto;
-    margin-bottom: auto;
-    height: 80%;
-    width: 600px;
-    max-width: 100%;
-    background-color: var(--background);
-    border-radius: var(--radius-2xl);
-    box-shadow:
-        0 24px 60px rgba(31, 31, 26, 0.08),
-        0 8px 20px rgba(31, 31, 26, 0.05);
-    backdrop-filter: blur(18px);
+
+}
+
+.login-left-side span{
+    color: var(--color-muted-foreground);
+
+}
+
+.login-card-item{
+    display: flex;
+    justify-content: center;
+    border-radius: calc(var(--radius) * 2.6);
+    text-align: center;
+    padding: calc(var(--spacing) * 2.3) calc(var(--spacing) * 3.5);
+    width: fit-content;
+}
+
+.login-card-item svg{
+    color: var(--color-chart-2);
 }
 
 .brand-logo {
