@@ -1,20 +1,19 @@
 /* =========================================
    4. LOGIN PAGE SPECIFICS
    ========================================= */
-body {
-    background-color: var(--secondary);
+.login-page-inner-container {
+    box-shadow: 0 24px 70px oklch(0.153 0.006 107.1 / 0.08);
 }
 
-.login-page {
-
+.login-left-side {
+    background: no-repeat left bottom / cover url('../../assets/login-page-background.svg');
 }
 
-.login-left-side span{
+.login-left-side span {
     color: var(--color-muted-foreground);
-
 }
 
-.login-card-item{
+.login-card-item {
     display: flex;
     justify-content: center;
     border-radius: calc(var(--radius) * 2.6);
@@ -23,7 +22,7 @@ body {
     width: fit-content;
 }
 
-.login-card-item svg{
+.login-card-item svg {
     color: var(--color-chart-2);
 }
 
@@ -34,7 +33,6 @@ body {
 }
 
 .login-header-description {
-    font-size: 16px;
     color: var(--color-muted-foreground);
 }
 
@@ -100,4 +98,43 @@ body {
     color: var(--color-destructive);
     height: 16px;
     width: 16px;
+}
+
+.bg-wave-bottom {
+    position: absolute;
+    left: 50%;
+    width: 1280px;
+    transform: translateX(-50%);
+}
+
+.bg-wave-bottom img {
+    /* keep the SVG at original size: */
+    width: 1280px;
+    /* important to prevent scaling: */
+    max-width: none;
+    display: block;
+}
+
+.bg-desktop-wave-bottom {
+    /* position: absolute; */
+    z-index: 0;
+}
+
+
+/* =========================================
+   BREAKPOINTS SETUP
+   ========================================= */
+
+@media (max-width: 1279px) {
+    .login-right-side {
+        background: no-repeat center bottom / cover url('../../assets/login-page-background.svg');
+    }
+}
+
+@media (min-width: 1280px) and (max-height: 600px) {
+    .login-page-inner-container {
+        width: 100%;
+        max-width: 100%;
+        border-radius: 0;
+    }
 }

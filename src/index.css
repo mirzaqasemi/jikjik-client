@@ -71,6 +71,7 @@ body,
   box-sizing: border-box;
 }
 
+/* 
 @layer base {
 
   h1,
@@ -86,7 +87,7 @@ body,
 }
 
 h1 {
-  font-size: 3rem;
+  font-size: 2.5rem;
   font-weight: 800;
 }
 
@@ -108,6 +109,42 @@ h5 {
 
 h6 {
   font-size: 0.875rem;
+}
+
+@media (max-width: 1024px) {
+  h1 {
+    font-size: 2rem;
+  }
+} */
+
+@layer base {
+  h1 {
+    @apply text-xl sm:text-2xl lg:text-[28px] font-bold tracking-tight;
+  }
+
+  h2 {
+    @apply text-lg sm:text-xl lg:text-2xl font-semibold tracking-tight;
+  }
+
+  h3 {
+    @apply text-base sm:text-lg lg:text-xl font-semibold;
+  }
+
+  h4 {
+    @apply text-base font-semibold;
+  }
+
+  p {
+    @apply text-sm leading-6;
+  }
+
+  span {
+    @apply text-sm;
+  }
+
+  small {
+    @apply text-xs;
+  }
 }
 
 body {
