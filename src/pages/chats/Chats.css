@@ -1,93 +1,24 @@
 /* =========================================
-   CHATS PAGE
-   ========================================= */
-   .chats-page {
-       width: 100%;
-       padding: 20px 20px 10px;
-   }
-
-.user-profile {
-    width: 50px;
-    min-width: 50px;
-    height: 50px;
-    border-radius: 500px;
-    background-color: darkgrey;
-}
-
-
-/* =========================================
    1.HEADER SECTION
    ========================================= */
-.chats-header {
-    border-bottom: 1px solid var(--border-light);
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-}
-
-.header-info {
-    margin-bottom: 16px;
-}
-
 .chats-header .header-info h2 {
     font-size: 30px;
     font-weight: 800;
-    /* margin-bottom: 16px; */
+}
+
+.search-bar [data-slot="input-group-control"] {
+    font-size: 13px;
 }
 
 .logout-btn {
-    border: none;
-    padding: 8px;
-    border-radius: 100%;
-    background-color: var(--color-primary);
-    transition: background-color 0.3s ease;
+    border: 1px var(--color-primary) solid;
+    /* transition: background-color 0.3s ease; */
 }
-
-.logout-icon {
-    width: 16px;
-    height: 16px;
-    fill: var(--surface-hover);
-}
-
-.logout-btn:hover {
-    background-color: var(--color-primary-hover);
-}
-
-.search-bar {
-    position: relative;
-    width: 100%;
-}
-
-/* .search-bar input {
-    padding: 10px 10px 10px 36px;
-    background-color: var(--surface-hover);
-    border: 1px solid transparent;
-    border-radius: 24px !important;
-    font-size: 14px;
-    outline: none;
-    transition: all 0.2s ease;
-    width: 100%;
-    color: var(--text-main);
-} */
-
-/* .search-bar input:focus {
-    background-color: var(--surface);
-    border-color: var(--color-primary);
-} */
-
 
 /* =========================================
    2.MIDDLE SECTION
    ========================================= */
-
-.chat-list {
-    /* flex: 1; */
-    overflow-y: auto;
-}
-
 .chat-item {
-    width: 100%;
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--surface-hover);
     cursor: pointer;
     transition: background-color 0.2s ease;
 }
@@ -95,38 +26,6 @@
 .chat-item:hover {
     background-color: var(--surface-hover);
     border-radius: 12px;
-}
-
-.avatar-container {
-    position: relative;
-    margin-right: 14px;
-}
-
-.avatar {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    object-fit: cover;
-    background-color: var(--border-light);
-}
-
-.online-dot {
-    position: absolute;
-    bottom: 2px;
-    right: 2px;
-    left: auto;
-    width: 12px;
-    height: 12px;
-    background-color: var(--color-online);
-    border: 1px solid var(--surface);
-    border-radius: 50%;
-}
-
-.chat-info {
-    flex: 1;
-    min-width: 0;
-    /* Prevents text overflow breaking flex layout */
-    color: var(--text-main);
 }
 
 .label-row {
@@ -152,10 +51,9 @@
 }
 
 .chat-preview.unread-text {
-    font-weight: 600;
-    color: var(--text-main);
+    font-weight: 400;
+    color: var(--color-muted-foreground);
 }
-
 
 .chat-meta {
     display: flex;
@@ -168,16 +66,13 @@
 }
 
 .chat-meta.unread-time {
-    color: var(--color-primary);
+    font-size: 10px;
     font-weight: 600;
 }
 
 .unread-badge {
     background-color: var(--color-primary);
-    color: white;
-    font-size: 11px;
-    font-weight: 300;
-    border-radius: 100%;
-    align-items: center;
+    color: var(--color-primary-foreground);
+    font-size: 10px;
+    font-weight: 400;
 }
-

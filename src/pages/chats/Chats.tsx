@@ -1,6 +1,6 @@
 import ComposeDialog from "@/components/compose-dialog/ComposeDialog.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
-import { Search } from "lucide-react"
+import { LogOut, SearchIcon } from "lucide-react"
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Navigate, useNavigate } from 'react-router-dom';
@@ -55,56 +55,52 @@ export default function Chats() {
     }
 
     return (
-        <div id="page-inbox" className="chats-page">
+        <div id="page-inbox" className="w-full px-4 pt-5 pb-3 chats-page">
             <div className="chats-header">
-                <div className='flex justify-between items-center header-info'>
+                <div className='flex justify-between items-center mb-4 header-info'>
                     <h2>Jik Jik</h2>
-                    <button className="flex logout-btn" aria-label="More options" onClick={logout}>
-                        <svg className='logout-icon' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-                            <path
-                                d="M48 256C48 141.1 141.1 48 256 48c13.3 0 24-10.7 24-24s-10.7-24-24-24C114.6 0 0 114.6 0 256S114.6 512 256 512c13.3 0 24-10.7 24-24s-10.7-24-24-24C141.1 464 48 370.9 48 256zM392.3 134.4c-9.7-9-24.9-8.5-33.9 1.3s-8.5 24.9 1.3 33.9L426.9 232 184 232c-13.3 0-24 10.7-24 24s10.7 24 24 24l242.9 0-67.2 62.4c-9.7 9-10.3 24.2-1.3 33.9s24.2 10.3 33.9 1.3l112-104c4.9-4.5 7.7-10.9 7.7-17.6s-2.8-13-7.7-17.6l-112-104z" />
-                        </svg>
+                    <button className="flex rounded-full p-2 logout-btn" aria-label="More options" onClick={logout}>
+                        <LogOut className="h-4 w-4" strokeWidth={1.5}/>
                     </button>
                 </div>
-                {/* <div className="search-bar"> */}
-                <InputGroup className="">
-                    <InputGroupInput placeholder="Search..." />
-                    <InputGroupAddon>
-                        <Search />
+                <InputGroup className="search-bar">
+                    <InputGroupInput id="inline-start-input" placeholder="Search chats, people, groups..." />
+                    <InputGroupAddon align="inline-start">
+                        <SearchIcon className="text-muted-foreground" />
                     </InputGroupAddon>
-                    {/* <InputGroupAddon align="inline-end">12 results</InputGroupAddon> */}
                 </InputGroup>
-                {/* </div> */}
             </div>
 
             {isLoading ?
                 <Spinner />
-                : <div className="chats-list">
+                : <div className="overflow-auto mt-8">
                     {
                         allChats.map(chat => (
                             <button onClick={() => navigate(`/chats/${chat.id}`)} key={chat.id}
-                                className="flex chat-item">
-                                <div className="flex avatar-container">
-                                    <img src="https://i.pravatar.cc/150?img=11" alt="David" className="avatar" />
+                                className="flex m-auto h-18 items-center w-full chat-item">
+                                <div className="relative h-10 w-10 shrink-0">
+                                    <img src="https://i.pravatar.cc/150?img=11" alt="David" className="h-full w-full rounded-full object-cover" />
                                     {/* {username.img != null && <img src={username.img} alt="David" class="avatar"/>} */}
                                     {/* {chat.img != null && <img src={chat.img} alt="David" class="avatar" />} */}
-                                    <div className="online-dot"></div>
+                                    <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-chart-2  border-2 border-white" aria-label="Online" />
                                 </div>
-                                <div className="chat-info">
+                                <div className="flex-1 pb-2.5 pt-2.5 ml-3 border-b chat-info">
                                     <div className="flex label-row">
                                         <div className="chat-name">{utils.getTitle(user.username, chat)}</div>
-                                        <div className="chat-meta unread-time">{utils.formatDate(chat.lastMsg?.date)}</div>
+                                        <span className="text-muted-foreground chat-meta unread-time">{utils.formatDate(chat.lastMsg?.date)}</span>
                                     </div>
                                     <div className="flex label-row">
-                                        <div className="chat-preview unread-text">{chat.lastMsg?.content}</div>
-                                        <div className="w-5 h-5 flex justify-center unread-badge">2</div>
+                                        <div className="chat-preview unread-text">{chat.lastMsg?.content} Hey!</div>
+                                        <div className="w-4 h-4 flex justify-center rounded-full unread-badge">2</div>
                                     </div>
                                 </div>
                             </button>
                         ))
                     }
                 </div>}
-            <ComposeDialog />
+            <div className="absolute bottom-5 right-4">
+                <ComposeDialog />
+            </div>
         </div>
     );
 }
