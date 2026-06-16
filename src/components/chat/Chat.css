@@ -13,37 +13,30 @@
 .conversation-header {
     flex-shrink: 0;
     width: 100%;
-    padding: 16px 20px;
+    padding: 8px 8px;
     border-bottom: 1px solid var(--border-light);
-    background-color: var(--surface);
+    background-color: white;
     justify-content: space-between;
 }
 
 .btn-back {
-    background: none;
-    border: none;
-    padding: 8px;
-    margin-left: -8px;
-    margin-right: 8px;
-    color: var(--text-main);
-    width: auto;
-    transition: background-color 0.3s ease;
+    color: var(--color-muted-foreground);
+    transition: background-color 0.5s ease;
 }
 
-.btn-back:hover {
-    background-color: var(--surface-hover);
-    border-radius: 50%;
+.btn-back:active {
+    background-color: var(--color-secondary);
 }
 
 .user-name {
     color: var(--text-main);
     font-size: 16px;
-    font-weight: 700;
+    font-weight: 500;
 }
 
 .user-status {
     font-size: 12px;
-    color: var(--color-online);
+    color: var(--color-sidebar-ring);
     font-weight: 400;
 }
 
@@ -85,12 +78,10 @@
 }
 
 .message-wrapper.sent {
-    /* align-self: flex-end; */
     align-items: flex-end;
 }
 
 .message-wrapper.received {
-    /* align-self: flex-end; */
     align-items: flex-start;
 }
 
@@ -102,8 +93,8 @@
 }
 
 .sent .message-bubble {
-    background-color: var(--color-primary);
-    color: white;
+    background-color: #EFFDDE;
+    color: black;
     border-bottom-right-radius: 4px;
 }
 
@@ -132,41 +123,23 @@
    ========================================= */
 .chat-input-area {
     flex-shrink: 0;
-    padding: 16px 20px;
-    background-color: var(--surface);
+    padding: 4px 16px;
+    background-color: white;
     border-top: 1px solid var(--border-light);
     gap: 12px;
 }
 
 .chat-input-area input {
     flex: 1;
-    padding: 12px 16px;
-    background-color: var(--surface-hover);
-    color: var(--text-main) !important;
-    border: 1px solid transparent;
-    border-color: var(--border-focus) ;
-    border-radius: 24px;
     font-size: 14px;
     outline: none;
-    transition: background-color 0.3s ease;
-}
-
-.chat-input-area input:hover {
-    background-color: var(--surface);
-    border-color: var(--border-focus);
 }
 
 .btn-send {
-    background-color: var(--color-primary);
-    color: white;
-    width: 40px;
-    height: 40px;
-    border-radius: 100%;
-    padding: 0px;
-    border: none;
-    align-items: center;
+    transition: background-color 0.3s ease;
+    padding: 8px;
 }
 
-.btn-send:hover {
-    background-color: var(--color-primary-hover);
+.btn-send:active {
+    background-color: oklch(85.157% 0.17398 88.295 / 0.13);
 }

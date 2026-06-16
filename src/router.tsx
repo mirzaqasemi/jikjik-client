@@ -1,14 +1,16 @@
 import { createBrowserRouter } from 'react-router-dom';
+import ChatPlaceHolder from './components/chat-place-holder/ChatPlaceHolder';
+import Chat from './components/chat/Chat';
+import Chats from './pages/chats/Chats';
 import RootLayout from './components/root-layout/RootLayout';
 import * as loaders from './loaders/loaders';
-import Login from './pages/login/Login';
 import ErrorPage from './pages/error/ErrorPage';
-import Chats from './pages/chats/Chats';
-import Chat from './pages/chat/Chat';
+import Login from './pages/login/Login';
 
 export const LOGIN_ROUTE = "/";
 export const CHATS_ROUTE = "/chats";
 export const CHAT_ROUTE = "/chats/:chatId";
+const RELATIVE_CHAT_ROUTE = ":chatId";
 
 export const router = createBrowserRouter([
   {
@@ -25,11 +27,17 @@ export const router = createBrowserRouter([
         path: CHATS_ROUTE,
         loader: loaders.protectedLoader,
         element: <Chats />,
-      },
-      {
-        path: CHAT_ROUTE,
-        loader: loaders.chatLoader,
-        element: <Chat />,
+        children: [
+          {
+            index: true,
+            element: <ChatPlaceHolder />
+          },
+          {
+            path: RELATIVE_CHAT_ROUTE,
+            loader: loaders.chatLoader,
+            element: <Chat />,
+          },
+        ],
       },
     ],
   },

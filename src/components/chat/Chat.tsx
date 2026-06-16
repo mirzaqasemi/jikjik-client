@@ -6,6 +6,7 @@ import * as session from '../../services/session.ts';
 import * as utilities from "../../utilities/utilities.ts";
 import './Chat.css';
 import { Spinner } from "@/components/ui/spinner.tsx";
+import { ArrowLeft, SendHorizontal } from "lucide-react";
 
 export default function Chat() {
     const params = useParams<{ chatId: string }>();
@@ -108,21 +109,20 @@ export default function Chat() {
     return (
         <div className="flex flex-col chat-page">
 
-            
             {/* <!-- Top: Header Section --> */}
-            <div className="flex align-center conversation-header">
-                <Link to={"../"} className="btn-back">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path>
-                    </svg>
-                </Link>
-                <div className="flex">
-                    <div className="avatar-container">
-                        <img src="https://i.pravatar.cc/150?img=32" alt="" className="avatar" />
-                    </div>
-                    <div className="flex flex-col user-details">
-                        <span className="user-name">{utilities.getTitle(user.username, selectedChat)}</span>
-                        <span className="user-status">Online</span>
+            <div className="flex items-center conversation-header">
+                <div className="flex gap-2.5">
+                    <Link to={"../"} className="lg:hidden flex justify-center items-center btn-back w-10 h-10 rounded-full">
+                        <ArrowLeft strokeWidth={"1.5"} />
+                    </Link>
+                    <div className="flex gap-3">
+                        <div className="avatar-container">
+                            <img src="https://i.pravatar.cc/150?img=32" alt="" className="size-11 rounded-full lg:hidden" />
+                        </div>
+                        <div className="flex flex-col items-start user-details">
+                            <span className="user-name">{utilities.getTitle(user.username, selectedChat)}</span>
+                            <span className="user-status">Online</span>
+                        </div>
                     </div>
                 </div>
                 {/* <!-- Right Side: Three Dots (Kebab Menu) --> */}
@@ -140,7 +140,7 @@ export default function Chat() {
             {/* <!-- Middle: Messages Section --> */}
             {
                 isLoading ?
-                    <Spinner />
+                    <Spinner className="flex-1 m-auto size-9 opacity-30" />
                     :
                     <div className="flex flex-col messages-area">
                         <div className="date-separator">TODAY</div>
@@ -165,19 +165,15 @@ export default function Chat() {
 
             {/* <!-- Bottom: Input Section --> */}
             <div className="flex justify-center chat-input-area">
-                <input value={inputStr} type="text" placeholder="Type a message..."
+                <input value={inputStr} type="text" placeholder="Write a message..."
                     onChange={(e) => setinputStr(e.target.value)}
                     onKeyDown={(e) => {
                         if (e.key === "Enter") {
                             addToMessages();
                         }
                     }} />
-                <button onClick={addToMessages} className="flex justify-center btn-send">
-                    <svg style={{ transform: "rotate(90deg)" }} width="18" height="18" fill="none" stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path strokeLinejoin="round" strokeLinecap="round" strokeWidth="2"
-                            d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-                    </svg>
+                <button onClick={addToMessages} className="flex justify-center rounded-full btn-send ">
+                    <SendHorizontal className="" fill="var(--primary)" strokeWidth={"1.5"} stroke="" />
                 </button>
             </div>
         </div>
