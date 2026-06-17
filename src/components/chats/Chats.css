@@ -1,17 +1,29 @@
 /* =========================================
    1.HEADER SECTION
    ========================================= */
-.chats-header .header-info h2 {
-    font-size: 30px;
-    font-weight: 800;
-}
-
 .search-bar [data-slot="input-group-control"] {
     font-size: 13px;
 }
 
-.logout-btn {
-    border: 1px var(--color-primary) solid;
+.sidebar-icons li button {
+    width: 100%;
+    color: var(--color-foreground);
+    gap: 16px;
+    padding-left: 24px;
+    padding-block: 20px;
+    border-radius: 0px;
+    justify-content: start;
+}
+
+.sidebar-icons li button:hover {
+    background-color: var(--color-secondary);
+}
+
+.sidebar-icons li svg {
+    color: var(--color-foreground);
+    stroke-width: 1.5;
+    width: 20px;
+    height: 20px;
 }
 
 /* =========================================

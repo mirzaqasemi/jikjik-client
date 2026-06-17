@@ -1,7 +1,20 @@
-import ComposeDialog from "@/components/compose-dialog/ComposeDialog.tsx";
+import { Button } from "@/components/ui/button";
+import {
+    InputGroup,
+    InputGroupAddon,
+    InputGroupInput,
+} from "@/components/ui/input-group";
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger
+} from "@/components/ui/sheet";
+
 import { Spinner } from "@/components/ui/spinner.tsx";
-import { LogOut, SearchIcon } from "lucide-react"
 import { useQuery } from "@tanstack/react-query";
+import { AlignJustify, LogOut, SearchIcon, UserRoundPlus, UsersRound } from "lucide-react";
 import { useState } from "react";
 import { Navigate, useNavigate } from 'react-router-dom';
 import * as hooks from '../../hooks/useDebounce.ts';
@@ -10,11 +23,6 @@ import * as backend from '../../services/backend.ts';
 import * as session from '../../services/session.ts';
 import * as utils from "../../utilities/utilities.ts";
 import './Chats.css';
-import {
-    InputGroup,
-    InputGroupAddon,
-    InputGroupInput,
-} from "@/components/ui/input-group"
 
 export default function Chats() {
     const [searchQuery, setSearchQuery] = useState("");
@@ -56,8 +64,43 @@ export default function Chats() {
 
     return (
         <div className="w-full px-4 pt-5 pb-3 chats-page">
-            <div className="chats-header">
-               
+
+            {/* <!-- Top: Header Section --> */}
+            <div className="flex items-center gap-4">
+                {/* <!-- Hamburger Menu --> */}
+                <Sheet>
+                    <SheetTrigger asChild>
+                        <AlignJustify className="text-muted cursor-pointer" />
+                    </SheetTrigger>
+                    <SheetContent showCloseButton={false} side="left" className="gap-5">
+                        <SheetHeader className="gap-4 border-b pb-4">
+                            <img src="" alt="" className="size-9 rounded-full" />
+                            <SheetTitle>{user.displayName}</SheetTitle>
+                        </SheetHeader>
+                        <ul className="flex flex-col sidebar-icons">
+                            <li>
+                                <Button variant="ghost">
+                                    <UsersRound />
+                                    New Group
+                                </Button>
+                            </li>
+                            <li>
+                                <Button variant="ghost">
+                                    <UserRoundPlus />
+                                    New Contact
+                                </Button>
+                            </li>
+                            <li>
+                                <Button variant="ghost" onClick={() => logout()}>
+                                    <LogOut />
+                                    Logout
+                                </Button>
+                            </li>
+                        </ul>
+                    </SheetContent>
+                </Sheet>
+
+                {/* <!-- Search Bar --> */}
                 <InputGroup className="search-bar">
                     <InputGroupInput id="inline-start-input" placeholder="Search chats, people, groups..." />
                     <InputGroupAddon align="inline-start">
@@ -68,6 +111,7 @@ export default function Chats() {
 
             {isLoading ?
                 <Spinner />
+                /* <!-- Middle: Chat List --> */
                 : <div className="overflow-auto mt-8">
                     {
                         allChats.map(chat => (
@@ -92,10 +136,8 @@ export default function Chats() {
                             </button>
                         ))
                     }
-                </div>}
-            <div className="absolute bottom-5 right-4 xl:hidden">
-                <ComposeDialog />
-            </div>
+                </div>
+            }
         </div>
     );
 }

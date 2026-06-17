@@ -33,7 +33,7 @@ export default function ComposeDialog() {
                 <DialogContent className="[&>button]:rounded-full [&>button]:bg-white [&>button]:shadow-[0_2px_10px_rgba(0,0,0,0.08)] [&>button]:shadow-black/10">
                     <DialogHeader className="gap-3">
                         <DialogTitle className="text-center">New Message</DialogTitle>
-                        <ul className="flex flex-col gap-3">
+                        <ul className="flex flex-col gap-3 sidebar-icons">
                             <li className="flex items-center gap-4 pb-1 border-b">
                                 <UsersRound className="h-6 w-6" strokeWidth={1.5}/>
                                 <span>New Group</span>
