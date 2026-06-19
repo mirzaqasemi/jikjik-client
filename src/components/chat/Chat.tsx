@@ -1,12 +1,16 @@
+import { Spinner } from "@/components/ui/spinner.tsx";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useLayoutEffect, useRef, useState } from "react";
+import { ArrowLeft, SendHorizontal } from "lucide-react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, useLoaderData, useParams } from 'react-router-dom';
 import * as backend from "../../services/backend.ts";
 import * as session from '../../services/session.ts';
 import * as utilities from "../../utilities/utilities.ts";
 import './Chat.css';
-import { Spinner } from "@/components/ui/spinner.tsx";
-import { ArrowLeft, SendHorizontal } from "lucide-react";
+import Message from "./message/Message.tsx";
+
+
+type MessageWithStatus = backend.Message & { status: "pending" | "error" };
 
 export default function Chat() {
     const params = useParams<{ chatId: string }>();
@@ -15,8 +19,7 @@ export default function Chat() {
     const queryClient = useQueryClient(); // Give access to the big cache/storage room
     const rawUser = session.getUser();
     const bottomRef = useRef<HTMLDivElement>(null);
-    //FIXME
-    let classStr = "";
+    const [pendingMsgs, setPendingMsgs] = useState<MessageWithStatus[]>([]);
 
     if (rawUser == null) {
         throw new Error("User not authenticated");
@@ -30,7 +33,7 @@ export default function Chat() {
 
     // Fetching data from backend
     const {
-        data: messages = [], // Rename "data" to "messages" 
+        data: serverMessages = [], // Rename "data" to "messages" 
         isLoading,
         isError,
     } = useQuery<backend.Message[]>({
@@ -38,7 +41,19 @@ export default function Chat() {
         queryFn: () => backend.getMessages(chatId),
         enabled: !!user && !!chatId,
         refetchInterval: 500,
+
     });
+
+    useEffect(() => {
+        setPendingMsgs((oldPending) =>
+            oldPending.filter(
+                (pending) =>
+                    !serverMessages.some(
+                        (serverMsg) => serverMsg.uid === pending.uid
+                    )
+            )
+        );
+    }, [serverMessages]);
 
     if (isError) {
         return (
@@ -52,46 +67,37 @@ export default function Chat() {
         bottomRef.current?.scrollIntoView({
             behavior: "auto"
         })
-    }, [messages.length]);
-
-    //FIXME
-    function getMessageSender(message: backend.Message) {
-        if (selectedChat.users.length > 2 && message.sender.username != user.username) { //In group
-            classStr = "received"
-            return <div className="flex sender-title">{message.sender.displayName}</div>
-        } else if (message.sender.username === user.username) {
-            classStr = "sent";
-            return;
-        }
-        classStr = "received";
-        return;
-    }
+    }, [serverMessages.length]);
 
     const sendMessageMutation = useMutation({
-        mutationFn: (params: { username: string, chat: backend.Chat, content: string }) => {
+        mutationFn: (params: { username: string, chat: backend.Chat, content: string, uid: string }) => {
             return backend.sendMessage(params);
         },
         //onMutate() runs immediately before mutationFn executes
-        onMutate: ({ content }) => {
-            const msgObj = {
+        onMutate: ({ content, uid }) => {
+            const msgObj: MessageWithStatus = {
                 sender: user,
                 content,
-                date: new Date()
+                date: new Date(),
+                uid,
+                status: "pending"
             }
-            // queryClient.setQueryData(queryKey, updater)
-            queryClient.setQueryData<backend.Message[] /*The data stored under this key is Message[]*/>(
-                ["messagesId", chatId], // Go find cached messages for this chat
-                oldMessages => [ //const oldMessages = queryClient.getQueryData(["messagesId", chatId]); Which TanStack internally does it and passes it automatically
-                    ...(oldMessages ?? []), //If oldMessages is undefined, use empty array instead
-                    msgObj
-                ] // Replace cached data, UI instantly rerenders
-            )
+            setPendingMsgs([...pendingMsgs, msgObj]);
         },
         onError: (err, params) => {
-            console.log("failed to send message", params, err)
+            const arr = pendingMsgs.map((pendingMsg) => {
+                if (pendingMsg.uid === params.uid) {
+                    return {
+                        ...pendingMsg,
+                        status: "error"
+                    } as MessageWithStatus;
+                }
+                return pendingMsg;
+            });
+            setPendingMsgs(arr);
+            console.error("failed to send message", params, err);
         },
     });
-
 
     async function addToMessages() {
         if (!inputStr.trim()) return;
@@ -102,7 +108,8 @@ export default function Chat() {
         sendMessageMutation.mutate({
             username: user.username,
             chat: selectedChat,
-            content: content
+            content: content,
+            uid: crypto.randomUUID()
         });
     }
 
@@ -145,18 +152,16 @@ export default function Chat() {
                     <div className="flex flex-col messages-area">
                         <div className="date-separator">TODAY</div>
                         {
-                            messages.map((message, index) => {
-                                let messageSender = getMessageSender(message);
-                                return <div key={index} className={"flex flex-col message-wrapper" + " " + classStr}>
-                                    <div className="flex flex-col message-bubble">
-                                        {
-                                            messageSender
-                                        }
-                                        <div>{message.content}</div>
-                                    </div>
-                                    <div className="flex message-meta">{utilities.formatDate(message.date)}</div>
-                                </div>
-                            })
+                            serverMessages.map((message) =>
+                                <Message user={user} chat={selectedChat} message={message} key={message.uid} status="success" />
+                            )
+                        }
+                        {
+                            pendingMsgs.filter((pendingMsg) =>
+                                !serverMessages.some((serverMsg) => serverMsg.uid === pendingMsg.uid)
+                            ).map((pendingMsg) =>
+                                < Message user={user} chat={selectedChat} message={pendingMsg} key={pendingMsg.uid} status={pendingMsg.status} />
+                            )
                         }
                         <div ref={bottomRef}></div>
                     </div>
