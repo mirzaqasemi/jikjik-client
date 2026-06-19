@@ -9,6 +9,23 @@ $ErrorActionPreference = "Stop"
 
 Assert-ConfigExists
 
+function Assert-ConfigWritable {
+    $configDir = Split-Path -Parent $Script:MatrixConfigFile
+    $configItem = Get-Item $Script:MatrixConfigFile
+
+    if ($configItem.IsReadOnly) {
+        Set-ItemProperty -Path $Script:MatrixConfigFile -Name IsReadOnly -Value $false
+    }
+
+    try {
+        $probe = [System.IO.Path]::Combine($configDir, ".write-test-$([System.Guid]::NewGuid().ToString('N'))")
+        [System.IO.File]::WriteAllText($probe, "")
+        Remove-Item -Force $probe
+    } catch {
+        throw "Unable to write $Script:MatrixConfigFile. Check file permissions or stop Synapse if it is locking the file. $($_.Exception.Message)"
+    }
+}
+
 if ($Mode -eq "dev") {
     $registrationEnabled = "true"
     $registrationWithoutVerification = "true"
@@ -30,7 +47,19 @@ $overrides = @(
     "registration_shared_secret: `"$Script:MatrixRegistrationSecret`""
 )
 
-Write-Utf8NoBom -Path $Script:MatrixConfigFile -Lines ($lines + $overrides)
+Assert-ConfigWritable
+
+$configDir = Split-Path -Parent $Script:MatrixConfigFile
+$tmpFile = [System.IO.Path]::Combine($configDir, "homeserver.yaml.$([System.Guid]::NewGuid().ToString('N')).tmp")
+
+try {
+    Write-Utf8NoBom -Path $tmpFile -Lines ($lines + $overrides)
+    Move-Item -Force -Path $tmpFile -Destination $Script:MatrixConfigFile
+} finally {
+    if (Test-Path $tmpFile) {
+        Remove-Item -Force $tmpFile
+    }
+}
 
 Write-Host "Synapse config updated: $Mode"
 Write-Host "Restart Synapse for changes to take effect."
