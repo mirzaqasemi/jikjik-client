@@ -6,6 +6,9 @@ export type Listener = () => void;
 
 const displayNameKey = 'displayName';
 const usernameKey = 'username';
+const matrixAccessTokenKey = "matrixAccessToken";
+const matrixDeviceIdKey = "matrixDeviceId";
+const matrixUserIdKey = "matrixUserId";
 
 let currentUser: User | null = null;
 const listeners = new Set<Listener>();
@@ -48,6 +51,9 @@ export function logoutUser(): void {
     localStorage.removeItem(usernameKey);
     localStorage.removeItem(displayNameKey);
     localStorage.removeItem('loggedIn')
+    localStorage.removeItem(matrixAccessTokenKey);
+    localStorage.removeItem(matrixDeviceIdKey);
+    localStorage.removeItem(matrixUserIdKey);
     currentUser = null;
     callListeners();
 }

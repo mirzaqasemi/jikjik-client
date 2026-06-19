@@ -34,8 +34,25 @@ if ($Mode -eq "dev") {
     $registrationWithoutVerification = "false"
 }
 
-$lines = Get-Content $Script:MatrixConfigFile | Where-Object {
-    $_ -notmatch '^(public_baseurl|enable_registration|enable_registration_without_verification|registration_shared_secret):'
+$lines = @()
+$skipUserDirectory = $false
+foreach ($line in Get-Content $Script:MatrixConfigFile) {
+    if ($line -eq "# Jikjik local development overrides.") {
+        continue
+    }
+    if ($line -match '^(public_baseurl|enable_registration|enable_registration_without_verification|registration_shared_secret):') {
+        continue
+    }
+    if ($line -match '^user_directory:') {
+        $skipUserDirectory = $true
+        continue
+    }
+    if ($skipUserDirectory -and $line -match '^\S') {
+        $skipUserDirectory = $false
+    }
+    if (-not $skipUserDirectory) {
+        $lines += $line
+    }
 }
 
 $overrides = @(
@@ -45,6 +62,8 @@ $overrides = @(
     "enable_registration: $registrationEnabled"
     "enable_registration_without_verification: $registrationWithoutVerification"
     "registration_shared_secret: `"$Script:MatrixRegistrationSecret`""
+    "user_directory:"
+    "  search_all_users: true"
 )
 
 Assert-ConfigWritable

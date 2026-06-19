@@ -10,29 +10,57 @@ MODE="${1:-dev}"
 
 ensure_config_exists
 
-ensure_config_writable() {
+write_config_in_container() {
+    require_docker
+
+    echo "Updating Docker-owned Synapse config from the Synapse container..."
+    docker run --rm \
+        --user 0 \
+        --mount type=bind,src="$MATRIX_DATA_DIR",dst=/data \
+        --entrypoint sh \
+        -e MATRIX_BASE_URL="$MATRIX_BASE_URL" \
+        -e REGISTRATION_ENABLED="$REGISTRATION_ENABLED" \
+        -e REGISTRATION_WITHOUT_VERIFICATION="$REGISTRATION_WITHOUT_VERIFICATION" \
+        -e MATRIX_REGISTRATION_SECRET="$MATRIX_REGISTRATION_SECRET" \
+        "$MATRIX_IMAGE" \
+        -c '
+set -eu
+config=/data/homeserver.yaml
+tmp="$(mktemp /data/homeserver.yaml.XXXXXX)"
+trap "rm -f \"$tmp\"" EXIT
+awk '"'"'
+    /^# Jikjik local development overrides\.$/ { next }
+    /^(public_baseurl|enable_registration|enable_registration_without_verification|registration_shared_secret):/ { next }
+    /^user_directory:/ { skip = 1; next }
+    skip && /^[^[:space:]]/ { skip = 0 }
+    !skip { print }
+'"'"' "$config" > "$tmp"
+cat >> "$tmp" <<EOF
+
+# Jikjik local development overrides.
+public_baseurl: "$MATRIX_BASE_URL/"
+enable_registration: $REGISTRATION_ENABLED
+enable_registration_without_verification: $REGISTRATION_WITHOUT_VERIFICATION
+registration_shared_secret: "$MATRIX_REGISTRATION_SECRET"
+user_directory:
+  search_all_users: true
+EOF
+chmod 0644 "$tmp"
+chown --reference="$config" "$tmp" 2>/dev/null || true
+mv "$tmp" "$config"
+trap - EXIT
+'
+}
+
+config_is_writable() {
     local config_dir
     config_dir="$(dirname "$MATRIX_CONFIG_FILE")"
 
     if [[ -w "$MATRIX_CONFIG_FILE" && -w "$config_dir" ]]; then
-        return
+        return 0
     fi
 
-    require_docker
-
-    echo "Fixing ownership for Docker-generated Synapse config..."
-    docker run --rm \
-        --mount type=bind,src="$MATRIX_DATA_DIR",dst=/data \
-        --entrypoint sh \
-        -e HOST_UID="$(id -u)" \
-        -e HOST_GID="$(id -g)" \
-        "$MATRIX_IMAGE" \
-        -c 'chown -R "$HOST_UID:$HOST_GID" /data'
-
-    if [[ ! -w "$MATRIX_CONFIG_FILE" || ! -w "$config_dir" ]]; then
-        echo "Unable to write $MATRIX_CONFIG_FILE after fixing ownership." >&2
-        exit 1
-    fi
+    return 1
 }
 
 case "$MODE" in
@@ -50,14 +78,24 @@ case "$MODE" in
         ;;
 esac
 
-ensure_config_writable
+if ! config_is_writable; then
+    write_config_in_container
+    echo "Synapse config updated: $MODE"
+    echo "Restart Synapse for changes to take effect."
+    exit 0
+fi
 
 config_dir="$(dirname "$MATRIX_CONFIG_FILE")"
 tmp_file="$(mktemp "$config_dir/homeserver.yaml.XXXXXX")"
 trap 'rm -f "$tmp_file"' EXIT
 
-grep -Ev '^(public_baseurl|enable_registration|enable_registration_without_verification|registration_shared_secret):' \
-    "$MATRIX_CONFIG_FILE" > "$tmp_file"
+awk '
+    /^# Jikjik local development overrides\.$/ { next }
+    /^(public_baseurl|enable_registration|enable_registration_without_verification|registration_shared_secret):/ { next }
+    /^user_directory:/ { skip = 1; next }
+    skip && /^[^[:space:]]/ { skip = 0 }
+    !skip { print }
+' "$MATRIX_CONFIG_FILE" > "$tmp_file"
 
 cat >> "$tmp_file" <<EOF
 
@@ -66,6 +104,8 @@ public_baseurl: "$MATRIX_BASE_URL/"
 enable_registration: $REGISTRATION_ENABLED
 enable_registration_without_verification: $REGISTRATION_WITHOUT_VERIFICATION
 registration_shared_secret: "$MATRIX_REGISTRATION_SECRET"
+user_directory:
+  search_all_users: true
 EOF
 
 chmod 0644 "$tmp_file"
