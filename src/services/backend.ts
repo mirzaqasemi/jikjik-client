@@ -1,21 +1,13 @@
-import type {
+import {
+    createClient,
+    EventType,
     MatrixEvent,
-    MatrixHttpMethod,
-    MatrixJoinedRoomsResponse,
-    MatrixLoginResponse,
-    MatrixMemberContent,
-    MatrixMessageContent,
-    MatrixMessagesResponse,
-    MatrixRoomAvatarContent,
-    MatrixRoomCanonicalAliasContent,
-    MatrixRoomCreateContent,
-    MatrixRoomEncryptionContent,
-    MatrixProfileResponse,
-    MatrixRoomNameContent,
-    MatrixRoomTopicContent,
-    MatrixSession,
-    MatrixUserDirectoryResponse,
-} from "./matrix-models";
+    MsgType,
+    type MatrixClient,
+    type Room,
+    type RoomMember,
+} from "matrix-js-sdk";
+import type { IContent } from "matrix-js-sdk/lib/models/event";
 import * as session from "./session";
 
 // -----------------------------------------
@@ -77,7 +69,7 @@ export interface Chat
     /** Matrix room id, for example "!room:localhost". */
     id: string;
 
-    /** Room display title from m.room.name, or derived from members for group chats. */
+    /** Room display title from m.room.name, or derived by the SDK when room state is available. */
     title?: string;
 
     /** Joined room members currently exposed to the UI. */
@@ -86,11 +78,11 @@ export interface Chat
     /** Most recent text message loaded for the room, or null when no text message was found. */
     lastMsg: Message | null;
 
-    /** Room avatar MXC URI from m.room.avatar. */
-    avatarUrl?: string;
+    /** Room avatar MXC URI or resolved media URL from SDK room state. */
+    avatarUrl?: string | null;
 
     /** Main published room alias from m.room.canonical_alias. */
-    canonicalAlias?: string;
+    canonicalAlias?: string | null;
 
     /** Matrix user id that created the room. */
     creator?: string;
@@ -109,98 +101,42 @@ export interface Chat
 }
 
 const MATRIX_BASE_URL = (import.meta.env.VITE_MATRIX_BASE_URL || "http://localhost:8008").replace(/\/$/, "");
-const MATRIX_ACCESS_TOKEN_KEY = "matrixAccessToken";
-const MATRIX_DEVICE_ID_KEY = "matrixDeviceId";
-const MATRIX_USER_ID_KEY = "matrixUserId";
+const TEXT_MESSAGE_EVENT_TYPE = "m.room.message";
 
-// -----------------------------------------
-// Matrix helpers
-// -----------------------------------------
-function matrixPath(path: string): string {
-    return `${MATRIX_BASE_URL}/_matrix/client/v3${path}`;
-}
+let matrixClient: MatrixClient | null = null;
 
-function encodePathPart(value: string): string {
-    return encodeURIComponent(value);
-}
+function createSdkClient(): MatrixClient {
+    const matrixSession = session.getMatrixSession();
 
-function storeMatrixSession(matrixSession: MatrixSession): void {
-    localStorage.setItem(MATRIX_ACCESS_TOKEN_KEY, matrixSession.accessToken);
-    localStorage.setItem(MATRIX_USER_ID_KEY, matrixSession.userId);
-
-    if (matrixSession.deviceId) {
-        localStorage.setItem(MATRIX_DEVICE_ID_KEY, matrixSession.deviceId);
-    } else {
-        localStorage.removeItem(MATRIX_DEVICE_ID_KEY);
-    }
-}
-
-function getMatrixSession(): MatrixSession | null {
-    const accessToken = localStorage.getItem(MATRIX_ACCESS_TOKEN_KEY);
-    const userId = localStorage.getItem(MATRIX_USER_ID_KEY);
-
-    if (!accessToken || !userId) {
-        return null;
-    }
-
-    return {
-        accessToken,
-        deviceId: localStorage.getItem(MATRIX_DEVICE_ID_KEY) || undefined,
-        userId,
-    };
-}
-
-export function clearMatrixSession(): void {
-    localStorage.removeItem(MATRIX_ACCESS_TOKEN_KEY);
-    localStorage.removeItem(MATRIX_DEVICE_ID_KEY);
-    localStorage.removeItem(MATRIX_USER_ID_KEY);
-}
-
-async function matrixFetch<T>(method: MatrixHttpMethod, path: string, body?: unknown, authenticated = true): Promise<T> {
-    const headers: Record<string, string> = {};
-
-    if (body != null) {
-        headers["Content-Type"] = "application/json";
-    }
-
-    if (authenticated) {
-        const matrixSession = getMatrixSession();
-        if (matrixSession == null) {
-            throw new Error("User not logged in");
-        }
-        headers.Authorization = `Bearer ${matrixSession.accessToken}`;
-    }
-
-    const response = await fetch(matrixPath(path), {
-        method,
-        headers,
-        body: body == null ? undefined : JSON.stringify(body),
+    return createClient({
+        baseUrl: MATRIX_BASE_URL,
+        accessToken: matrixSession?.accessToken,
+        deviceId: matrixSession?.deviceId,
+        timelineSupport: true,
+        userId: matrixSession?.userId,
     });
-
-    if (response.ok) {
-        if (response.status === 204) {
-            return undefined as T;
-        }
-        return response.json() as Promise<T>;
-    }
-
-    let message = `Matrix request failed: ${method} ${path} (${response.status})`;
-    try {
-        const errorBody = await response.json() as { error?: string; errcode?: string };
-        message = errorBody.error || errorBody.errcode || message;
-    } catch {
-        // Keep the status-based message when Synapse does not return JSON.
-    }
-    throw new Error(message);
 }
 
-function getCurrentMatrixUserId(): string {
-    const matrixSession = getMatrixSession();
-    if (matrixSession != null) {
-        return matrixSession.userId;
+function getClient(): MatrixClient {
+    const matrixSession = session.getMatrixSession();
+    if (matrixSession == null) {
+        resetClient();
+        throw new Error("User not logged in");
     }
 
-    return session.mustGetUser().username;
+    if (matrixClient != null && matrixClient.getUserId() !== matrixSession.userId) {
+        resetClient();
+    }
+
+    if (matrixClient == null) {
+        matrixClient = createSdkClient();
+    }
+    return matrixClient;
+}
+
+function resetClient(): void {
+    matrixClient?.stopClient();
+    matrixClient = null;
 }
 
 function displayNameFromUserId(userId: string): string {
@@ -208,25 +144,178 @@ function displayNameFromUserId(userId: string): string {
     return localPart || userId;
 }
 
-function userFromMemberEvent(event: MatrixEvent<MatrixMemberContent>): User {
-    const userId = event.state_key || event.sender || "";
+function userFromMember(member: RoomMember): User {
     return {
-        username: userId,
-        displayName: event.content?.displayname || displayNameFromUserId(userId),
-        avatarUrl: event.content?.avatar_url,
-        lastSeen: event.content?.membership,
-        membership: event.content?.membership,
+        username: member.userId,
+        displayName: member.name || displayNameFromUserId(member.userId),
+        avatarUrl: member.events.member?.getContent().avatar_url,
+        lastSeen: member.membership,
+        membership: member.membership,
     };
 }
 
-async function userFromId(userId: string): Promise<User> {
+function userFromProfile(userId: string, profile: { avatar_url?: string; displayname?: string }): User {
+    return {
+        username: userId,
+        displayName: profile.displayname || displayNameFromUserId(userId),
+        avatarUrl: profile.avatar_url,
+    };
+}
+
+function messageFromEvent(event: MatrixEvent, roomUsers: User[]): Message | null {
+    const content = event.getContent();
+    if (event.getType() !== TEXT_MESSAGE_EVENT_TYPE || content.msgtype !== MsgType.Text || !content.body) {
+        return null;
+    }
+
+    const senderId = event.getSender() || "";
+    const sender = roomUsers.find(user => user.username === senderId) || {
+        username: senderId,
+        displayName: displayNameFromUserId(senderId),
+    };
+    const transactionId = event.getTxnId() || event.getUnsigned().transaction_id;
+
+    return {
+        sender,
+        content: content.body,
+        date: event.getDate() || new Date(event.getTs() || Date.now()),
+        uid: transactionId,
+        transactionId,
+        eventId: event.getId(),
+        roomId: event.getRoomId(),
+        messageType: content.msgtype,
+        age: event.getAge(),
+    };
+}
+
+function stateContent<TContent extends IContent>(room: Room, eventType: string): TContent | undefined {
+    return room.currentState.getStateEvents(eventType, "")?.getContent<TContent>();
+}
+
+function chatFromSdkRoom(room: Room): Chat {
+    const users = room.getJoinedMembers().map(userFromMember);
+    const messages = room.getLiveTimeline()
+        .getEvents()
+        .map(event => messageFromEvent(event, users))
+        .filter((message): message is Message => message != null);
+    const create = stateContent<{ creator?: string; room_version?: string }>(room, EventType.RoomCreate);
+    const encryption = stateContent<{ algorithm?: string }>(room, EventType.RoomEncryption);
+    const topic = stateContent<{ topic?: string }>(room, EventType.RoomTopic);
+
+    return {
+        id: room.roomId,
+        title: room.name || undefined,
+        users,
+        lastMsg: messages.at(-1) || null,
+        avatarUrl: room.getMxcAvatarUrl() || room.getAvatarUrl(MATRIX_BASE_URL, 64, 64, "crop", false),
+        canonicalAlias: room.getCanonicalAlias(),
+        creator: create?.creator,
+        encrypted: encryption != null,
+        encryptionAlgorithm: encryption?.algorithm,
+        roomVersion: room.getVersion() || create?.room_version,
+        topic: topic?.topic,
+    };
+}
+
+function userFromMemberState(userId: string, content: IContent): User {
+    return {
+        username: userId,
+        displayName: content.displayname || displayNameFromUserId(userId),
+        avatarUrl: content.avatar_url,
+        lastSeen: content.membership,
+        membership: content.membership,
+    };
+}
+
+function chatFromInitialSync(roomId: string, response: Awaited<ReturnType<MatrixClient["roomInitialSync"]>>): Chat {
+    const state = response.state || [];
+    const users = state
+        .filter(event => event.type === EventType.RoomMember && event.state_key && event.content.membership === "join")
+        .map(event => userFromMemberState(event.state_key!, event.content));
+    const events = (response.messages?.chunk || []).map(event => new MatrixEvent(event));
+    const messages = events
+        .map(event => messageFromEvent(event, users))
+        .filter((message): message is Message => message != null);
+    const roomName = state.find(event => event.type === EventType.RoomName)?.content.name;
+    const avatar = state.find(event => event.type === EventType.RoomAvatar)?.content.url;
+    const canonicalAlias = state.find(event => event.type === EventType.RoomCanonicalAlias)?.content.alias;
+    const create = state.find(event => event.type === EventType.RoomCreate)?.content;
+    const encryption = state.find(event => event.type === EventType.RoomEncryption)?.content;
+    const topic = state.find(event => event.type === EventType.RoomTopic)?.content.topic;
+
+    return {
+        id: roomId,
+        title: roomName,
+        users,
+        lastMsg: messages.at(-1) || null,
+        avatarUrl: avatar,
+        canonicalAlias,
+        creator: create?.creator,
+        encrypted: encryption != null,
+        encryptionAlgorithm: encryption?.algorithm,
+        roomVersion: create?.room_version,
+        topic,
+    };
+}
+
+async function getSdkRoomOrInitialSync(roomId: string): Promise<Chat> {
+    const client = getClient();
+    const room = client.getRoom(roomId);
+    if (room != null) {
+        return chatFromSdkRoom(room);
+    }
+
+    return chatFromInitialSync(roomId, await client.roomInitialSync(roomId, 1));
+}
+
+async function getRoomUsers(roomId: string): Promise<User[]> {
+    const room = getClient().getRoom(roomId);
+    if (room != null) {
+        return room.getJoinedMembers().map(userFromMember);
+    }
+
+    const response = await getClient().getJoinedRoomMembers(roomId);
+    return Object.entries(response.joined).map(([userId, profile]) => ({
+        username: userId,
+        displayName: profile.display_name || displayNameFromUserId(userId),
+        avatarUrl: profile.avatar_url,
+        membership: "join",
+    }));
+}
+
+// -----------------------------------------
+// API Functions
+// -----------------------------------------
+export async function login(username: string, password: string): Promise<User | null> {
+    resetClient();
+    const loginClient = createClient({ baseUrl: MATRIX_BASE_URL });
+    const loginResponse = await loginClient.loginRequest({
+        type: "m.login.password",
+        identifier: {
+            type: "m.id.user",
+            user: username,
+        },
+        password,
+    });
+
+    session.setMatrixSession({
+        accessToken: loginResponse.access_token,
+        deviceId: loginResponse.device_id,
+        userId: loginResponse.user_id,
+    });
+    matrixClient = createSdkClient();
+
+    return currentUser();
+}
+
+export async function currentUser(username?: string): Promise<User | null> {
+    const userId = username || session.getMatrixSession()?.userId;
+    if (!userId) {
+        return null;
+    }
+
     try {
-        const profile = await matrixFetch<MatrixProfileResponse>("GET", `/profile/${encodePathPart(userId)}`);
-        return {
-            username: userId,
-            displayName: profile.displayname || displayNameFromUserId(userId),
-            avatarUrl: profile.avatar_url,
-        };
+        return userFromProfile(userId, await getClient().getProfileInfo(userId));
     } catch {
         return {
             username: userId,
@@ -235,152 +324,9 @@ async function userFromId(userId: string): Promise<User> {
     }
 }
 
-function messageFromEvent(event: MatrixEvent<MatrixMessageContent>, roomUsers: User[]): Message | null {
-    if (event.type !== "m.room.message" || event.content?.msgtype !== "m.text" || !event.content.body) {
-        return null;
-    }
-
-    const senderId = event.sender || "";
-    const sender = roomUsers.find(user => user.username === senderId) || {
-        username: senderId,
-        displayName: displayNameFromUserId(senderId),
-    };
-
-    const transactionId = event.unsigned?.transaction_id;
-
-    return {
-        sender,
-        content: event.content.body,
-        date: new Date(event.origin_server_ts || Date.now()),
-        uid: transactionId,
-        transactionId,
-        eventId: event.event_id,
-        roomId: event.room_id,
-        messageType: event.content.msgtype,
-        age: event.age ?? event.unsigned?.age,
-    };
-}
-
-async function getRoomState(roomId: string): Promise<MatrixEvent[]> {
-    return matrixFetch<MatrixEvent[]>("GET", `/rooms/${encodePathPart(roomId)}/state`);
-}
-
-function usersFromRoomState(state: MatrixEvent[]): User[] {
-    return state
-        .filter(event => {
-            const content = event.content as MatrixMemberContent | undefined;
-            return event.type === "m.room.member" &&
-                content?.membership === "join" &&
-                typeof event.state_key === "string";
-        })
-        .map(event => event as MatrixEvent<MatrixMemberContent>)
-        .map(userFromMemberEvent);
-}
-
-function titleFromRoomState(state: MatrixEvent[], users: User[]): string | undefined {
-    const roomNameEvent = state.find(event => {
-        const content = event.content as MatrixRoomNameContent | undefined;
-        return event.type === "m.room.name" && typeof content?.name === "string";
-    });
-    const roomName = (roomNameEvent?.content as MatrixRoomNameContent | undefined)?.name;
-
-    if (roomName) {
-        return roomName;
-    }
-
-    if (users.length > 2) {
-        return users
-            .filter(user => user.username !== getCurrentMatrixUserId())
-            .map(user => user.displayName)
-            .join(", ");
-    }
-
-    return undefined;
-}
-
-function contentFromState<TContent>(state: MatrixEvent[], type: string): TContent | undefined {
-    return state.find(event => event.type === type)?.content as TContent | undefined;
-}
-
-async function getRoomMessages(roomId: string, roomUsers: User[], limit: number): Promise<Message[]> {
-    const query = new URLSearchParams({
-        dir: "b",
-        limit: String(limit),
-    });
-    const response = await matrixFetch<MatrixMessagesResponse>("GET", `/rooms/${encodePathPart(roomId)}/messages?${query}`);
-
-    return response.chunk
-        .map(event => messageFromEvent(event, roomUsers))
-        .filter((message): message is Message => message != null)
-        .reverse();
-}
-
-async function chatFromRoomId(roomId: string): Promise<Chat> {
-    const state = await getRoomState(roomId);
-    let users = usersFromRoomState(state);
-
-    if (users.length === 0) {
-        users = [await userFromId(getCurrentMatrixUserId())];
-    }
-
-    const messages = await getRoomMessages(roomId, users, 1);
-    const avatar = contentFromState<MatrixRoomAvatarContent>(state, "m.room.avatar");
-    const canonicalAlias = contentFromState<MatrixRoomCanonicalAliasContent>(state, "m.room.canonical_alias");
-    const create = contentFromState<MatrixRoomCreateContent>(state, "m.room.create");
-    const encryption = contentFromState<MatrixRoomEncryptionContent>(state, "m.room.encryption");
-    const topic = contentFromState<MatrixRoomTopicContent>(state, "m.room.topic");
-
-    return {
-        id: roomId,
-        title: titleFromRoomState(state, users),
-        users,
-        lastMsg: messages[0] || null,
-        avatarUrl: avatar?.url,
-        canonicalAlias: canonicalAlias?.alias,
-        creator: create?.creator,
-        encrypted: encryption != null,
-        encryptionAlgorithm: encryption?.algorithm,
-        roomVersion: create?.room_version,
-        topic: topic?.topic,
-    };
-}
-
-// -----------------------------------------
-// API Functions
-// -----------------------------------------
-export async function login(username: string, password: string): Promise<User | null> {
-    const loginResponse = await matrixFetch<MatrixLoginResponse>("POST", "/login", {
-        type: "m.login.password",
-        identifier: {
-            type: "m.id.user",
-            user: username,
-        },
-        password,
-    }, false);
-
-    storeMatrixSession({
-        accessToken: loginResponse.access_token,
-        deviceId: loginResponse.device_id,
-        userId: loginResponse.user_id,
-    });
-
-    return currentUser();
-}
-
-export async function currentUser(username?: string): Promise<User | null> {
-    const matrixSession = getMatrixSession();
-    const userId = username || matrixSession?.userId;
-
-    if (!userId) {
-        return null;
-    }
-
-    return userFromId(userId);
-}
-
 export async function getChats(filter?: string): Promise<Chat[]> {
-    const response = await matrixFetch<MatrixJoinedRoomsResponse>("GET", "/joined_rooms");
-    const chats = await Promise.all(response.joined_rooms.map(chatFromRoomId));
+    const response = await getClient().getJoinedRooms();
+    const chats = await Promise.all(response.joined_rooms.map(getSdkRoomOrInitialSync));
     const normalizedFilter = (filter || "").trim().toLowerCase();
 
     const sortedChats = chats.sort((a, b) => {
@@ -406,12 +352,26 @@ export async function getChats(filter?: string): Promise<Chat[]> {
 }
 
 export async function getChat(chatId: string): Promise<Chat> {
-    return chatFromRoomId(chatId);
+    return getSdkRoomOrInitialSync(chatId);
 }
 
 export async function getMessages(chatId: string): Promise<Message[]> {
-    const chat = await getChat(chatId);
-    return getRoomMessages(chatId, chat.users, 50);
+    const client = getClient();
+    const room = client.getRoom(chatId);
+    const users = await getRoomUsers(chatId);
+
+    if (room != null) {
+        await client.scrollback(room, 50);
+        return room.getLiveTimeline()
+            .getEvents()
+            .map(event => messageFromEvent(event, users))
+            .filter((message): message is Message => message != null);
+    }
+
+    const response = await client.roomInitialSync(chatId, 50);
+    return (response.messages?.chunk || [])
+        .map(event => messageFromEvent(new MatrixEvent(event), users))
+        .filter((message): message is Message => message != null);
 }
 
 export async function sendMessage(req: {
@@ -425,25 +385,15 @@ export async function sendMessage(req: {
     transactionId?: string;
 }): Promise<void> {
     const transactionId = req.transactionId || req.uid || crypto.randomUUID();
-    await matrixFetch<Record<string, string>>(
-        "PUT",
-        `/rooms/${encodePathPart(req.chat.id)}/send/m.room.message/${encodePathPart(transactionId)}`,
-        {
-            msgtype: "m.text",
-            body: req.content,
-        }
-    );
+    await getClient().sendTextMessage(req.chat.id, req.content, transactionId);
 }
 
 export async function getContacts(): Promise<User[]> {
+    const currentUserId = session.getMatrixSession()?.userId;
     const searchTerms = "abcdefghijklmnopqrstuvwxyz0123456789_".split("");
-    const responses = await Promise.all(searchTerms.map(searchTerm =>
-        matrixFetch<MatrixUserDirectoryResponse>("POST", "/user_directory/search", {
-            search_term: searchTerm,
-            limit: 20,
-        }).catch(() => ({ results: [] }))
+    const responses = await Promise.all(searchTerms.map(term =>
+        getClient().searchUserDirectory({ term, limit: 20 }).catch(() => ({ results: [] }))
     ));
-    const currentUserId = getCurrentMatrixUserId();
     const contacts = new Map<string, User>();
 
     for (const response of responses) {

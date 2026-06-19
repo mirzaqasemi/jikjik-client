@@ -43,7 +43,7 @@ foreach ($line in Get-Content $Script:MatrixConfigFile) {
     if ($line -match '^(public_baseurl|enable_registration|enable_registration_without_verification|registration_shared_secret):') {
         continue
     }
-    if ($line -match '^user_directory:') {
+    if ($line -match '^(user_directory|rc_login|rc_registration|rc_message):') {
         $skipUserDirectory = $true
         continue
     }
@@ -64,6 +64,22 @@ $overrides = @(
     "registration_shared_secret: `"$Script:MatrixRegistrationSecret`""
     "user_directory:"
     "  search_all_users: true"
+    "rc_login:"
+    "  address:"
+    "    per_second: 50"
+    "    burst_count: 100"
+    "  account:"
+    "    per_second: 50"
+    "    burst_count: 100"
+    "  failed_attempts:"
+    "    per_second: 50"
+    "    burst_count: 100"
+    "rc_registration:"
+    "  per_second: 50"
+    "  burst_count: 100"
+    "rc_message:"
+    "  per_second: 50"
+    "  burst_count: 100"
 )
 
 Assert-ConfigWritable

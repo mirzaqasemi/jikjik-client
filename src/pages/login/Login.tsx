@@ -10,7 +10,6 @@ import { useMutation } from "@tanstack/react-query";
 import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as backend from '../../services/backend.ts';
-import * as session from '../../services/session.ts';
 import './login.css';
 
 
@@ -26,7 +25,6 @@ export default function Login() {
         },
         onSuccess: (user) => {
             if (user != null) {
-                session.setUser(user.username, user.displayName);
                 navigate(CHATS_ROUTE);
             } else {
                 setWarning("This username is not found!");

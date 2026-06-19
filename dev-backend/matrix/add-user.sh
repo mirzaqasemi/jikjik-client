@@ -32,11 +32,17 @@ if ! container_running; then
     exit 1
 fi
 
-docker exec "$MATRIX_CONTAINER_NAME" register_new_matrix_user \
+output="$(docker exec "$MATRIX_CONTAINER_NAME" register_new_matrix_user \
     "http://localhost:8008" \
-    -c /data/homeserver.yaml \
+    -k "$MATRIX_REGISTRATION_SECRET" \
     -u "$USERNAME" \
     -p "$PASSWORD" \
-    "$ADMIN_FLAG"
+    --exists-ok \
+    "$ADMIN_FLAG")"
 
-echo "Registered @$USERNAME:$MATRIX_SERVER_NAME"
+if [[ "$output" == *"User already exists. Skipping."* ]]; then
+    echo "User already exists: @$USERNAME:$MATRIX_SERVER_NAME"
+else
+    echo "$output"
+    echo "Registered @$USERNAME:$MATRIX_SERVER_NAME"
+fi

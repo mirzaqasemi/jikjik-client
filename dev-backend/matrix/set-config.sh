@@ -31,6 +31,7 @@ trap "rm -f \"$tmp\"" EXIT
 awk '"'"'
     /^# Jikjik local development overrides\.$/ { next }
     /^(public_baseurl|enable_registration|enable_registration_without_verification|registration_shared_secret):/ { next }
+    /^(rc_login|rc_registration|rc_message):/ { skip = 1; next }
     /^user_directory:/ { skip = 1; next }
     skip && /^[^[:space:]]/ { skip = 0 }
     !skip { print }
@@ -44,6 +45,22 @@ enable_registration_without_verification: $REGISTRATION_WITHOUT_VERIFICATION
 registration_shared_secret: "$MATRIX_REGISTRATION_SECRET"
 user_directory:
   search_all_users: true
+rc_login:
+  address:
+    per_second: 50
+    burst_count: 100
+  account:
+    per_second: 50
+    burst_count: 100
+  failed_attempts:
+    per_second: 50
+    burst_count: 100
+rc_registration:
+  per_second: 50
+  burst_count: 100
+rc_message:
+  per_second: 50
+  burst_count: 100
 EOF
 chmod 0644 "$tmp"
 chown --reference="$config" "$tmp" 2>/dev/null || true
@@ -92,6 +109,7 @@ trap 'rm -f "$tmp_file"' EXIT
 awk '
     /^# Jikjik local development overrides\.$/ { next }
     /^(public_baseurl|enable_registration|enable_registration_without_verification|registration_shared_secret):/ { next }
+    /^(rc_login|rc_registration|rc_message):/ { skip = 1; next }
     /^user_directory:/ { skip = 1; next }
     skip && /^[^[:space:]]/ { skip = 0 }
     !skip { print }
@@ -106,6 +124,22 @@ enable_registration_without_verification: $REGISTRATION_WITHOUT_VERIFICATION
 registration_shared_secret: "$MATRIX_REGISTRATION_SECRET"
 user_directory:
   search_all_users: true
+rc_login:
+  address:
+    per_second: 50
+    burst_count: 100
+  account:
+    per_second: 50
+    burst_count: 100
+  failed_attempts:
+    per_second: 50
+    burst_count: 100
+rc_registration:
+  per_second: 50
+  burst_count: 100
+rc_message:
+  per_second: 50
+  burst_count: 100
 EOF
 
 chmod 0644 "$tmp_file"
