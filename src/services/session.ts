@@ -1,23 +1,24 @@
 import { useEffect, useState } from "react";
+import type { MatrixSession } from "./matrix-models";
 import type { User } from "../services/backend";
 
 export type Listener = () => void;
 
 
-const displayNameKey = 'displayName';
-const usernameKey = 'username';
+const matrixAccessTokenKey = "matrixAccessToken";
+const matrixDeviceIdKey = "matrixDeviceId";
+const matrixUserIdKey = "matrixUserId";
 
 let currentUser: User | null = null;
 const listeners = new Set<Listener>();
 
 export function getUser(): User | null{
     if (currentUser == null) {
-        const username = localStorage.getItem(usernameKey);
-        const displayName = localStorage.getItem(displayNameKey)
-        if (username != null && displayName != null) {
+        const matrixSession = getMatrixSession();
+        if (matrixSession != null) {
             currentUser = {
-                username,
-                displayName
+                username: matrixSession.userId,
+                displayName: matrixSession.userId
             }
         }
     }
@@ -33,23 +34,48 @@ export function mustGetUser(): User {
     return user;
 }
 
-export function setUser(username: string, displayName: string): void {
-    localStorage.setItem(usernameKey, username);
-    localStorage.setItem(displayNameKey, displayName);
-    localStorage.setItem('loggedIn', 'true');
-    currentUser = {
-        username: username,
-        displayName: displayName
+export function getMatrixSession(): MatrixSession | null {
+    const accessToken = localStorage.getItem(matrixAccessTokenKey);
+    const userId = localStorage.getItem(matrixUserIdKey);
+
+    if (!accessToken || !userId) {
+        return null;
     }
+
+    return {
+        accessToken,
+        deviceId: localStorage.getItem(matrixDeviceIdKey) || undefined,
+        userId,
+    };
+}
+
+export function setMatrixSession(matrixSession: MatrixSession): void {
+    localStorage.setItem(matrixAccessTokenKey, matrixSession.accessToken);
+    localStorage.setItem(matrixUserIdKey, matrixSession.userId);
+
+    if (matrixSession.deviceId) {
+        localStorage.setItem(matrixDeviceIdKey, matrixSession.deviceId);
+    } else {
+        localStorage.removeItem(matrixDeviceIdKey);
+    }
+
+    currentUser = {
+        username: matrixSession.userId,
+        displayName: matrixSession.userId,
+    };
+    callListeners();
+}
+
+export function clearMatrixSession(): void {
+    localStorage.removeItem(matrixAccessTokenKey);
+    localStorage.removeItem(matrixDeviceIdKey);
+    localStorage.removeItem(matrixUserIdKey);
+    currentUser = null;
     callListeners();
 }
 
 export function logoutUser(): void {
-    localStorage.removeItem(usernameKey);
-    localStorage.removeItem(displayNameKey);
-    localStorage.removeItem('loggedIn')
-    currentUser = null;
-    callListeners();
+    clearMatrixSession();
 }
 
 export function addListener(listener: Listener): () => void {
@@ -70,10 +96,9 @@ function callListeners() {
 export function useSession(): User | null{
     const [userInfo, setUserInfo] = useState<User | null>(getUser());
     useEffect(() => {
-        const cleanup = addListener(() => {
+        return addListener(() => {
             setUserInfo(getUser());
         });
-        return cleanup;
     }, []);
     return userInfo;
 }

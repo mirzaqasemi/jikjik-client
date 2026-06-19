@@ -1,6 +1,6 @@
 import type * as backend from "../services/backend";
 
-export function formatDate(date?: Date): string {
+export function formatDate(date?: Date | null): string {
     if (date == null) return "";
     let hourNum = date.getHours();
     const minute = date.getMinutes().toString().padStart(2, '0');
