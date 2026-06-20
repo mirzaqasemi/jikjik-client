@@ -1,9 +1,9 @@
 import {
     createClient,
     EventType,
+    type MatrixClient,
     MatrixEvent,
     MsgType,
-    type MatrixClient,
     type Room,
     type RoomMember,
 } from "matrix-js-sdk";
@@ -338,7 +338,7 @@ async function getRoomUsers(roomId: string): Promise<User[]> {
 // -----------------------------------------
 export async function login(loginIdentifier: string, password: string): Promise<User | null> {
     resetClient();
-    const loginClient = createClient({ baseUrl: MATRIX_BASE_URL });
+    const loginClient = createClient({baseUrl: MATRIX_BASE_URL});
     const loginResponse = await loginClient.loginRequest({
         type: "m.login.password",
         identifier: {
@@ -436,27 +436,21 @@ export async function sendMessage(req: {
     await getClient().sendTextMessage(req.chat.id, req.content, transactionId);
 }
 
-export async function getContacts(): Promise<User[]> {
+export async function searchContacts(query: string, limit: number = 20): Promise<User[]> {
     const currentUserId = session.getMatrixSession()?.userId;
-    const searchTerms = "abcdefghijklmnopqrstuvwxyz0123456789_".split("");
-    const responses = await Promise.all(searchTerms.map(term =>
-        getClient().searchUserDirectory({ term, limit: 20 }).catch(() => ({ results: [] }))
-    ));
-    const contacts = new Map<string, User>();
+    const response = await getClient().searchUserDirectory({term: query, limit});
+    const contacts: User[] = [];
 
-    for (const response of responses) {
-        for (const result of response.results) {
-            if (result.user_id === currentUserId || contacts.has(result.user_id)) {
-                continue;
-            }
-
-            contacts.set(result.user_id, userFromUserId(result.user_id, {
-                displayName: result.display_name || displayNameFromUserId(result.user_id),
-                avatarUrl: result.avatar_url,
-            }));
+    for (const result of response.results) {
+        if (result.user_id === currentUserId) {
+            continue;
         }
+
+        contacts.push(userFromUserId(result.user_id, {
+            displayName: result.display_name || displayNameFromUserId(result.user_id),
+            avatarUrl: result.avatar_url,
+        }));
     }
 
-    return (await withPresenceForUsers([...contacts.values()]))
-        .sort((a, b) => a.displayName.localeCompare(b.displayName));
+    return await withPresenceForUsers(contacts);
 }
