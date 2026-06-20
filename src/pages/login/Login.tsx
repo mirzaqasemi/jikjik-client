@@ -32,8 +32,8 @@ export default function Login() {
     const passRef = useRef<HTMLInputElement>(null);
 
     const loginMutation = useMutation({
-        mutationFn: ({ username }: { username: string }) => {
-            return backend.login(username);
+        mutationFn: ({ username, password }: { username: string; password: string }) => {
+            return backend.login(username, password);
         },
         onSuccess: (user) => {
             if (user != null) {
@@ -61,6 +61,7 @@ export default function Login() {
         setWarning("");
         loginMutation.mutate({
             username: usernameInput.value,
+            password: passwordInput.value,
         }); // React Query internally does something like:
         // const data = await mutationFn({username: usernameInput.value, password: passwordInput.value})
         // storeResultInsideReactQuery(data) Which stores data in "mutation.data"
