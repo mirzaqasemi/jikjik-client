@@ -1,20 +1,13 @@
-import { Button } from "@/components/ui/button";
 import {
     InputGroup,
     InputGroupAddon,
     InputGroupInput,
 } from "@/components/ui/input-group";
-import {
-    Sheet,
-    SheetContent,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger
-} from "@/components/ui/sheet";
 
+import { SearchIcon } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { useQuery } from "@tanstack/react-query";
-import { AlignJustify, LogOut, SearchIcon, UserRoundPlus, UsersRound } from "lucide-react";
+
 import { useState } from "react";
 import { Navigate, useNavigate } from 'react-router-dom';
 import * as hooks from '../../hooks/useDebounce.ts';
@@ -23,6 +16,7 @@ import * as backend from '../../services/backend.ts';
 import * as session from '../../services/session.ts';
 import * as utils from "../../utilities/utilities.ts";
 import './Chats.css';
+import Menu from "../menu/Menu.tsx";
 
 export default function Chats() {
     const [searchQuery, setSearchQuery] = useState("");
@@ -68,37 +62,7 @@ export default function Chats() {
             {/* <!-- Top: Header Section --> */}
             <div className="flex items-center gap-4">
                 {/* <!-- Hamburger Menu --> */}
-                <Sheet>
-                    <SheetTrigger asChild>
-                        <AlignJustify className="text-muted cursor-pointer" />
-                    </SheetTrigger>
-                    <SheetContent showCloseButton={false} side="left" className="gap-5">
-                        <SheetHeader className="gap-4 border-b pb-4">
-                            <img src="" alt="" className="size-9 rounded-full" />
-                            <SheetTitle>{user.displayName}</SheetTitle>
-                        </SheetHeader>
-                        <ul className="flex flex-col sidebar-icons">
-                            <li>
-                                <Button variant="ghost">
-                                    <UsersRound />
-                                    New Group
-                                </Button>
-                            </li>
-                            <li>
-                                <Button variant="ghost">
-                                    <UserRoundPlus />
-                                    New Contact
-                                </Button>
-                            </li>
-                            <li>
-                                <Button variant="ghost" onClick={() => logout()}>
-                                    <LogOut />
-                                    Logout
-                                </Button>
-                            </li>
-                        </ul>
-                    </SheetContent>
-                </Sheet>
+               <Menu logout={logout} user={user}/>
 
                 {/* <!-- Search Bar --> */}
                 <InputGroup className="search-bar">
