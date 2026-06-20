@@ -30,8 +30,17 @@ export interface User
     /** Matrix avatar MXC URI from profile, user directory, or room membership state. */
     avatarUrl?: string | null;
 
-    /** Legacy UI status label. Currently populated from Matrix membership when available. */
-    lastSeen?: string;
+    /** Last known Matrix activity timestamp, derived from presence last_active_ago when available. */
+    lastSeen?: Date;
+
+    /** Matrix presence state when available. */
+    presence?: "online" | "offline" | "unavailable";
+
+    /** True when Matrix reports this user is actively online. */
+    currentlyActive?: boolean;
+
+    /** Optional Matrix presence status message. */
+    statusMessage?: string;
 
     /** Room membership state for this user, for example "join" or "invite". */
     membership?: string;
@@ -157,11 +166,37 @@ function userFromUserId(userId: string, user: Omit<User, "userId" | "username">)
     };
 }
 
+function lastSeenFromPresence(lastActiveAgo?: number): Date | undefined {
+    if (lastActiveAgo == null) {
+        return undefined;
+    }
+
+    return new Date(Date.now() - lastActiveAgo);
+}
+
+async function withPresence(user: User): Promise<User> {
+    try {
+        const presence = await getClient().getPresence(user.userId);
+        return {
+            ...user,
+            presence: presence.presence,
+            currentlyActive: presence.currently_active,
+            statusMessage: presence.status_msg,
+            lastSeen: lastSeenFromPresence(presence.last_active_ago),
+        };
+    } catch {
+        return user;
+    }
+}
+
+async function withPresenceForUsers(users: User[]): Promise<User[]> {
+    return Promise.all(users.map(withPresence));
+}
+
 function userFromMember(member: RoomMember): User {
     return userFromUserId(member.userId, {
         displayName: member.name || displayNameFromUserId(member.userId),
         avatarUrl: member.events.member?.getContent().avatar_url,
-        lastSeen: member.membership,
         membership: member.membership,
     });
 }
@@ -231,7 +266,6 @@ function userFromMemberState(userId: string, content: IContent): User {
     return userFromUserId(userId, {
         displayName: content.displayname || displayNameFromUserId(userId),
         avatarUrl: content.avatar_url,
-        lastSeen: content.membership,
         membership: content.membership,
     });
 }
@@ -270,25 +304,33 @@ function chatFromInitialSync(roomId: string, response: Awaited<ReturnType<Matrix
 async function getSdkRoomOrInitialSync(roomId: string): Promise<Chat> {
     const client = getClient();
     const room = client.getRoom(roomId);
+    let chat: Chat;
+
     if (room != null) {
-        return chatFromSdkRoom(room);
+        chat = chatFromSdkRoom(room);
+    } else {
+        chat = chatFromInitialSync(roomId, await client.roomInitialSync(roomId, 1));
     }
 
-    return chatFromInitialSync(roomId, await client.roomInitialSync(roomId, 1));
+    console.log(chat.users)
+    return {
+        ...chat,
+        users: await withPresenceForUsers(chat.users),
+    };
 }
 
 async function getRoomUsers(roomId: string): Promise<User[]> {
     const room = getClient().getRoom(roomId);
     if (room != null) {
-        return room.getJoinedMembers().map(userFromMember);
+        return withPresenceForUsers(room.getJoinedMembers().map(userFromMember));
     }
 
     const response = await getClient().getJoinedRoomMembers(roomId);
-    return Object.entries(response.joined).map(([userId, profile]) => userFromUserId(userId, {
+    return withPresenceForUsers(Object.entries(response.joined).map(([userId, profile]) => userFromUserId(userId, {
         displayName: profile.display_name || displayNameFromUserId(userId),
         avatarUrl: profile.avatar_url,
         membership: "join",
-    }));
+    })));
 }
 
 // -----------------------------------------
@@ -415,5 +457,6 @@ export async function getContacts(): Promise<User[]> {
         }
     }
 
-    return [...contacts.values()].sort((a, b) => a.displayName.localeCompare(b.displayName));
+    return (await withPresenceForUsers([...contacts.values()]))
+        .sort((a, b) => a.displayName.localeCompare(b.displayName));
 }
