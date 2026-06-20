@@ -1,5 +1,5 @@
 import { Spinner } from "@/components/ui/spinner.tsx";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { ArrowLeft, SendHorizontal } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, useLoaderData, useParams } from 'react-router-dom';
@@ -10,13 +10,12 @@ import './Chat.css';
 import Message from "./message/Message.tsx";
 
 
-type MessageWithStatus = backend.Message & { status: "pending" | "error" };
+export type MessageWithStatus = backend.Message & { status: "pending" | "error" };
 
 export default function Chat() {
     const params = useParams<{ chatId: string }>();
     const selectedChat = useLoaderData<backend.Chat>();
     const [inputStr, setinputStr] = useState("");
-    const queryClient = useQueryClient(); // Give access to the big cache/storage room
     const rawUser = session.getUser();
     const bottomRef = useRef<HTMLDivElement>(null);
     const [pendingMsgs, setPendingMsgs] = useState<MessageWithStatus[]>([]);
@@ -41,7 +40,6 @@ export default function Chat() {
         queryFn: () => backend.getMessages(chatId),
         enabled: !!user && !!chatId,
         refetchInterval: 500,
-
     });
 
     useEffect(() => {
@@ -54,7 +52,6 @@ export default function Chat() {
             )
         );
     }, [serverMessages]);
-
     if (isError) {
         return (
             <div className="flex justify-center items-center h-full">
@@ -75,42 +72,63 @@ export default function Chat() {
         },
         //onMutate() runs immediately before mutationFn executes
         onMutate: ({ content, uid }) => {
-            const msgObj: MessageWithStatus = {
-                sender: user,
-                content,
-                date: new Date(),
-                uid,
-                status: "pending"
+            if (!pendingMsgs.some((pendingMsg) => pendingMsg.uid == uid)) {
+                const msgObj: MessageWithStatus = {
+                    sender: user,
+                    content,
+                    date: new Date(),
+                    uid,
+                    transactionId: uid,
+                    status: "pending"
+                }
+                setPendingMsgs((oldPendingMsgs) => [...oldPendingMsgs, msgObj]);
             }
-            setPendingMsgs([...pendingMsgs, msgObj]);
         },
         onError: (err, params) => {
-            const arr = pendingMsgs.map((pendingMsg) => {
-                if (pendingMsg.uid === params.uid) {
-                    return {
-                        ...pendingMsg,
-                        status: "error"
-                    } as MessageWithStatus;
-                }
-                return pendingMsg;
+            setPendingMsgs((oldPendingMsgs) => {
+                return oldPendingMsgs.map((pendingMsg) => {
+                    if (pendingMsg.uid === params.uid) {
+                        return {
+                            ...pendingMsg,
+                            status: "error"
+                        } as MessageWithStatus;
+                    }
+                    return pendingMsg;
+                })
             });
-            setPendingMsgs(arr);
             console.error("failed to send message", params, err);
         },
     });
 
     async function addToMessages() {
         if (!inputStr.trim()) return;
-
-        const content = inputStr; // Save inputStr before clearing
-
         setinputStr("");
         sendMessageMutation.mutate({
             username: user.username,
             chat: selectedChat,
-            content: content,
+            content: inputStr,
             uid: crypto.randomUUID()
         });
+    }
+
+    function retryMessage(failedMsg: backend.Message) {
+        // 1. change icon from error → pending
+        setPendingMsgs((oldPendingMsgs) =>
+            oldPendingMsgs.map((msg) => {
+                if (msg.uid == failedMsg.uid) {
+                    return { ...msg, status: "pending" }
+                }
+                return msg;
+            })
+        );
+
+        // 2. resend same message to backend
+        sendMessageMutation.mutate({
+            username: user.userId,
+            chat: selectedChat,
+            content: failedMsg.content,
+            uid: failedMsg.transactionId!,
+        })
     }
 
     return (
@@ -153,14 +171,15 @@ export default function Chat() {
                         <div className="date-separator">TODAY</div>
                         {
                             serverMessages.map((message) =>
-                                <Message user={user} chat={selectedChat} message={message} key={message.uid} status="success" />
+                                <Message user={user} chat={selectedChat} message={message} key={message.eventId} status="success" retryMessage={retryMessage} />
                             )
                         }
                         {
                             pendingMsgs.filter((pendingMsg) =>
                                 !serverMessages.some((serverMsg) => serverMsg.uid === pendingMsg.uid)
                             ).map((pendingMsg) =>
-                                < Message user={user} chat={selectedChat} message={pendingMsg} key={pendingMsg.uid} status={pendingMsg.status} />
+                                < Message user={user} chat={selectedChat} message={pendingMsg} key={pendingMsg.uid} status={pendingMsg.status}
+                                    retryMessage={retryMessage} />
                             )
                         }
                         <div ref={bottomRef}></div>
