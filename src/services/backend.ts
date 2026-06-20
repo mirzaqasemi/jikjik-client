@@ -10,6 +10,7 @@ import {
 import type { ICreateRoomOpts } from "matrix-js-sdk/lib/@types/requests";
 import { Preset, Visibility } from "matrix-js-sdk/lib/@types/partials";
 import type { IContent } from "matrix-js-sdk/lib/models/event";
+import { attachBackendEventClient, detachBackendEventClient } from "./backend-event";
 import * as session from "./session";
 
 // -----------------------------------------
@@ -157,13 +158,15 @@ let matrixClient: MatrixClient | null = null;
 function createSdkClient(): MatrixClient {
     const matrixSession = session.getMatrixSession();
 
-    return createClient({
+    const client = createClient({
         baseUrl: MATRIX_BASE_URL,
         accessToken: matrixSession?.accessToken,
         deviceId: matrixSession?.deviceId,
         timelineSupport: true,
         userId: matrixSession?.userId,
     });
+    attachBackendEventClient(client);
+    return client;
 }
 
 function getClient(): MatrixClient {
@@ -184,6 +187,7 @@ function getClient(): MatrixClient {
 }
 
 function resetClient(): void {
+    detachBackendEventClient();
     matrixClient?.stopClient();
     matrixClient = null;
 }
