@@ -16,7 +16,7 @@ export default function ComposeDialog() {
     useEffect(() => {
         async function fetchContacts() {
             try {
-                setContacts([...await backend.getContacts()]);
+                setContacts([...await backend.searchContacts("")]);
             } catch (error) {
             }
         }
