@@ -8,6 +8,7 @@ export type Listener = () => void;
 const matrixAccessTokenKey = "matrixAccessToken";
 const matrixDeviceIdKey = "matrixDeviceId";
 const matrixUserIdKey = "matrixUserId";
+const draftDmUserKey = "draftDmUser";
 
 let currentUser: User | null = null;
 const listeners = new Set<Listener>();
@@ -68,16 +69,39 @@ export function setMatrixSession(matrixSession: MatrixSession): void {
     callListeners();
 }
 
-export function clearMatrixSession(): void {
+export function draftDm(user: User): void {
+    sessionStorage.setItem(draftDmUserKey, JSON.stringify(user));
+}
+
+export function getDraftDm(): User | null {
+    const draftUser = sessionStorage.getItem(draftDmUserKey);
+    if (!draftUser) {
+        return null;
+    }
+
+    try {
+        return JSON.parse(draftUser) as User;
+    } catch {
+        removeDraftDm();
+        return null;
+    }
+}
+
+export function removeDraftDm(): void {
+    sessionStorage.removeItem(draftDmUserKey);
+}
+
+export function clearSession(): void {
     localStorage.removeItem(matrixAccessTokenKey);
     localStorage.removeItem(matrixDeviceIdKey);
     localStorage.removeItem(matrixUserIdKey);
+    removeDraftDm();
     currentUser = null;
     callListeners();
 }
 
 export function logoutUser(): void {
-    clearMatrixSession();
+    clearSession();
 }
 
 export function addListener(listener: Listener): () => void {
