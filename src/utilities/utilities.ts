@@ -10,7 +10,7 @@ export function formatDate(date?: Date | null): string {
     return timeString + " " + ampm;
 }
 
-export function getTitle(username: string, chat: backend.Chat): string {
+export function getTitle(currentUserId: string, chat: backend.Chat): string {
     const users = chat.users;
 
     let names: string[] = [];
@@ -18,7 +18,7 @@ export function getTitle(username: string, chat: backend.Chat): string {
         return chat.title;
     }
     for (let index = 0; index < users.length; index++) {
-        if (users[index].username !== username) {
+        if (users[index].userId !== currentUserId) {
             names.push(users[index].displayName);
         }
     }

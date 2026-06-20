@@ -17,6 +17,7 @@ export function getUser(): User | null{
         const matrixSession = getMatrixSession();
         if (matrixSession != null) {
             currentUser = {
+                userId: matrixSession.userId,
                 username: matrixSession.userId,
                 displayName: matrixSession.userId
             }
@@ -60,6 +61,7 @@ export function setMatrixSession(matrixSession: MatrixSession): void {
     }
 
     currentUser = {
+        userId: matrixSession.userId,
         username: matrixSession.userId,
         displayName: matrixSession.userId,
     };

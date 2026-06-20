@@ -16,7 +16,12 @@ import * as session from "./session";
 // TODO: Move these app-facing backend models to a dedicated models file or folder later.
 export interface User
 {
-    /** Matrix user id, for example "@alex92:localhost". */
+    /** Canonical Matrix user id, for example "@alex92:localhost". */
+    userId: string;
+
+    /**
+     * @deprecated Use userId instead. This is currently kept as a compatibility alias for older UI code.
+     */
     username: string;
 
     /** Human-readable display name from Matrix profile or room membership state. */
@@ -144,22 +149,28 @@ function displayNameFromUserId(userId: string): string {
     return localPart || userId;
 }
 
-function userFromMember(member: RoomMember): User {
+function userFromUserId(userId: string, user: Omit<User, "userId" | "username">): User {
     return {
-        username: member.userId,
+        userId,
+        username: userId,
+        ...user,
+    };
+}
+
+function userFromMember(member: RoomMember): User {
+    return userFromUserId(member.userId, {
         displayName: member.name || displayNameFromUserId(member.userId),
         avatarUrl: member.events.member?.getContent().avatar_url,
         lastSeen: member.membership,
         membership: member.membership,
-    };
+    });
 }
 
 function userFromProfile(userId: string, profile: { avatar_url?: string; displayname?: string }): User {
-    return {
-        username: userId,
+    return userFromUserId(userId, {
         displayName: profile.displayname || displayNameFromUserId(userId),
         avatarUrl: profile.avatar_url,
-    };
+    });
 }
 
 function messageFromEvent(event: MatrixEvent, roomUsers: User[]): Message | null {
@@ -169,10 +180,9 @@ function messageFromEvent(event: MatrixEvent, roomUsers: User[]): Message | null
     }
 
     const senderId = event.getSender() || "";
-    const sender = roomUsers.find(user => user.username === senderId) || {
-        username: senderId,
+    const sender = roomUsers.find(user => user.userId === senderId) || userFromUserId(senderId, {
         displayName: displayNameFromUserId(senderId),
-    };
+    });
     const transactionId = event.getTxnId() || event.getUnsigned().transaction_id;
 
     return {
@@ -218,13 +228,12 @@ function chatFromSdkRoom(room: Room): Chat {
 }
 
 function userFromMemberState(userId: string, content: IContent): User {
-    return {
-        username: userId,
+    return userFromUserId(userId, {
         displayName: content.displayname || displayNameFromUserId(userId),
         avatarUrl: content.avatar_url,
         lastSeen: content.membership,
         membership: content.membership,
-    };
+    });
 }
 
 function chatFromInitialSync(roomId: string, response: Awaited<ReturnType<MatrixClient["roomInitialSync"]>>): Chat {
@@ -275,8 +284,7 @@ async function getRoomUsers(roomId: string): Promise<User[]> {
     }
 
     const response = await getClient().getJoinedRoomMembers(roomId);
-    return Object.entries(response.joined).map(([userId, profile]) => ({
-        username: userId,
+    return Object.entries(response.joined).map(([userId, profile]) => userFromUserId(userId, {
         displayName: profile.display_name || displayNameFromUserId(userId),
         avatarUrl: profile.avatar_url,
         membership: "join",
@@ -286,14 +294,14 @@ async function getRoomUsers(roomId: string): Promise<User[]> {
 // -----------------------------------------
 // API Functions
 // -----------------------------------------
-export async function login(username: string, password: string): Promise<User | null> {
+export async function login(loginIdentifier: string, password: string): Promise<User | null> {
     resetClient();
     const loginClient = createClient({ baseUrl: MATRIX_BASE_URL });
     const loginResponse = await loginClient.loginRequest({
         type: "m.login.password",
         identifier: {
             type: "m.id.user",
-            user: username,
+            user: loginIdentifier,
         },
         password,
     });
@@ -308,8 +316,8 @@ export async function login(username: string, password: string): Promise<User | 
     return currentUser();
 }
 
-export async function currentUser(username?: string): Promise<User | null> {
-    const userId = username || session.getMatrixSession()?.userId;
+export async function currentUser(): Promise<User | null> {
+    const userId = session.getMatrixSession()?.userId;
     if (!userId) {
         return null;
     }
@@ -317,10 +325,9 @@ export async function currentUser(username?: string): Promise<User | null> {
     try {
         return userFromProfile(userId, await getClient().getProfileInfo(userId));
     } catch {
-        return {
-            username: userId,
+        return userFromUserId(userId, {
             displayName: displayNameFromUserId(userId),
-        };
+        });
     }
 }
 
@@ -344,7 +351,7 @@ export async function getChats(filter?: string): Promise<Chat[]> {
             chat.title,
             chat.lastMsg?.content,
             ...chat.users.map(user => user.displayName),
-            ...chat.users.map(user => user.username),
+            ...chat.users.map(user => user.userId),
         ].filter(Boolean).join(" ").toLowerCase();
 
         return haystack.includes(normalizedFilter);
@@ -375,7 +382,6 @@ export async function getMessages(chatId: string): Promise<Message[]> {
 }
 
 export async function sendMessage(req: {
-    username: string;
     chat: Chat;
     content: string;
     /**
@@ -402,11 +408,10 @@ export async function getContacts(): Promise<User[]> {
                 continue;
             }
 
-            contacts.set(result.user_id, {
-                username: result.user_id,
+            contacts.set(result.user_id, userFromUserId(result.user_id, {
                 displayName: result.display_name || displayNameFromUserId(result.user_id),
                 avatarUrl: result.avatar_url,
-            });
+            }));
         }
     }
 
