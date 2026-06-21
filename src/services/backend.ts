@@ -7,7 +7,10 @@ import {
     type Room,
     type RoomMember,
 } from "matrix-js-sdk";
+import type { ICreateRoomOpts } from "matrix-js-sdk/lib/@types/requests";
+import { Preset, Visibility } from "matrix-js-sdk/lib/@types/partials";
 import type { IContent } from "matrix-js-sdk/lib/models/event";
+import { attachBackendEventClient, detachBackendEventClient } from "./backend-event";
 import * as session from "./session";
 
 // -----------------------------------------
@@ -114,6 +117,39 @@ export interface Chat
     topic?: string;
 }
 
+export interface CreateRoomRequest
+{
+    /** Human-readable room name shown in chat lists and room headers. */
+    title: string;
+
+    /** Optional room topic/description stored in Matrix room state. */
+    topic?: string;
+
+    /** Matrix users to invite at creation time. They are not participants until they join. */
+    invitees?: string[];
+
+    /** Matrix room directory visibility. Defaults to private. */
+    visibility?: ICreateRoomOpts["visibility"];
+
+    /** Matrix creation preset, for example private_chat or public_chat. */
+    preset?: ICreateRoomOpts["preset"];
+
+    /** Optional localpart for a published room alias. */
+    roomAliasName?: string;
+
+    /** Optional Matrix room version override. Leave unset for the homeserver default. */
+    roomVersion?: string;
+
+    /** Optional Matrix state events to include during room creation. */
+    initialState?: ICreateRoomOpts["initial_state"];
+
+    /** Optional Matrix power-level overrides for moderation/admin rules. */
+    powerLevelContentOverride?: ICreateRoomOpts["power_level_content_override"];
+
+    /** Optional low-level Matrix creation content, such as room type. */
+    creationContent?: ICreateRoomOpts["creation_content"];
+}
+
 const MATRIX_BASE_URL = (import.meta.env.VITE_MATRIX_BASE_URL || "http://localhost:8008").replace(/\/$/, "");
 const TEXT_MESSAGE_EVENT_TYPE = "m.room.message";
 
@@ -122,13 +158,15 @@ let matrixClient: MatrixClient | null = null;
 function createSdkClient(): MatrixClient {
     const matrixSession = session.getMatrixSession();
 
-    return createClient({
+    const client = createClient({
         baseUrl: MATRIX_BASE_URL,
         accessToken: matrixSession?.accessToken,
         deviceId: matrixSession?.deviceId,
         timelineSupport: true,
         userId: matrixSession?.userId,
     });
+    attachBackendEventClient(client);
+    return client;
 }
 
 function getClient(): MatrixClient {
@@ -149,6 +187,7 @@ function getClient(): MatrixClient {
 }
 
 function resetClient(): void {
+    detachBackendEventClient();
     matrixClient?.stopClient();
     matrixClient = null;
 }
@@ -156,6 +195,23 @@ function resetClient(): void {
 function displayNameFromUserId(userId: string): string {
     const localPart = userId.startsWith("@") ? userId.slice(1).split(":")[0] : userId;
     return localPart || userId;
+}
+
+function currentServerName(): string {
+    const userId = session.getMatrixSession()?.userId;
+    const serverName = userId?.split(":").slice(1).join(":");
+    if (!serverName) {
+        throw new Error("User not logged in");
+    }
+    return serverName;
+}
+
+function normalizeUserId(username: string): string {
+    const trimmedUsername = username.trim();
+    if (trimmedUsername.startsWith("@")) {
+        return trimmedUsername;
+    }
+    return `@${trimmedUsername}:${currentServerName()}`;
 }
 
 function userFromUserId(userId: string, user: Omit<User, "userId" | "username">): User {
@@ -191,6 +247,21 @@ async function withPresence(user: User): Promise<User> {
 
 async function withPresenceForUsers(users: User[]): Promise<User[]> {
     return Promise.all(users.map(withPresence));
+}
+
+async function markDirectRoom(userId: string, roomId: string): Promise<void> {
+    const client = getClient();
+    const directRooms = await client.getAccountDataFromServer(EventType.Direct) || {};
+    const userRooms = directRooms[userId] || [];
+
+    if (userRooms.includes(roomId)) {
+        return;
+    }
+
+    await client.setAccountData(EventType.Direct, {
+        ...directRooms,
+        [userId]: [...userRooms, roomId],
+    });
 }
 
 function userFromMember(member: RoomMember): User {
@@ -312,7 +383,6 @@ async function getSdkRoomOrInitialSync(roomId: string): Promise<Chat> {
         chat = chatFromInitialSync(roomId, await client.roomInitialSync(roomId, 1));
     }
 
-    console.log(chat.users)
     return {
         ...chat,
         users: await withPresenceForUsers(chat.users),
@@ -402,6 +472,36 @@ export async function getChats(filter?: string): Promise<Chat[]> {
 
 export async function getChat(chatId: string): Promise<Chat> {
     return getSdkRoomOrInitialSync(chatId);
+}
+
+export async function createDm(username: string): Promise<Chat> {
+    const userId = normalizeUserId(username);
+    const response = await getClient().createRoom({
+        preset: Preset.PrivateChat,
+        visibility: Visibility.Private,
+        invite: [userId],
+        is_direct: true,
+    });
+
+    await markDirectRoom(userId, response.room_id).catch(() => undefined);
+    return getSdkRoomOrInitialSync(response.room_id);
+}
+
+export async function createRoom(req: CreateRoomRequest): Promise<Chat> {
+    const response = await getClient().createRoom({
+        name: req.title,
+        topic: req.topic,
+        invite: req.invitees?.map(normalizeUserId),
+        visibility: req.visibility || Visibility.Private,
+        preset: req.preset,
+        room_alias_name: req.roomAliasName,
+        room_version: req.roomVersion,
+        initial_state: req.initialState,
+        power_level_content_override: req.powerLevelContentOverride,
+        creation_content: req.creationContent,
+    });
+
+    return getSdkRoomOrInitialSync(response.room_id);
 }
 
 export async function getMessages(chatId: string): Promise<Message[]> {
