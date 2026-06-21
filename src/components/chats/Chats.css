@@ -39,18 +39,23 @@
     border-radius: 12px;
 }
 
+.chat-list > button:last-child .chat-info{  /* > means: "Select only direct children."*/
+    border-bottom: 0px;
+}
+
 .label-row {
     justify-content: space-between;
     align-items: center;
 }
 
 .chat-name {
-    font-size: 16px;
+    font-size: 13px;
     font-weight: 600;
     margin-bottom: 4px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    word-spacing: 3px;
 }
 
 .chat-preview {

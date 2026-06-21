@@ -1,9 +1,9 @@
-.message-wrapper.sent {
-    align-items: flex-end;
+.sent {
+    align-self: flex-end;
 }
 
-.message-wrapper.received {
-    align-items: flex-start;
+.received {
+    align-self: flex-start;
 }
 
 .message-bubble {
