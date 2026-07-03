@@ -153,15 +153,21 @@ let matrixClient: MatrixClient | null = null;
 
 function createSdkClient(): MatrixClient {
     const matrixSession = session.getMatrixSession();
+    if (matrixSession == null) {
+        throw new Error("User not logged in");
+    }
 
     const client = createClient({
         baseUrl: MATRIX_BASE_URL,
-        accessToken: matrixSession?.accessToken,
-        deviceId: matrixSession?.deviceId,
+        accessToken: matrixSession.accessToken,
+        deviceId: matrixSession.deviceId,
         timelineSupport: true,
-        userId: matrixSession?.userId,
+        userId: matrixSession.userId,
     });
     attachBackendEventClient(client);
+    client.startClient({
+        initialSyncLimit: 20,
+    });
     return client;
 }
 
@@ -423,6 +429,11 @@ export async function login(loginIdentifier: string, password: string): Promise<
     matrixClient = createSdkClient();
 
     return currentUser();
+}
+
+export function logout(): void {
+    resetClient();
+    session.clearSession();
 }
 
 export async function currentUser(): Promise<User | null> {

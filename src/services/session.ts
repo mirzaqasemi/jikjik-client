@@ -100,10 +100,6 @@ export function clearSession(): void {
     callListeners();
 }
 
-export function logoutUser(): void {
-    clearSession();
-}
-
 export function addListener(listener: Listener): () => void {
     listeners.add(listener);
     return () => removeListener(listener);

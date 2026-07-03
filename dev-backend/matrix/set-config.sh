@@ -31,7 +31,7 @@ trap "rm -f \"$tmp\"" EXIT
 awk '"'"'
     /^# Jikjik local development overrides\.$/ { next }
     /^(public_baseurl|enable_registration|enable_registration_without_verification|registration_shared_secret):/ { next }
-    /^(rc_login|rc_registration|rc_message):/ { skip = 1; next }
+    /^(rc_login|rc_registration|rc_registration_token_validity|rc_message|rc_admin_redaction|rc_joins|rc_joins_per_room|rc_3pid_validation|rc_invites|rc_third_party_invite|rc_media_create|rc_presence|rc_delayed_event_mgmt|rc_reports|rc_room_creation|rc_user_directory):/ { skip = 1; next }
     /^user_directory:/ { skip = 1; next }
     skip && /^[^[:space:]]/ { skip = 0 }
     !skip { print }
@@ -47,20 +47,71 @@ user_directory:
   search_all_users: true
 rc_login:
   address:
-    per_second: 50
-    burst_count: 100
+    per_second: 100
+    burst_count: 1000
   account:
-    per_second: 50
-    burst_count: 100
+    per_second: 100
+    burst_count: 1000
   failed_attempts:
-    per_second: 50
-    burst_count: 100
+    per_second: 100
+    burst_count: 1000
 rc_registration:
-  per_second: 50
-  burst_count: 100
+  per_second: 100
+  burst_count: 1000
+rc_registration_token_validity:
+  per_second: 100
+  burst_count: 1000
 rc_message:
-  per_second: 50
-  burst_count: 100
+  per_second: 100
+  burst_count: 1000
+rc_admin_redaction:
+  per_second: 100
+  burst_count: 1000
+rc_joins:
+  local:
+    per_second: 100
+    burst_count: 1000
+  remote:
+    per_second: 100
+    burst_count: 1000
+rc_joins_per_room:
+  per_second: 100
+  burst_count: 1000
+rc_3pid_validation:
+  per_second: 100
+  burst_count: 1000
+rc_invites:
+  per_room:
+    per_second: 100
+    burst_count: 1000
+  per_user:
+    per_second: 100
+    burst_count: 1000
+  per_issuer:
+    per_second: 100
+    burst_count: 1000
+rc_third_party_invite:
+  per_second: 100
+  burst_count: 1000
+rc_media_create:
+  per_second: 100
+  burst_count: 1000
+rc_presence:
+  per_user:
+    per_second: 100
+    burst_count: 1000
+rc_delayed_event_mgmt:
+  per_second: 100
+  burst_count: 1000
+rc_reports:
+  per_second: 100
+  burst_count: 1000
+rc_room_creation:
+  per_second: 100
+  burst_count: 1000
+rc_user_directory:
+  per_second: 100
+  burst_count: 1000
 EOF
 chmod 0644 "$tmp"
 chown --reference="$config" "$tmp" 2>/dev/null || true
@@ -109,7 +160,7 @@ trap 'rm -f "$tmp_file"' EXIT
 awk '
     /^# Jikjik local development overrides\.$/ { next }
     /^(public_baseurl|enable_registration|enable_registration_without_verification|registration_shared_secret):/ { next }
-    /^(rc_login|rc_registration|rc_message):/ { skip = 1; next }
+    /^(rc_login|rc_registration|rc_registration_token_validity|rc_message|rc_admin_redaction|rc_joins|rc_joins_per_room|rc_3pid_validation|rc_invites|rc_third_party_invite|rc_media_create|rc_presence|rc_delayed_event_mgmt|rc_reports|rc_room_creation|rc_user_directory):/ { skip = 1; next }
     /^user_directory:/ { skip = 1; next }
     skip && /^[^[:space:]]/ { skip = 0 }
     !skip { print }
@@ -126,20 +177,71 @@ user_directory:
   search_all_users: true
 rc_login:
   address:
-    per_second: 50
-    burst_count: 100
+    per_second: 100
+    burst_count: 1000
   account:
-    per_second: 50
-    burst_count: 100
+    per_second: 100
+    burst_count: 1000
   failed_attempts:
-    per_second: 50
-    burst_count: 100
+    per_second: 100
+    burst_count: 1000
 rc_registration:
-  per_second: 50
-  burst_count: 100
+  per_second: 100
+  burst_count: 1000
+rc_registration_token_validity:
+  per_second: 100
+  burst_count: 1000
 rc_message:
-  per_second: 50
-  burst_count: 100
+  per_second: 100
+  burst_count: 1000
+rc_admin_redaction:
+  per_second: 100
+  burst_count: 1000
+rc_joins:
+  local:
+    per_second: 100
+    burst_count: 1000
+  remote:
+    per_second: 100
+    burst_count: 1000
+rc_joins_per_room:
+  per_second: 100
+  burst_count: 1000
+rc_3pid_validation:
+  per_second: 100
+  burst_count: 1000
+rc_invites:
+  per_room:
+    per_second: 100
+    burst_count: 1000
+  per_user:
+    per_second: 100
+    burst_count: 1000
+  per_issuer:
+    per_second: 100
+    burst_count: 1000
+rc_third_party_invite:
+  per_second: 100
+  burst_count: 1000
+rc_media_create:
+  per_second: 100
+  burst_count: 1000
+rc_presence:
+  per_user:
+    per_second: 100
+    burst_count: 1000
+rc_delayed_event_mgmt:
+  per_second: 100
+  burst_count: 1000
+rc_reports:
+  per_second: 100
+  burst_count: 1000
+rc_room_creation:
+  per_second: 100
+  burst_count: 1000
+rc_user_directory:
+  per_second: 100
+  burst_count: 1000
 EOF
 
 chmod 0644 "$tmp_file"
