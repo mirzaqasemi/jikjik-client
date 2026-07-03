@@ -153,4 +153,4 @@ Common variables:
 
 Do not expose this dev homeserver publicly with open registration enabled.
 
-`set-config` also enables `user_directory.search_all_users` so local contact search can discover dev users through the Matrix SDK. It relaxes local login, registration, and message rate limits so seed scripts can run without waiting on Synapse throttling.
+`set-config` also enables `user_directory.search_all_users` so local contact search can discover dev users through the Matrix SDK. It relaxes local login, registration, room creation, join, invite, user directory, presence, media, and message rate limits so seed scripts and local UI testing can run without waiting on Synapse throttling.
