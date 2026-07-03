@@ -2,7 +2,7 @@ import { SendHorizontal } from "lucide-react";
 import { useState } from "react";
 import "./MessageInput.css"
 
-export default function MessageInput({ sendMessage }: { sendMessage: (inputStr: string) => void }) {
+export default function MessageInput({ sendMessage, disabled }: { sendMessage: (inputStr: string) => void, disabled: boolean }) {
     const [inputStr, setInputStr] = useState("");
     return (
         //  <!-- Bottom: Input Section -->
@@ -14,8 +14,10 @@ export default function MessageInput({ sendMessage }: { sendMessage: (inputStr: 
                         sendMessage(inputStr);
                         setInputStr("");
                     }
-                }} />
-            <button className="flex justify-center rounded-full btn-send" onClick={() => sendMessage(inputStr)} >
+                }}
+                disabled={disabled}
+                />
+            <button className="flex justify-center rounded-full btn-send" onClick={() => sendMessage(inputStr)}  disabled={disabled}>
                 <SendHorizontal className="" fill="var(--primary)" strokeWidth={"1.5"} stroke="" />
             </button>
         </div >
