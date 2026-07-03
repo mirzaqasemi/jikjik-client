@@ -49,7 +49,7 @@ export default function Chats() {
     }
 
     function logout() {
-        session.logoutUser();
+        backend.logout();
         navigate(router.LOGIN_ROUTE);
     }
 
