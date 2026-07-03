@@ -6,6 +6,7 @@ import {
     type Room,
 } from "matrix-js-sdk";
 import type { User } from "./backend";
+import { DraftStorage } from "./draft-storage";
 import * as session from "./session";
 
 export interface DraftDmResolvedEvent
@@ -83,7 +84,7 @@ function handleRoomTimeline(_event: MatrixEvent, room?: Room): void {
 }
 
 function resolveDraftDmWithRoom(room: Room): void {
-    const draftUser = session.getDraftDm();
+    const draftUser = DraftStorage.getDraftDm();
     if (draftUser == null || !isDirectRoomWithUser(room, draftUser.userId)) {
         return;
     }
