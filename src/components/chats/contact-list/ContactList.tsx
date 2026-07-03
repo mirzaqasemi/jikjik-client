@@ -1,5 +1,5 @@
 import * as backend from "@/services/backend.ts";
-import * as session from "@/services/session";
+import { draftDm } from "@/services/draft-storage";
 import { useNavigate } from "react-router-dom";
 
 type Params = {
@@ -16,7 +16,7 @@ export default function ContactList(params: Params) {
                 {
                     params.contacts.map((contact) => (
                         <button onClick={() => {
-                            session.draftDm(contact);
+                            draftDm(contact);
                             navigate(`/chats/draft`);
                             params.onSelect();
                         }

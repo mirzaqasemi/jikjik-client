@@ -4,6 +4,7 @@ import "./MessageInput.css"
 
 export default function MessageInput({ sendMessage, disabled }: { sendMessage: (inputStr: string) => void, disabled: boolean }) {
     const [inputStr, setInputStr] = useState("");
+    
     return (
         //  <!-- Bottom: Input Section -->
         < div className="flex justify-center chat-input-area" >

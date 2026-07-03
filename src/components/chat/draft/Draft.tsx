@@ -9,12 +9,13 @@ import { useNavigate } from "react-router-dom";
 import '../Chat.css';
 import Header from "../header/Header";
 import MessageInput from "../message-input/MessageInput";
+import * as DraftStorage from "@/services/draft-storage";
 
 export default function Draft() {
     const [disabled, setDisabled] = useState(false)
     const navigate = useNavigate();
     const rawUser = session.getUser();
-    const rawContact = session.getDraftDm();
+    const rawContact = DraftStorage.getDraftDm();
     if (rawUser == null) {
         throw new Error("User not found");
     }
@@ -51,6 +52,8 @@ export default function Draft() {
             return await backend.createDm(params.contactUsername);
         },
         onSuccess: (data, params) => {
+            DraftStorage.draftMsg(data.id, params.inputStr, "send");
+            navigate(`/chats/${data.id}`);
         },
     });
 

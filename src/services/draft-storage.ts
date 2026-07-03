@@ -38,7 +38,7 @@ export function draftMsg(
     action: DraftMessageAction = DraftMessageAction.Display,
 ): void {
     if (content.length === 0) {
-        removeDraftForRoom(roomId);
+        removeDraftMsg(roomId);
         return;
     }
 
@@ -51,11 +51,11 @@ export function draftMsg(
     session.setSessionItem(getDraftMessageKey(roomId), draft);
 }
 
-export function getDraftForRoom(roomId: string): DraftMessage | null {
+export function getDraftMsg(roomId: string): DraftMessage | null {
     return session.getSessionItem<DraftMessage>(getDraftMessageKey(roomId));
 }
 
-export function removeDraftForRoom(roomId: string): void {
+export function removeDraftMsg(roomId: string): void {
     session.removeSessionItem(getDraftMessageKey(roomId));
 }
 
@@ -68,7 +68,7 @@ export const DraftStorage = {
     getDraftDm,
     removeDraftDm,
     draftMsg,
-    getDraftForRoom,
-    removeDraftForRoom,
+    getDraftMsg,
+    removeDraftMsg,
     clearDrafts,
 };

@@ -8,7 +8,9 @@ import './Chat.css';
 import Message from "./message/Message.tsx";
 import Header from "./header/Header.tsx";
 import MessageInput from "./message-input/MessageInput.tsx";
+import { DraftStorage } from "@/services/draft-storage.ts";
 
+import type { DraftMessage } from "@/services/draft-storage.ts";
 export type MessageWithStatus = backend.Message & { status: "pending" | "error" };
 
 export default function Chat() {
@@ -17,7 +19,6 @@ export default function Chat() {
     const rawUser = session.getUser();
     const bottomRef = useRef<HTMLDivElement>(null);
     const [pendingMsgs, setPendingMsgs] = useState<MessageWithStatus[]>([]);
-
     if (rawUser == null) {
         throw new Error("User not authenticated");
     }
@@ -41,6 +42,15 @@ export default function Chat() {
     });
 
     useEffect(() => {
+        const draftMsg = DraftStorage.getDraftMsg(chatId);
+        // If there is any drafted message and its action is 'send', then send it to backend throughout sendMessageMutation
+        if (draftMsg?.action == "send") {
+            sendMessage(draftMsg.content);
+            DraftStorage.removeDraftMsg(chatId);
+        }
+    }, []);
+
+    useEffect(() => {
         if (serverMessages.length == 0) return;
         setPendingMsgs((oldPending) =>
             oldPending.filter(
@@ -57,7 +67,7 @@ export default function Chat() {
         bottomRef.current?.scrollIntoView({
             behavior: "auto"
         })
-    }, [serverMessages.length]);
+    }, [serverMessages.length, chatId]);
 
     const sendMessageMutation = useMutation({
         mutationFn: (params: { username: string, chat: backend.Chat, content: string, uid: string }) => {
@@ -92,6 +102,7 @@ export default function Chat() {
             console.error("failed to send message", params, err);
         },
     });
+
 
     if (isError) {
         return (
@@ -131,6 +142,8 @@ export default function Chat() {
         })
     }
 
+
+
     return (
         <div className="flex flex-col chat-page">
             {/* <!-- Top: Header Section --> */}
@@ -161,7 +174,7 @@ export default function Chat() {
             }
 
             {/* <!-- Bottom: Input Section --> */}
-            <MessageInput sendMessage={sendMessage} />
+            <MessageInput sendMessage={sendMessage} disabled={false} />
         </div>
     );
 }
