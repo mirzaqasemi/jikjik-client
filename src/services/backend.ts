@@ -17,8 +17,7 @@ import * as session from "./session";
 // Types
 // -----------------------------------------
 // TODO: Move these app-facing backend models to a dedicated models file or folder later.
-export interface User
-{
+export interface User {
     /** Canonical Matrix user id, for example "@alex92:localhost". */
     userId: string;
 
@@ -49,8 +48,7 @@ export interface User
     membership?: string;
 }
 
-export interface Message
-{
+export interface Message {
     /** User who sent the message. */
     sender: User;
 
@@ -81,8 +79,7 @@ export interface Message
     age?: number;
 }
 
-export interface Chat
-{
+export interface Chat {
     /** Matrix room id, for example "!room:localhost". */
     id: string;
 
@@ -117,8 +114,7 @@ export interface Chat
     topic?: string;
 }
 
-export interface CreateRoomRequest
-{
+export interface CreateRoomRequest {
     /** Human-readable room name shown in chat lists and room headers. */
     title: string;
 
@@ -231,6 +227,8 @@ function lastSeenFromPresence(lastActiveAgo?: number): Date | undefined {
 }
 
 async function withPresence(user: User): Promise<User> {
+    //FIXME this gets 403 and too many requests
+    return user;
     try {
         const presence = await getClient().getPresence(user.userId);
         return {
@@ -309,7 +307,8 @@ function stateContent<TContent extends IContent>(room: Room, eventType: string):
 }
 
 function chatFromSdkRoom(room: Room): Chat {
-    const users = room.getJoinedMembers().map(userFromMember);
+    const users = room.getMembers().map(userFromMember); //TODO add support for invited members
+
     const messages = room.getLiveTimeline()
         .getEvents()
         .map(event => messageFromEvent(event, users))
@@ -317,7 +316,6 @@ function chatFromSdkRoom(room: Room): Chat {
     const create = stateContent<{ creator?: string; room_version?: string }>(room, EventType.RoomCreate);
     const encryption = stateContent<{ algorithm?: string }>(room, EventType.RoomEncryption);
     const topic = stateContent<{ topic?: string }>(room, EventType.RoomTopic);
-
     return {
         id: room.roomId,
         title: room.name || undefined,
@@ -343,8 +341,8 @@ function userFromMemberState(userId: string, content: IContent): User {
 
 function chatFromInitialSync(roomId: string, response: Awaited<ReturnType<MatrixClient["roomInitialSync"]>>): Chat {
     const state = response.state || [];
-    const users = state
-        .filter(event => event.type === EventType.RoomMember && event.state_key && event.content.membership === "join")
+    const users = state //TODO add support for join/invited and other types of membership
+        .filter(event => event.type === EventType.RoomMember && event.state_key) // && event.content.membership === "join"
         .map(event => userFromMemberState(event.state_key!, event.content));
     const events = (response.messages?.chunk || []).map(event => new MatrixEvent(event));
     const messages = events
@@ -376,7 +374,6 @@ async function getSdkRoomOrInitialSync(roomId: string): Promise<Chat> {
     const client = getClient();
     const room = client.getRoom(roomId);
     let chat: Chat;
-
     if (room != null) {
         chat = chatFromSdkRoom(room);
     } else {
@@ -408,7 +405,7 @@ async function getRoomUsers(roomId: string): Promise<User[]> {
 // -----------------------------------------
 export async function login(loginIdentifier: string, password: string): Promise<User | null> {
     resetClient();
-    const loginClient = createClient({baseUrl: MATRIX_BASE_URL});
+    const loginClient = createClient({ baseUrl: MATRIX_BASE_URL });
     const loginResponse = await loginClient.loginRequest({
         type: "m.login.password",
         identifier: {
@@ -503,7 +500,7 @@ export async function createRoom(req: CreateRoomRequest): Promise<Chat> {
 
     return getSdkRoomOrInitialSync(response.room_id);
 }
-
+//TODO handle not found error
 export async function getMessages(chatId: string): Promise<Message[]> {
     const client = getClient();
     const room = client.getRoom(chatId);
@@ -538,7 +535,7 @@ export async function sendMessage(req: {
 
 export async function searchContacts(query: string, limit: number = 20): Promise<User[]> {
     const currentUserId = session.getMatrixSession()?.userId;
-    const response = await getClient().searchUserDirectory({term: query, limit});
+    const response = await getClient().searchUserDirectory({ term: query, limit });
     const contacts: User[] = [];
 
     for (const result of response.results) {
