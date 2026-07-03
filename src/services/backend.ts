@@ -1,4 +1,5 @@
 import {
+    ClientEvent,
     createClient,
     EventType,
     type MatrixClient,
@@ -6,6 +7,7 @@ import {
     MsgType,
     type Room,
     type RoomMember,
+    SyncState,
 } from "matrix-js-sdk";
 import type { ICreateRoomOpts } from "matrix-js-sdk/lib/@types/requests";
 import { Preset, Visibility } from "matrix-js-sdk/lib/@types/partials";
@@ -195,6 +197,43 @@ function resetClient(): void {
     detachBackendEventClient();
     matrixClient?.stopClient();
     matrixClient = null;
+}
+
+function waitForInitialSync(client: MatrixClient): Promise<void> {
+    if (client.isInitialSyncComplete()) {
+        return Promise.resolve();
+    }
+
+    return new Promise((resolve, reject) => {
+        const timeoutId = window.setTimeout(() => {
+            cleanup();
+            reject(new Error("Matrix initial sync timed out"));
+        }, 15000);
+
+        function cleanup() {
+            client.off(ClientEvent.Sync, handleSync);
+            window.clearTimeout(timeoutId);
+        }
+
+        function handleSync(state: SyncState) {
+            if (client.isInitialSyncComplete() || state === SyncState.Prepared || state === SyncState.Syncing) {
+                cleanup();
+                resolve();
+                return;
+            }
+
+            if (state === SyncState.Error || state === SyncState.Stopped) {
+                cleanup();
+                reject(new Error("Matrix initial sync failed"));
+            }
+        }
+
+        client.on(ClientEvent.Sync, handleSync);
+        const currentState = client.getSyncState();
+        if (currentState != null) {
+            handleSync(currentState);
+        }
+    });
 }
 
 function displayNameFromUserId(userId: string): string {
@@ -401,6 +440,8 @@ async function getVisibleRoomIds(): Promise<string[]> {
     const client = getClient();
     const roomIds = new Set<string>();
 
+    await waitForInitialSync(client);
+
     client.getRooms()
         .filter(room => ["invite", "join"].includes(room.getMyMembership()))
         .forEach(room => roomIds.add(room.roomId));
@@ -499,6 +540,11 @@ export async function getChats(filter?: string): Promise<Chat[]> {
 
 export async function getChat(chatId: string): Promise<Chat> {
     return getSdkRoomOrInitialSync(chatId);
+}
+
+export async function acceptChatInvitation(chatId: string): Promise<Chat> {
+    const room = await getClient().joinRoom(chatId);
+    return getSdkRoomOrInitialSync(room.roomId);
 }
 
 export async function createDm(username: string): Promise<Chat> {
