@@ -83,6 +83,9 @@ export interface Chat {
     /** Matrix room id, for example "!room:localhost". */
     id: string;
 
+    /** Current user's Matrix membership in this room, for example "join" or "invite". */
+    membership?: string;
+
     /** Room display title from m.room.name, or derived by the SDK when room state is available. */
     title?: string;
 
@@ -324,6 +327,7 @@ function chatFromSdkRoom(room: Room): Chat {
     const topic = stateContent<{ topic?: string }>(room, EventType.RoomTopic);
     return {
         id: room.roomId,
+        membership: room.getMyMembership(),
         title: room.name || undefined,
         users,
         lastMsg: messages.at(-1) || null,
@@ -363,6 +367,7 @@ function chatFromInitialSync(roomId: string, response: Awaited<ReturnType<Matrix
 
     return {
         id: roomId,
+        membership: "join",
         title: roomName,
         users,
         lastMsg: messages.at(-1) || null,
@@ -390,6 +395,20 @@ async function getSdkRoomOrInitialSync(roomId: string): Promise<Chat> {
         ...chat,
         users: await withPresenceForUsers(chat.users),
     };
+}
+
+async function getVisibleRoomIds(): Promise<string[]> {
+    const client = getClient();
+    const roomIds = new Set<string>();
+
+    client.getRooms()
+        .filter(room => ["invite", "join"].includes(room.getMyMembership()))
+        .forEach(room => roomIds.add(room.roomId));
+
+    const response = await client.getJoinedRooms();
+    response.joined_rooms.forEach(roomId => roomIds.add(roomId));
+
+    return [...roomIds];
 }
 
 async function getRoomUsers(roomId: string): Promise<User[]> {
@@ -452,8 +471,8 @@ export async function currentUser(): Promise<User | null> {
 }
 
 export async function getChats(filter?: string): Promise<Chat[]> {
-    const response = await getClient().getJoinedRooms();
-    const chats = await Promise.all(response.joined_rooms.map(getSdkRoomOrInitialSync));
+    const roomIds = await getVisibleRoomIds();
+    const chats = await Promise.all(roomIds.map(getSdkRoomOrInitialSync));
     const normalizedFilter = (filter || "").trim().toLowerCase();
 
     const sortedChats = chats.sort((a, b) => {
