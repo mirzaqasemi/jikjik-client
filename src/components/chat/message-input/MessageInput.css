@@ -1,0 +1,25 @@
+/* =========================================
+    <!-- Bottom: Input Section -->
+   ========================================= */
+.chat-input-area {
+    flex-shrink: 0;
+    padding: 4px 16px;
+    background-color: white;
+    border-top: 1px solid var(--border-light);
+    gap: 12px;
+}
+
+.chat-input-area input {
+    flex: 1;
+    font-size: 14px;
+    outline: none;
+}
+
+.btn-send {
+    transition: background-color 0.3s ease;
+    padding: 8px;
+}
+
+.btn-send:active {
+    background-color: oklch(85.157% 0.17398 88.295 / 0.13);
+}

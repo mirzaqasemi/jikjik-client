@@ -1,4 +1,5 @@
-import type * as backend from "../services/backend";
+import  * as backend from "../services/backend";
+import  * as session from "../services/session";
 
 export function formatDate(date?: Date | null): string {
     if (date == null) return "";
@@ -10,9 +11,10 @@ export function formatDate(date?: Date | null): string {
     return timeString + " " + ampm;
 }
 
-export function getTitle(currentUserId: string, chat: backend.Chat): string {
+export function getTitle( chat: backend.Chat): string {
+    const user: backend.User | null = session.getUser();
+    const currentUserId= user?.userId;
     const users = chat.users;
-
     let names: string[] = [];
     if (chat.title != null && chat.title != "") {
         return chat.title;

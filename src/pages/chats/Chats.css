@@ -7,14 +7,6 @@
     background-size: cover;
 }
 
-.chat-background::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    opacity: 0.06;
-    pointer-events: none;
-}
-
 .chat-background-content {
     position: relative;
     z-index: 1;

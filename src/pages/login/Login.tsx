@@ -158,7 +158,7 @@ export default function Login() {
                                         <InputGroupInput
                                             type={showPassword ? "text" : "password"}
                                             id="fieldgroup-pass"
-                                            defaultValue="password123"
+                                            defaultValue="password"
                                             ref={passRef}
                                         />
                                         <InputGroupAddon align="inline-end">

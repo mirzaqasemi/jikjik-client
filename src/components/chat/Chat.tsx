@@ -1,21 +1,19 @@
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ArrowLeft, SendHorizontal } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Link, useLoaderData, useParams } from 'react-router-dom';
+import { useLoaderData, useParams } from 'react-router-dom';
 import * as backend from "../../services/backend.ts";
 import * as session from '../../services/session.ts';
-import * as utilities from "../../utilities/utilities.ts";
 import './Chat.css';
 import Message from "./message/Message.tsx";
-
+import Header from "./header/Header.tsx";
+import MessageInput from "./message-input/MessageInput.tsx";
 
 export type MessageWithStatus = backend.Message & { status: "pending" | "error" };
 
 export default function Chat() {
     const params = useParams<{ chatId: string }>();
     const selectedChat = useLoaderData<backend.Chat>();
-    const [inputStr, setinputStr] = useState("");
     const rawUser = session.getUser();
     const bottomRef = useRef<HTMLDivElement>(null);
     const [pendingMsgs, setPendingMsgs] = useState<MessageWithStatus[]>([]);
@@ -43,6 +41,7 @@ export default function Chat() {
     });
 
     useEffect(() => {
+        if (serverMessages.length == 0) return;
         setPendingMsgs((oldPending) =>
             oldPending.filter(
                 (pending) =>
@@ -52,13 +51,7 @@ export default function Chat() {
             )
         );
     }, [serverMessages]);
-    if (isError) {
-        return (
-            <div className="flex justify-center items-center h-full">
-                Failed to load chats.
-            </div>
-        );
-    }
+
     //At first: Chat component Render -> DOM updated -> useLayoutEffect runs -> scroll -> PAINT 🎨 (The browser actually draws pixels on the screen so the user can see something.)
     useLayoutEffect(() => {
         bottomRef.current?.scrollIntoView({
@@ -100,9 +93,16 @@ export default function Chat() {
         },
     });
 
-    async function addToMessages() {
+    if (isError) {
+        return (
+            <div className="flex justify-center items-center h-full">
+                Failed to load chats.
+            </div>
+        );
+    }
+
+    function sendMessage(inputStr: string) {
         if (!inputStr.trim()) return;
-        setinputStr("");
         sendMessageMutation.mutate({
             username: user.username,
             chat: selectedChat,
@@ -133,34 +133,8 @@ export default function Chat() {
 
     return (
         <div className="flex flex-col chat-page">
-
             {/* <!-- Top: Header Section --> */}
-            <div className="flex items-center conversation-header">
-                <div className="flex gap-2.5">
-                    <Link to={"../"} className="lg:hidden flex justify-center items-center btn-back w-10 h-10 rounded-full">
-                        <ArrowLeft strokeWidth={"1.5"} />
-                    </Link>
-                    <div className="flex gap-3">
-                        <div className="avatar-container">
-                            <img src="https://i.pravatar.cc/150?img=32" alt="" className="size-11 rounded-full lg:hidden" />
-                        </div>
-                        <div className="flex flex-col items-start user-details">
-                            <span className="user-name">{utilities.getTitle(user.username, selectedChat)}</span>
-                            <span className="user-status">Online</span>
-                        </div>
-                    </div>
-                </div>
-                {/* <!-- Right Side: Three Dots (Kebab Menu) --> */}
-                <button className="flex icon-btn more-options-btn" aria-label="More options">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5"
-                        strokeLinejoin="round" strokeLinecap="round">
-                        <circle cx="12" cy="5" r="1"></circle>
-                        <circle cx="12" cy="12" r="1"></circle>
-                        <circle cx="12" cy="19" r="1"></circle>
-                    </svg>
-                </button>
-            </div>
-
+            <Header selectedChat={selectedChat} />
 
             {/* <!-- Middle: Messages Section --> */}
             {
@@ -186,20 +160,8 @@ export default function Chat() {
                     </div>
             }
 
-
             {/* <!-- Bottom: Input Section --> */}
-            <div className="flex justify-center chat-input-area">
-                <input value={inputStr} type="text" placeholder="Write a message..."
-                    onChange={(e) => setinputStr(e.target.value)}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                            addToMessages();
-                        }
-                    }} />
-                <button onClick={addToMessages} className="flex justify-center rounded-full btn-send ">
-                    <SendHorizontal className="" fill="var(--primary)" strokeWidth={"1.5"} stroke="" />
-                </button>
-            </div>
+            <MessageInput sendMessage={sendMessage} />
         </div>
     );
 }

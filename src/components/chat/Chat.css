@@ -6,53 +6,6 @@
     height: 100vh;
 }
 
-
-/* =========================================
-    <!-- Top: Header Section --> 
-   ========================================= */
-.conversation-header {
-    flex-shrink: 0;
-    width: 100%;
-    padding: 8px 8px;
-    border-bottom: 1px solid var(--border-light);
-    background-color: white;
-    justify-content: space-between;
-}
-
-.btn-back {
-    color: var(--color-muted-foreground);
-    transition: background-color 0.5s ease;
-}
-
-.btn-back:active {
-    background-color: var(--color-secondary);
-}
-
-.user-name {
-    color: var(--text-main);
-    font-size: 16px;
-    font-weight: 500;
-}
-
-.user-status {
-    font-size: 12px;
-    color: var(--color-sidebar-ring);
-    font-weight: 400;
-}
-
-.icon-btn {
-    background: transparent;
-    border: none;
-    padding: 8px;
-    border-radius: 50%;
-    width: auto;
-    transition: background-color 0.3s ease;
-}
-
-.icon-btn:hover {
-    background-color: #f8fafc;
-}
-
 /* =========================================
     <!-- Middle: Messages Section -->
    ========================================= */
@@ -77,28 +30,3 @@
     text-align: center;
 }
 
-/* =========================================
-    <!-- Bottom: Input Section -->
-   ========================================= */
-.chat-input-area {
-    flex-shrink: 0;
-    padding: 4px 16px;
-    background-color: white;
-    border-top: 1px solid var(--border-light);
-    gap: 12px;
-}
-
-.chat-input-area input {
-    flex: 1;
-    font-size: 14px;
-    outline: none;
-}
-
-.btn-send {
-    transition: background-color 0.3s ease;
-    padding: 8px;
-}
-
-.btn-send:active {
-    background-color: oklch(85.157% 0.17398 88.295 / 0.13);
-}

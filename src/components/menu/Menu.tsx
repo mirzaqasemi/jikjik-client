@@ -16,14 +16,14 @@ type Params = {
 
 export default function Menu(params: Params) {
     return (
-        <>
+        <div>
             <Sheet>
                 <SheetTrigger asChild>
                     <AlignJustify className="text-muted cursor-pointer" />
                 </SheetTrigger>
                 <SheetContent showCloseButton={false} side="left" className="gap-5">
                     <SheetHeader className="gap-4 border-b pb-4">
-                        <img src="" alt="" className="size-9 rounded-full" />
+                        <img src="user-profile" alt="" className="size-9 rounded-full" />
                         <SheetTitle>{params.user.displayName}</SheetTitle>
                     </SheetHeader>
                     <ul className="flex flex-col sidebar-icons">
@@ -48,7 +48,7 @@ export default function Menu(params: Params) {
                     </ul>
                 </SheetContent>
             </Sheet>
-        </>
+        </div>
     );
 }
 

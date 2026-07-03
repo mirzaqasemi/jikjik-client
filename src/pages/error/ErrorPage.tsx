@@ -11,10 +11,10 @@ export default function ErrorPage() {
   }
 
   return (
-    <div style={{ padding: '2rem', color: 'red' }}>
-      <h1>Oops!</h1>
-      <p>Sorry, an unexpected error has occurred.</p>
-      <p><i>{errorMessage}</i></p>
+    <div style={{ padding: '2rem', color: 'red' }} className='flex flex-col h-full justify-center items-center gap-6'>
+      <h1 className='text-4xl'>Oops!</h1>
+      <p className='text-3xl'>Sorry, an unexpected error has occurred.</p>
+      <p className='text-3xl'><i>{errorMessage}</i></p>
     </div>
   );
 }
