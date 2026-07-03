@@ -13,6 +13,10 @@ import type { ICreateRoomOpts } from "matrix-js-sdk/lib/@types/requests";
 import { Preset, Visibility } from "matrix-js-sdk/lib/@types/partials";
 import type { IContent } from "matrix-js-sdk/lib/models/event";
 import { attachBackendEventClient, detachBackendEventClient } from "./backend-event";
+import {
+    findDirectRoomId,
+    isVisibleRoom,
+} from "./direct-room";
 import * as session from "./session";
 
 // -----------------------------------------
@@ -443,7 +447,7 @@ async function getVisibleRoomIds(): Promise<string[]> {
     await waitForInitialSync(client);
 
     client.getRooms()
-        .filter(room => ["invite", "join"].includes(room.getMyMembership()))
+        .filter(isVisibleRoom)
         .forEach(room => roomIds.add(room.roomId));
 
     const response = await client.getJoinedRooms();
@@ -540,6 +544,16 @@ export async function getChats(filter?: string): Promise<Chat[]> {
 
 export async function getChat(chatId: string): Promise<Chat> {
     return getSdkRoomOrInitialSync(chatId);
+}
+
+export async function getDirectRoomId(username: string): Promise<string | null> {
+    const userId = normalizeUserId(username);
+    const client = getClient();
+
+    await waitForInitialSync(client);
+
+    const directRooms = await client.getAccountDataFromServer(EventType.Direct) || {};
+    return findDirectRoomId(client, userId, directRooms);
 }
 
 export async function acceptChatInvitation(chatId: string): Promise<Chat> {

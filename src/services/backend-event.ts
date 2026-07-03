@@ -2,12 +2,10 @@ import {
     ClientEvent,
     RoomEvent,
     type MatrixClient,
-    type MatrixEvent,
-    type Room,
 } from "matrix-js-sdk";
 import type { User } from "./backend";
+import { findDirectRoomId } from "./direct-room";
 import { DraftStorage } from "./draft-storage";
-import * as session from "./session";
 
 export interface DraftDmResolvedEvent
 {
@@ -34,6 +32,10 @@ export function subscribeBackendEvent<TEvent extends keyof BackendEventMap>(
     const eventListeners = listeners[event] || new Set<AnyBackendEventListener>();
     eventListeners.add(listener as AnyBackendEventListener);
     listeners[event] = eventListeners;
+
+    if (event === "draftDmResolved") {
+        queueMicrotask(resolveDraftDmFromKnownRooms);
+    }
 
     return () => eventListeners.delete(listener as AnyBackendEventListener);
 }
@@ -69,39 +71,31 @@ function emitBackendEvent<TEvent extends keyof BackendEventMap>(
     listeners[event]?.forEach(listener => listener(payload));
 }
 
-function handleRoom(room: Room): void {
-    resolveDraftDmWithRoom(room);
+function handleRoom(): void {
+    resolveDraftDmFromKnownRooms();
 }
 
-function handleRoomMembership(room: Room): void {
-    resolveDraftDmWithRoom(room);
+function handleRoomMembership(): void {
+    resolveDraftDmFromKnownRooms();
 }
 
-function handleRoomTimeline(_event: MatrixEvent, room?: Room): void {
-    if (room != null) {
-        resolveDraftDmWithRoom(room);
-    }
+function handleRoomTimeline(): void {
+    resolveDraftDmFromKnownRooms();
 }
 
-function resolveDraftDmWithRoom(room: Room): void {
+function resolveDraftDmFromKnownRooms(): void {
     const draftUser = DraftStorage.getDraftDm();
-    if (draftUser == null || !isDirectRoomWithUser(room, draftUser.userId)) {
+    if (draftUser == null || attachedClient == null) {
+        return;
+    }
+
+    const roomId = findDirectRoomId(attachedClient, draftUser.userId);
+    if (roomId == null) {
         return;
     }
 
     emitBackendEvent("draftDmResolved", {
         draftUser,
-        roomId: room.roomId,
+        roomId,
     });
-}
-
-function isDirectRoomWithUser(room: Room, userId: string): boolean {
-    // TODO: Handle invite-state DMs explicitly. For now this resolves joined two-person rooms.
-    const currentUserId = session.getMatrixSession()?.userId;
-    const members = room.getJoinedMembers();
-
-    return currentUserId != null
-        && members.length === 2
-        && members.some(member => member.userId === currentUserId)
-        && members.some(member => member.userId === userId);
 }
