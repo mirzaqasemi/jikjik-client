@@ -181,7 +181,7 @@ export default function Login() {
                                     <span>{warning}</span>
                                 </div>}
                                 <Field orientation="horizontal">
-                                    <Button className='w-full btn-primary' type="submit" disabled={loginMutation.isPending}>Login</Button>
+                                    <Button className='w-full' type="submit" variant={"default"} disabled={loginMutation.isPending}>Login</Button>
                                 </Field>
                             </FieldGroup>
                         </form>

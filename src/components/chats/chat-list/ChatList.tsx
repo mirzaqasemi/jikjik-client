@@ -15,7 +15,12 @@ export default function ChatList(params: Params) {
             {
                 params.chats.map(chat => (
                     <button onClick={() => {
-                        navigate(`/chats/${chat.id}`);
+                        if (chat.membership === "invite") {
+                            navigate(`/chats/${chat.id}/invite`);
+                        }
+                        else if (chat.membership === "join"){
+                            navigate(`/chats/${chat.id}`) 
+                        };
                         params.onSelect();
                     }
                     } key={chat.id}

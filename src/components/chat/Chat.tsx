@@ -10,7 +10,6 @@ import Header from "./header/Header.tsx";
 import MessageInput from "./message-input/MessageInput.tsx";
 import { DraftStorage } from "@/services/draft-storage.ts";
 
-import type { DraftMessage } from "@/services/draft-storage.ts";
 export type MessageWithStatus = backend.Message & { status: "pending" | "error" };
 
 export default function Chat() {
@@ -141,9 +140,7 @@ export default function Chat() {
             uid: failedMsg.transactionId!,
         })
     }
-
-
-
+    
     return (
         <div className="flex flex-col chat-page">
             {/* <!-- Top: Header Section --> */}
