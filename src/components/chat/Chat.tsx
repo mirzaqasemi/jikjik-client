@@ -14,7 +14,7 @@ export type MessageWithStatus = backend.Message & { status: "pending" | "error" 
 
 export default function Chat() {
     const params = useParams<{ chatId: string }>();
-    const selectedChat = useLoaderData<backend.Chat>();
+    const chat = useLoaderData<backend.Chat>();
     const rawUser = session.getUser();
     const bottomRef = useRef<HTMLDivElement>(null);
     const [pendingMsgs, setPendingMsgs] = useState<MessageWithStatus[]>([]);
@@ -115,7 +115,7 @@ export default function Chat() {
         if (!inputStr.trim()) return;
         sendMessageMutation.mutate({
             username: user.username,
-            chat: selectedChat,
+            chat: chat,
             content: inputStr,
             uid: crypto.randomUUID()
         });
@@ -135,7 +135,7 @@ export default function Chat() {
         // 2. resend same message to backend
         sendMessageMutation.mutate({
             username: user.userId,
-            chat: selectedChat,
+            chat: chat,
             content: failedMsg.content,
             uid: failedMsg.transactionId!,
         })
@@ -144,7 +144,7 @@ export default function Chat() {
     return (
         <div className="flex flex-col chat-page">
             {/* <!-- Top: Header Section --> */}
-            <Header selectedChat={selectedChat} />
+            <Header selectedChat={chat} />
 
             {/* <!-- Middle: Messages Section --> */}
             {
@@ -155,14 +155,14 @@ export default function Chat() {
                         <div className="date-separator">TODAY</div>
                         {
                             serverMessages.map((message) =>
-                                <Message user={user} chat={selectedChat} message={message} key={message.eventId} status="success" retryMessage={retryMessage} />
+                                <Message user={user} chat={chat} message={message} key={message.eventId} status="success" retryMessage={retryMessage} />
                             )
                         }
                         {
                             pendingMsgs.filter((pendingMsg) =>
                                 !serverMessages.some((serverMsg) => serverMsg.uid === pendingMsg.uid)
                             ).map((pendingMsg) =>
-                                < Message user={user} chat={selectedChat} message={pendingMsg} key={pendingMsg.uid} status={pendingMsg.status}
+                                < Message user={user} chat={chat} message={pendingMsg} key={pendingMsg.uid} status={pendingMsg.status}
                                     retryMessage={retryMessage} />
                             )
                         }

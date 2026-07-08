@@ -27,7 +27,27 @@ export async function chatLoader({ params }: LoaderFunctionArgs) {
     if (!chatId) {
       throw new Error("Missing chatId");
     }
-    return backend.getChat(chatId);
+    const chat = await backend.getChat(chatId);
+    if (chat.membership == "invite") {
+      return redirect(`chats/${chatId}/invite`);
+    }
+    return chat;
+  }
+  return protectedLoaderResult;
+}
+
+export async function inviteChatLoader({ params }: LoaderFunctionArgs) {
+  const protectedLoaderResult = protectedLoader();
+  const chatId = params.chatId;
+  if (protectedLoaderResult == null) {
+    if (!chatId) {
+      throw new Error("Missing chatId");
+    }
+    const chat = await backend.getChat(chatId);
+    if (chat.membership == 'join') {
+      return redirect(`/chats/${chatId}`);
+    }
+    return chat;
   }
   return protectedLoaderResult;
 }
