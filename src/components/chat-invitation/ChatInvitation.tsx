@@ -16,10 +16,9 @@ export default function ChatInvitation() {
             if (!response.id) {
                 throw new Error("Couldn't join the room");
             }
-            navigate(`/chats/${chatId}`)
+            navigate(`/chats/${chatId}`);
         } catch (error) {
             console.error("Failed to join", error);
-            navigate(`/chats/${chatId}/invite`);
         }
     }
 
