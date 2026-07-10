@@ -18,13 +18,12 @@ export default function ChatList(params: Params) {
                         if (chat.membership === "invite") {
                             navigate(`/chats/${chat.id}/invite`);
                         }
-                        else if (chat.membership === "join"){
-                            navigate(`/chats/${chat.id}`) 
+                        else if (chat.membership === "join") {
+                            navigate(`/chats/${chat.id}`)
                         };
                         params.onSelect();
                     }
-                    } key={chat.id}
-                        className="flex m-auto h-18 items-center w-full chat-item">
+                    } key={chat.id} className="flex m-auto h-18 items-center w-full chat-item">
                         <div className="relative h-10 w-10 shrink-0">
                             <img src="https://i.pravatar.cc/150?img=11" alt="David" className="h-full w-full rounded-full object-cover" />
                             {/* {username.img != null && <img src={username.img} alt="David" class="avatar"/>} */}

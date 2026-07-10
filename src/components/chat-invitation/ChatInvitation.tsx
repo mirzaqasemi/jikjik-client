@@ -23,18 +23,20 @@ export default function ChatInvitation() {
     }
 
     return (
-        <div className="flex flex-col justify-center items-center gap-3 w-[300px] lg:w-[500px] py-7 px-3 rounded-4xl text-xl bg-white">
+        <div className="flex flex-col justify-center items-center gap-3 w-80 sm:w-90 lg:w-100 py-7 px-3 rounded-4xl text-xl bg-white">
             <div className="space-y-2.5 mb-3">
-                <h3>Do you want to chat with {chat.title}</h3>
+                <h3>Do you want to chat with {chat.title}?</h3>
                 <div className="flex justify-center items-center gap-x-2">
                     <div className="flex justify-center items-center font-bold w-12 h-12 rounded-full bg-chart-2 text-chart-4">{chat.title?.charAt(0).toUpperCase()}</div>
                     <span className="muted-text">{chat.title} wants to chat</span>
                 </div>
             </div>
-            <Button className='w-36' onClick={onStartChating}>Start Chatting</Button>
-            <div className="flex gap-x-2">
-                <Button variant="outline" className='w-36'>Decline</Button>
-                <Button variant="outline" className='w-36 text-destructive'>Decline and Block</Button>
+            <div className="flex flex-col gap-y-2.5 gap-x-4 w-70 sm:w-75">
+                <div className="flex justify-between">
+                    <Button variant="outline" className='w-[49%] lg:w-[47%]'>Decline</Button>
+                    <Button className='w-[49%] lg:w-[47%]' onClick={onStartChating}>Start Chatting</Button>
+                </div>
+                <Button variant="outline" className='w-full text-destructive'>Decline and Block</Button>
             </div>
         </div>
     );
