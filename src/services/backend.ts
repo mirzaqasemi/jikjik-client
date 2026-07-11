@@ -220,7 +220,7 @@ function waitForInitialSync(client: MatrixClient): Promise<void> {
         }
 
         function handleSync(state: SyncState) {
-            if (client.isInitialSyncComplete() || state === SyncState.Prepared || state === SyncState.Syncing) {
+            if (client.isInitialSyncComplete() || state === SyncState.Prepared) {
                 cleanup();
                 resolve();
                 return;
@@ -559,6 +559,34 @@ export async function getDirectRoomId(username: string): Promise<string | null> 
 export async function acceptChatInvitation(chatId: string): Promise<Chat> {
     const room = await getClient().joinRoom(chatId);
     return getSdkRoomOrInitialSync(room.roomId);
+}
+
+export async function declineChatInvitation(chatId: string): Promise<void> {
+    const client = getClient();
+    await client.leave(chatId);
+    await client.forget(chatId).catch(() => undefined);
+}
+
+export async function blockUser(username: string): Promise<void> {
+    const userId = normalizeUserId(username);
+    const client = getClient();
+    const ignoredUsers = new Set(client.getIgnoredUsers());
+    if (ignoredUsers.has(userId)) {
+        return;
+    }
+
+    await client.setIgnoredUsers([...ignoredUsers, userId]);
+}
+
+export async function unblockUser(username: string): Promise<void> {
+    const userId = normalizeUserId(username);
+    const client = getClient();
+    const ignoredUsers = new Set(client.getIgnoredUsers());
+    if (!ignoredUsers.delete(userId)) {
+        return;
+    }
+
+    await client.setIgnoredUsers([...ignoredUsers]);
 }
 
 export async function createDm(username: string): Promise<Chat> {
