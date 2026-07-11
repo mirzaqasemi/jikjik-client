@@ -24,7 +24,7 @@ export default function Draft() {
         throw new Error("Contact not found");
     }
     const contact = rawContact;
-    const selectedChat: backend.Chat = {
+    const chat: backend.Chat = {
         id: "",
         title: contact?.displayName,
         users: [contact, user],
@@ -67,7 +67,7 @@ export default function Draft() {
 
     return (
         <div className="flex flex-col w-full h-full">
-            <Header selectedChat={selectedChat} />
+            <Header chat={chat} />
             <div className="flex flex-col h-full items-center justify-center rounded-xl">
                 {
                     createDmMutation.isIdle &&

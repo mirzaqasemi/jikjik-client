@@ -144,7 +144,7 @@ export default function Chat() {
     return (
         <div className="flex flex-col chat-page">
             {/* <!-- Top: Header Section --> */}
-            <Header selectedChat={chat} />
+            <Header chat={chat} />
 
             {/* <!-- Middle: Messages Section --> */}
             {

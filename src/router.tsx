@@ -1,5 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom';
-import ChatPlaceHolder from './components/chat-place-holder/ChatPlaceHolder';
+import ChatPlaceHolder from './components/chat/chat-place-holder/ChatPlaceHolder';
 import Chat from './components/chat/Chat';
 import Chats from './pages/chats/Chats';
 import RootLayout from './components/root-layout/RootLayout';
@@ -7,7 +7,7 @@ import * as loaders from './loaders/loaders';
 import ErrorPage from './pages/error/ErrorPage';
 import Login from './pages/login/Login';
 import Draft from './components/chat/draft/Draft';
-import ChatInvitation from './components/chat-invitation/ChatInvitation';
+import ChatInvitation from './components/chat/chat-invitation/ChatInvitation';
 
 export const LOGIN_ROUTE = "/";
 export const CHATS_ROUTE = "/chats";

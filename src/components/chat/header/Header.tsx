@@ -5,7 +5,7 @@ import * as backend from "../../../services/backend.ts";
 import * as session from "../../../services/session.ts";
 import "./Header.css";
 
-export default function Header({ selectedChat} : {selectedChat: backend.Chat}) {
+export default function Header({ chat} : {chat: backend.Chat}) {
     const rawUser = session.getUser();
      if (rawUser == null) {
         throw new Error("User not authenticated");
@@ -14,7 +14,7 @@ export default function Header({ selectedChat} : {selectedChat: backend.Chat}) {
     return (
         <>
             {/* <!-- Top: Header Section --> */}
-            <div className="flex items-center conversation-header">
+            <div className="flex w-full fixed top-0 items-center conversation-header">
                 <div className="flex gap-2.5">
                     <Link to={"../"} className="lg:hidden flex justify-center items-center btn-back w-10 h-10 rounded-full">
                         <ArrowLeft strokeWidth={"1.5"} />
@@ -24,7 +24,7 @@ export default function Header({ selectedChat} : {selectedChat: backend.Chat}) {
                             <img src="https://i.pravatar.cc/150?img=32" alt="" className="size-11 rounded-full lg:hidden" />
                         </div>
                         <div className="flex flex-col items-start user-details">
-                            <span className="user-name">{utilities.getTitle(selectedChat)}</span>
+                            <span className="user-name">{utilities.getTitle(chat)}</span>
                             <span className="user-status">Online</span>
                         </div>
                     </div>
