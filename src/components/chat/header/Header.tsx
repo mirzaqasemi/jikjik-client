@@ -14,7 +14,7 @@ export default function Header({ chat} : {chat: backend.Chat}) {
     return (
         <>
             {/* <!-- Top: Header Section --> */}
-            <div className="flex w-full fixed top-0 items-center conversation-header">
+            <div className="flex w-full absolute top-0 z-50 items-center conversation-header">
                 <div className="flex gap-2.5">
                     <Link to={"../"} className="lg:hidden flex justify-center items-center btn-back w-10 h-10 rounded-full">
                         <ArrowLeft strokeWidth={"1.5"} />
