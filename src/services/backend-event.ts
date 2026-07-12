@@ -63,6 +63,7 @@ export function subscribeInvitationChanged(roomId: string, listener: InvitationC
     const eventListeners = invitationChangedListeners.get(roomId) || new Set<InvitationChangedListener>();
     eventListeners.add(listener);
     invitationChangedListeners.set(roomId, eventListeners);
+    queueMicrotask(() => emitInitialInvitationChanged(roomId, listener));
 
     return () => {
         eventListeners.delete(listener);
@@ -70,6 +71,30 @@ export function subscribeInvitationChanged(roomId: string, listener: InvitationC
             invitationChangedListeners.delete(roomId);
         }
     };
+}
+
+function emitInitialInvitationChanged(roomId: string, listener: InvitationChangedListener): void {
+    if (!invitationChangedListeners.get(roomId)?.has(listener)) {
+        return;
+    }
+
+    const room = attachedClient?.getRoom(roomId);
+    if (room == null) {
+        listener({
+            roomId,
+            change: "removed",
+        });
+        return;
+    }
+
+    const membership = room.getMyMembership();
+    if (membership === "invite") {
+        emitInvitationChanged(room, "invited", listener);
+    } else if (membership === "join") {
+        emitInvitationChanged(room, "accepted", listener);
+    } else {
+        emitInvitationChanged(room, "removed", listener);
+    }
 }
 
 export function attachBackendEventClient(client: MatrixClient): void {
@@ -150,7 +175,11 @@ function emitChatsChanged(reason: ChatsChangedEvent["reason"], roomId?: string):
     });
 }
 
-function emitInvitationChanged(room: Room, change: InvitationChangedEvent["change"]): void {
+function emitInvitationChanged(
+    room: Room,
+    change: InvitationChangedEvent["change"],
+    listener?: InvitationChangedListener,
+): void {
     const memberships: Record<string, string> = {};
     room.getMembers().forEach(member => {
         if (member.membership == null) {
@@ -163,24 +192,31 @@ function emitInvitationChanged(room: Room, change: InvitationChangedEvent["chang
     emitInvitationChangedForRoomId(room.roomId, change, {
         memberships,
         users: Object.keys(memberships),
-    });
+    }, listener);
 }
 
 function emitInvitationChangedForRoomId(
     roomId: string,
     change: InvitationChangedEvent["change"],
     details: Pick<InvitationChangedEvent, "memberships" | "users"> = {},
+    listener?: InvitationChangedListener,
 ): void {
-    const eventListeners = invitationChangedListeners.get(roomId);
-    if (eventListeners == null) {
-        return;
-    }
-
     const event: InvitationChangedEvent = {
         roomId,
         change,
         ...details,
     };
+
+    if (listener != null) {
+        listener(event);
+        return;
+    }
+
+    const eventListeners = invitationChangedListeners.get(roomId);
+    if (eventListeners == null) {
+        return;
+    }
+
     eventListeners.forEach(listener => listener(event));
 }
 
