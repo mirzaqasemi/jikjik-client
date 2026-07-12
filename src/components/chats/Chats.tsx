@@ -37,6 +37,7 @@ export default function Chats() {
         },
         enabled: user != null, ////Do not run queryFn until user exists.
         retry: 2,
+        refetchInterval: 1000,
     });
     const { chats, contacts } = data; // onrolling data
 
