@@ -13,8 +13,7 @@ export default function ChatInvitation() {
     const rawUser = session.getUser();
     const chat = useLoaderData<backend.Chat>();
     const navigate = useNavigate();
-    const chatId = useParams().chatId;
-
+    const chatId = useParams().chatId!;
     // Add listener once, to know if invitation status be changed. 
     // If chatId or navigate are changed, so old listener should be cleaned and react adds new listener. 
     useEffect(() => {
@@ -31,18 +30,35 @@ export default function ChatInvitation() {
         return cleanup;
     }, [chatId, navigate]);
 
-    const mutation = useMutation({
-        mutationFn: backend.acceptChatInvitation,
+    const joinMutation = useMutation({
+        mutationFn: () => backend.acceptChatInvitation(chatId),
         onError: (error) => {
             console.error("Failed to join", error);
         },
-
     });
-    async function startChating() {
-        mutation.mutate(chatId!);
-    }
 
-    const btnDisabled = mutation.isPending || mutation.isSuccess;
+    const declineMutation = useMutation({
+        mutationFn: () => backend.declineChatInvitation(chatId),
+        onError: (error) => {
+            console.error("Failed to decline", error);
+        },
+    });
+
+    const blockMutation = useMutation({
+        mutationFn: () => {
+            const otherUser = chat.users.find((u) =>
+                u.userId != user.userId
+            )!;
+            return backend.blockUser(otherUser.userId);
+        },
+        onSuccess: () => declineMutation.mutate(),
+    });
+
+    if (rawUser == null) {
+        throw new Error("User not found!");
+    }
+    const user = rawUser;
+    const btnDisabled = (declineMutation.isPending || declineMutation.isSuccess) || (joinMutation.isPending || joinMutation.isSuccess) || (blockMutation.isPending || blockMutation.isSuccess);
 
     return (
         <div className="flex flex-col w-full items-center">
@@ -57,18 +73,18 @@ export default function ChatInvitation() {
                 </div>
                 <div className="flex flex-col gap-y-2.5 gap-x-4 w-70 sm:w-75">
                     <div className="flex justify-between">
-                        <Button variant="outline" className='w-[49%] lg:w-[47%]' disabled={btnDisabled}>
+                        <Button onClick={() => declineMutation.mutate()} disabled={btnDisabled} variant="outline" className='w-[49%] lg:w-[47%]'>
                             {/* {btnDisabled && <Spinner />} */}
                             Decline</Button>
-                        <Button className='w-[49%] lg:w-[47%]' onClick={startChating} disabled={btnDisabled}>
+                        <Button onClick={() => joinMutation.mutate()} disabled={btnDisabled} className='w-[49%] lg:w-[47%]'>
                             {/* {btnDisabled && <Spinner />} */}
                             Start Chatting</Button>
                     </div>
-                    <Button variant="outline" className='w-full text-destructive' disabled={btnDisabled}>
+                    <Button onClick={() => blockMutation.mutate()} disabled={btnDisabled} variant="outline" className='w-full text-destructive'>
                         {/* {btnDisabled && <Spinner />} */}
                         Decline and Block</Button>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }
