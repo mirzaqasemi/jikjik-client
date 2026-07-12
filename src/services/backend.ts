@@ -543,7 +543,11 @@ export async function getChats(filter?: string): Promise<Chat[]> {
 }
 
 export async function getChat(chatId: string): Promise<Chat> {
-    return getSdkRoomOrInitialSync(chatId);
+    await waitForInitialSync(getClient()).catch(() => undefined);
+    return getSdkRoomOrInitialSync(chatId).then(c=>{
+        console.log(c);
+        return c;
+    });
 }
 
 export async function getDirectRoomId(username: string): Promise<string | null> {
