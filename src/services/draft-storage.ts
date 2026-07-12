@@ -2,6 +2,7 @@ import type { User } from "./backend";
 import * as session from "./session";
 
 const draftDmUserKey = "draftDmUser";
+const draftMessageKeyPrefix = "draftMsg";
 
 export const DraftMessageAction = {
     Display: "display",
@@ -17,7 +18,7 @@ export interface DraftMessage {
 }
 
 function getDraftMessageKey(roomId: string): string[] {
-    return ["draftMsg", roomId];
+    return [draftMessageKeyPrefix, roomId];
 }
 
 export function draftDm(user: User): void {
@@ -60,7 +61,8 @@ export function removeDraftMsg(roomId: string): void {
 }
 
 export function clearDrafts(): void {
-    session.clearSessionItems();
+    removeDraftDm();
+    session.removeSessionItemsByPrefix(draftMessageKeyPrefix);
 }
 
 export const DraftStorage = {
