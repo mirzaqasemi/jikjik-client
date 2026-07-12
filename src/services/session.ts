@@ -53,6 +53,11 @@ export function getMatrixSession(): MatrixSession | null {
 }
 
 export function setMatrixSession(matrixSession: MatrixSession): void {
+    const previousUserId = localStorage.getItem(matrixUserIdKey);
+    if (previousUserId !== matrixSession.userId) {
+        clearSessionItems();
+    }
+
     localStorage.setItem(matrixAccessTokenKey, matrixSession.accessToken);
     localStorage.setItem(matrixUserIdKey, matrixSession.userId);
 
@@ -105,6 +110,18 @@ export function getSessionItem<T>(key: SessionItemKey): T | null {
 
 export function removeSessionItem(key: SessionItemKey): void {
     sessionStorage.removeItem(normalizeSessionItemKey(key));
+}
+
+export function removeSessionItemsByPrefix(prefix: SessionItemKey): void {
+    const normalizedPrefix = normalizeSessionItemKey(prefix);
+    const nestedPrefix = `${normalizedPrefix}:`;
+
+    for (let index = sessionStorage.length - 1; index >= 0; index--) {
+        const key = sessionStorage.key(index);
+        if (key === normalizedPrefix || key?.startsWith(nestedPrefix)) {
+            sessionStorage.removeItem(key);
+        }
+    }
 }
 
 export function clearSessionItems(): void {
