@@ -1,12 +1,11 @@
 import * as backend from "@/services/backend";
-import * as session from "@/services/session";
-import { Button } from "../../ui/button";
-import { useLoaderData, useNavigate, useParams } from "react-router-dom";
-import Header from "../header/Header";
-import { useMutation } from "@tanstack/react-query";
-import { Spinner } from "@/components/ui/spinner";
-import { useEffect } from "react";
 import { subscribeInvitationChanged } from "@/services/backend-event";
+import * as session from "@/services/session";
+import { useMutation } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useLoaderData, useNavigate, useParams } from "react-router-dom";
+import { Button } from "../../ui/button";
+import Header from "../header/Header";
 
 
 export default function ChatInvitation() {
@@ -74,14 +73,11 @@ export default function ChatInvitation() {
                 <div className="flex flex-col gap-y-2.5 gap-x-4 w-70 sm:w-75">
                     <div className="flex justify-between">
                         <Button onClick={() => declineMutation.mutate()} disabled={btnDisabled} variant="outline" className='w-[49%] lg:w-[47%]'>
-                            {/* {btnDisabled && <Spinner />} */}
                             Decline</Button>
                         <Button onClick={() => joinMutation.mutate()} disabled={btnDisabled} className='w-[49%] lg:w-[47%]'>
-                            {/* {btnDisabled && <Spinner />} */}
                             Start Chatting</Button>
                     </div>
-                    <Button onClick={() => blockMutation.mutate()} disabled={btnDisabled} variant="outline" className='w-full text-destructive'>
-                        {/* {btnDisabled && <Spinner />} */}
+                    <Button onClick={() => blockMutation.mutate()} disabled={chat.users.length < 2 || btnDisabled} variant="outline" className='w-full text-destructive'>
                         Decline and Block</Button>
                 </div>
             </div>

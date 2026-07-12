@@ -28,7 +28,6 @@ export async function chatLoader({ params }: LoaderFunctionArgs) {
       throw new Error("Missing chatId");
     }
     const chat = await backend.getChat(chatId);
-    console.log(chat.membership);
     
     if (chat.membership == "invite") {
       return redirect(`/chats/${chatId}/invite`);

@@ -545,7 +545,6 @@ export async function getChats(filter?: string): Promise<Chat[]> {
 export async function getChat(chatId: string): Promise<Chat> {
     await waitForInitialSync(getClient()).catch(() => undefined);
     return getSdkRoomOrInitialSync(chatId).then(c=>{
-        console.log(c);
         return c;
     });
 }
@@ -589,7 +588,6 @@ export async function unblockUser(username: string): Promise<void> {
     if (!ignoredUsers.delete(userId)) {
         return;
     }
-
     await client.setIgnoredUsers([...ignoredUsers]);
 }
 

@@ -2,14 +2,14 @@ import emptyGif from "@/assets/icons8-ghost.gif";
 import { Spinner } from "@/components/ui/spinner";
 import { subscribeBackendEvent } from "@/services/backend-event.ts";
 import * as backend from "@/services/backend.ts";
+import * as DraftStorage from "@/services/draft-storage";
 import * as session from "@/services/session";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import '../Chat.css';
 import Header from "../header/Header";
 import MessageInput from "../message-input/MessageInput";
-import * as DraftStorage from "@/services/draft-storage";
+import '../Chat.css';
 
 export default function Draft() {
     const [disabled, setDisabled] = useState(false)
@@ -55,6 +55,10 @@ export default function Draft() {
             DraftStorage.draftMsg(data.id, params.inputStr, "send");
             navigate(`/chats/${data.id}`);
         },
+        onError: () => {
+            setDisabled(false);
+        },
+
     });
 
     async function sendMessage(inputStr: string) {
@@ -82,7 +86,7 @@ export default function Draft() {
                     <Spinner className="flex-1 m-auto size-9 opacity-30" />
                 }
             </div>
-            <MessageInput sendMessage={sendMessage} disabled={disabled} />
+            <MessageInput sendMessage={sendMessage} disabled={disabled} keepInputOnSend={true}/>
 
         </div>
     );
