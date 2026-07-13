@@ -2,7 +2,7 @@ import { SendHorizontal } from "lucide-react";
 import { useState } from "react";
 import "./MessageInput.css"
 
-export default function MessageInput({ sendMessage, disabled, keepInputOnSend }: { sendMessage: (inputStr: string) => void, disabled: boolean, keepInputOnSend: boolean }) {
+export default function MessageInput({ sendMessage, disabled, keepInputOnSend }: { sendMessage: (inputStr: string) => void, disabled: boolean, keepInputOnSend?: boolean }) {
     const [inputStr, setInputStr] = useState("");
 
     return (
