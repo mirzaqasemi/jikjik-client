@@ -8,16 +8,16 @@ import './Chat.css';
 import Message from "./message/Message.tsx";
 import Header from "./header/Header.tsx";
 import MessageInput from "./message-input/MessageInput.tsx";
+import { DraftStorage } from "@/services/draft-storage.ts";
 
 export type MessageWithStatus = backend.Message & { status: "pending" | "error" };
 
 export default function Chat() {
     const params = useParams<{ chatId: string }>();
-    const selectedChat = useLoaderData<backend.Chat>();
+    const chat = useLoaderData<backend.Chat>();
     const rawUser = session.getUser();
     const bottomRef = useRef<HTMLDivElement>(null);
     const [pendingMsgs, setPendingMsgs] = useState<MessageWithStatus[]>([]);
-
     if (rawUser == null) {
         throw new Error("User not authenticated");
     }
@@ -41,6 +41,15 @@ export default function Chat() {
     });
 
     useEffect(() => {
+        const draftMsg = DraftStorage.getDraftMsg(chatId);
+        // If there is any drafted message and its action is 'send', then send it to backend throughout sendMessageMutation
+        if (draftMsg?.action == "send") {
+            sendMessage(draftMsg.content);
+            DraftStorage.removeDraftMsg(chatId);
+        }
+    }, []);
+
+    useEffect(() => {
         if (serverMessages.length == 0) return;
         setPendingMsgs((oldPending) =>
             oldPending.filter(
@@ -57,7 +66,7 @@ export default function Chat() {
         bottomRef.current?.scrollIntoView({
             behavior: "auto"
         })
-    }, [serverMessages.length]);
+    }, [serverMessages.length, chatId]);
 
     const sendMessageMutation = useMutation({
         mutationFn: (params: { username: string, chat: backend.Chat, content: string, uid: string }) => {
@@ -93,6 +102,7 @@ export default function Chat() {
         },
     });
 
+
     if (isError) {
         return (
             <div className="flex justify-center items-center h-full">
@@ -105,7 +115,7 @@ export default function Chat() {
         if (!inputStr.trim()) return;
         sendMessageMutation.mutate({
             username: user.username,
-            chat: selectedChat,
+            chat: chat,
             content: inputStr,
             uid: crypto.randomUUID()
         });
@@ -125,16 +135,16 @@ export default function Chat() {
         // 2. resend same message to backend
         sendMessageMutation.mutate({
             username: user.userId,
-            chat: selectedChat,
+            chat: chat,
             content: failedMsg.content,
             uid: failedMsg.transactionId!,
         })
     }
-
+    
     return (
         <div className="flex flex-col chat-page">
             {/* <!-- Top: Header Section --> */}
-            <Header selectedChat={selectedChat} />
+            <Header chat={chat} />
 
             {/* <!-- Middle: Messages Section --> */}
             {
@@ -145,14 +155,14 @@ export default function Chat() {
                         <div className="date-separator">TODAY</div>
                         {
                             serverMessages.map((message) =>
-                                <Message user={user} chat={selectedChat} message={message} key={message.eventId} status="success" retryMessage={retryMessage} />
+                                <Message user={user} chat={chat} message={message} key={message.eventId} status="success" retryMessage={retryMessage} />
                             )
                         }
                         {
                             pendingMsgs.filter((pendingMsg) =>
                                 !serverMessages.some((serverMsg) => serverMsg.uid === pendingMsg.uid)
                             ).map((pendingMsg) =>
-                                < Message user={user} chat={selectedChat} message={pendingMsg} key={pendingMsg.uid} status={pendingMsg.status}
+                                < Message user={user} chat={chat} message={pendingMsg} key={pendingMsg.uid} status={pendingMsg.status}
                                     retryMessage={retryMessage} />
                             )
                         }
@@ -161,7 +171,7 @@ export default function Chat() {
             }
 
             {/* <!-- Bottom: Input Section --> */}
-            <MessageInput sendMessage={sendMessage} />
+            <MessageInput sendMessage={sendMessage} disabled={false} />
         </div>
     );
 }

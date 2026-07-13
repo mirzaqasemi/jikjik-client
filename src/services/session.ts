@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import type { MatrixSession } from "./matrix-models";
-import type { User } from "../services/backend";
+import type { User } from "./backend";
 
 export type Listener = () => void;
+export type SessionItemKey = string | string[];
 
 
 const matrixAccessTokenKey = "matrixAccessToken";
 const matrixDeviceIdKey = "matrixDeviceId";
 const matrixUserIdKey = "matrixUserId";
-const draftDmUserKey = "draftDmUser";
+const appSessionItemPrefix = "app:";
 
 let currentUser: User | null = null;
 const listeners = new Set<Listener>();
@@ -52,6 +53,11 @@ export function getMatrixSession(): MatrixSession | null {
 }
 
 export function setMatrixSession(matrixSession: MatrixSession): void {
+    const previousUserId = localStorage.getItem(matrixUserIdKey);
+    if (previousUserId !== matrixSession.userId) {
+        clearSessionItems();
+    }
+
     localStorage.setItem(matrixAccessTokenKey, matrixSession.accessToken);
     localStorage.setItem(matrixUserIdKey, matrixSession.userId);
 
@@ -69,35 +75,62 @@ export function setMatrixSession(matrixSession: MatrixSession): void {
     callListeners();
 }
 
-export function draftDm(user: User): void {
-    sessionStorage.setItem(draftDmUserKey, JSON.stringify(user));
-}
-
-export function getDraftDm(): User | null {
-    const draftUser = sessionStorage.getItem(draftDmUserKey);
-    if (!draftUser) {
-        return null;
-    }
-
-    try {
-        return JSON.parse(draftUser) as User;
-    } catch {
-        removeDraftDm();
-        return null;
-    }
-}
-
-export function removeDraftDm(): void {
-    sessionStorage.removeItem(draftDmUserKey);
-}
-
 export function clearSession(): void {
     localStorage.removeItem(matrixAccessTokenKey);
     localStorage.removeItem(matrixDeviceIdKey);
     localStorage.removeItem(matrixUserIdKey);
-    removeDraftDm();
+    clearSessionItems();
     currentUser = null;
     callListeners();
+}
+
+function normalizeSessionItemKey(key: SessionItemKey): string {
+    const parts = Array.isArray(key) ? key : [key];
+    return `${appSessionItemPrefix}${parts.map(encodeURIComponent).join(":")}`;
+}
+
+export function setSessionItem(key: SessionItemKey, value: unknown): void {
+    sessionStorage.setItem(normalizeSessionItemKey(key), JSON.stringify(value));
+}
+
+export function getSessionItem<T>(key: SessionItemKey): T | null {
+    const normalizedKey = normalizeSessionItemKey(key);
+    const value = sessionStorage.getItem(normalizedKey);
+    if (!value) {
+        return null;
+    }
+
+    try {
+        return JSON.parse(value) as T;
+    } catch {
+        sessionStorage.removeItem(normalizedKey);
+        return null;
+    }
+}
+
+export function removeSessionItem(key: SessionItemKey): void {
+    sessionStorage.removeItem(normalizeSessionItemKey(key));
+}
+
+export function removeSessionItemsByPrefix(prefix: SessionItemKey): void {
+    const normalizedPrefix = normalizeSessionItemKey(prefix);
+    const nestedPrefix = `${normalizedPrefix}:`;
+
+    for (let index = sessionStorage.length - 1; index >= 0; index--) {
+        const key = sessionStorage.key(index);
+        if (key === normalizedPrefix || key?.startsWith(nestedPrefix)) {
+            sessionStorage.removeItem(key);
+        }
+    }
+}
+
+export function clearSessionItems(): void {
+    for (let index = sessionStorage.length - 1; index >= 0; index--) {
+        const key = sessionStorage.key(index);
+        if (key?.startsWith(appSessionItemPrefix)) {
+            sessionStorage.removeItem(key);
+        }
+    }
 }
 
 export function addListener(listener: Listener): () => void {

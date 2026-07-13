@@ -1,4 +1,5 @@
 import {
+    ClientEvent,
     createClient,
     EventType,
     type MatrixClient,
@@ -6,11 +7,16 @@ import {
     MsgType,
     type Room,
     type RoomMember,
+    SyncState,
 } from "matrix-js-sdk";
 import type { ICreateRoomOpts } from "matrix-js-sdk/lib/@types/requests";
 import { Preset, Visibility } from "matrix-js-sdk/lib/@types/partials";
 import type { IContent } from "matrix-js-sdk/lib/models/event";
 import { attachBackendEventClient, detachBackendEventClient } from "./backend-event";
+import {
+    findDirectRoomId,
+    isVisibleRoom,
+} from "./direct-room";
 import * as session from "./session";
 
 // -----------------------------------------
@@ -82,6 +88,9 @@ export interface Message {
 export interface Chat {
     /** Matrix room id, for example "!room:localhost". */
     id: string;
+
+    /** Current user's Matrix membership in this room, for example "join" or "invite". */
+    membership?: string;
 
     /** Room display title from m.room.name, or derived by the SDK when room state is available. */
     title?: string;
@@ -192,6 +201,43 @@ function resetClient(): void {
     detachBackendEventClient();
     matrixClient?.stopClient();
     matrixClient = null;
+}
+
+function waitForInitialSync(client: MatrixClient): Promise<void> {
+    if (client.isInitialSyncComplete()) {
+        return Promise.resolve();
+    }
+
+    return new Promise((resolve, reject) => {
+        const timeoutId = window.setTimeout(() => {
+            cleanup();
+            reject(new Error("Matrix initial sync timed out"));
+        }, 15000);
+
+        function cleanup() {
+            client.off(ClientEvent.Sync, handleSync);
+            window.clearTimeout(timeoutId);
+        }
+
+        function handleSync(state: SyncState) {
+            if (client.isInitialSyncComplete() || state === SyncState.Prepared) {
+                cleanup();
+                resolve();
+                return;
+            }
+
+            if (state === SyncState.Error || state === SyncState.Stopped) {
+                cleanup();
+                reject(new Error("Matrix initial sync failed"));
+            }
+        }
+
+        client.on(ClientEvent.Sync, handleSync);
+        const currentState = client.getSyncState();
+        if (currentState != null) {
+            handleSync(currentState);
+        }
+    });
 }
 
 function displayNameFromUserId(userId: string): string {
@@ -324,6 +370,7 @@ function chatFromSdkRoom(room: Room): Chat {
     const topic = stateContent<{ topic?: string }>(room, EventType.RoomTopic);
     return {
         id: room.roomId,
+        membership: room.getMyMembership(),
         title: room.name || undefined,
         users,
         lastMsg: messages.at(-1) || null,
@@ -363,6 +410,7 @@ function chatFromInitialSync(roomId: string, response: Awaited<ReturnType<Matrix
 
     return {
         id: roomId,
+        membership: "join",
         title: roomName,
         users,
         lastMsg: messages.at(-1) || null,
@@ -390,6 +438,22 @@ async function getSdkRoomOrInitialSync(roomId: string): Promise<Chat> {
         ...chat,
         users: await withPresenceForUsers(chat.users),
     };
+}
+
+async function getVisibleRoomIds(): Promise<string[]> {
+    const client = getClient();
+    const roomIds = new Set<string>();
+
+    await waitForInitialSync(client);
+
+    client.getRooms()
+        .filter(isVisibleRoom)
+        .forEach(room => roomIds.add(room.roomId));
+
+    const response = await client.getJoinedRooms();
+    response.joined_rooms.forEach(roomId => roomIds.add(roomId));
+
+    return [...roomIds];
 }
 
 async function getRoomUsers(roomId: string): Promise<User[]> {
@@ -452,8 +516,8 @@ export async function currentUser(): Promise<User | null> {
 }
 
 export async function getChats(filter?: string): Promise<Chat[]> {
-    const response = await getClient().getJoinedRooms();
-    const chats = await Promise.all(response.joined_rooms.map(getSdkRoomOrInitialSync));
+    const roomIds = await getVisibleRoomIds();
+    const chats = await Promise.all(roomIds.map(getSdkRoomOrInitialSync));
     const normalizedFilter = (filter || "").trim().toLowerCase();
 
     const sortedChats = chats.sort((a, b) => {
@@ -479,7 +543,52 @@ export async function getChats(filter?: string): Promise<Chat[]> {
 }
 
 export async function getChat(chatId: string): Promise<Chat> {
-    return getSdkRoomOrInitialSync(chatId);
+    await waitForInitialSync(getClient()).catch(() => undefined);
+    return getSdkRoomOrInitialSync(chatId).then(c=>{
+        return c;
+    });
+}
+
+export async function getDirectRoomId(username: string): Promise<string | null> {
+    const userId = normalizeUserId(username);
+    const client = getClient();
+
+    await waitForInitialSync(client);
+
+    const directRooms = await client.getAccountDataFromServer(EventType.Direct) || {};
+    return findDirectRoomId(client, userId, directRooms);
+}
+
+export async function acceptChatInvitation(chatId: string): Promise<Chat> {
+    const room = await getClient().joinRoom(chatId);
+    return getSdkRoomOrInitialSync(room.roomId);
+}
+
+export async function declineChatInvitation(chatId: string): Promise<void> {
+    const client = getClient();
+    await client.leave(chatId);
+    await client.forget(chatId).catch(() => undefined);
+}
+
+export async function blockUser(username: string): Promise<void> {
+    const userId = normalizeUserId(username);
+    const client = getClient();
+    const ignoredUsers = new Set(client.getIgnoredUsers());
+    if (ignoredUsers.has(userId)) {
+        return;
+    }
+
+    await client.setIgnoredUsers([...ignoredUsers, userId]);
+}
+
+export async function unblockUser(username: string): Promise<void> {
+    const userId = normalizeUserId(username);
+    const client = getClient();
+    const ignoredUsers = new Set(client.getIgnoredUsers());
+    if (!ignoredUsers.delete(userId)) {
+        return;
+    }
+    await client.setIgnoredUsers([...ignoredUsers]);
 }
 
 export async function createDm(username: string): Promise<Chat> {

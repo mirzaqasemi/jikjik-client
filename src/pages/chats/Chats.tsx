@@ -22,6 +22,7 @@ export default function Chats() {
             <div className={`${(chatId || (draftMode === "draft")) ? "flex" : "hidden lg:flex"} 
                             chat-background w-full h-full items-center justify-center lg:w-[75%]`}>
                 <div className="chat-background-content flex w-full h-full items-center justify-center">
+                    {/* “Render my matched child route here(inside <Outlet/>).” */}
                     <Outlet />
                 </div>
             </div>

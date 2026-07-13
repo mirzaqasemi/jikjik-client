@@ -1,0 +1,76 @@
+import type { User } from "./backend";
+import * as session from "./session";
+
+const draftDmUserKey = "draftDmUser";
+const draftMessageKeyPrefix = "draftMsg";
+
+export const DraftMessageAction = {
+    Display: "display",
+    Send: "send",
+} as const;
+
+export type DraftMessageAction = typeof DraftMessageAction[keyof typeof DraftMessageAction];
+
+export interface DraftMessage {
+    content: string;
+    action: DraftMessageAction;
+    updatedAt: number;
+}
+
+function getDraftMessageKey(roomId: string): string[] {
+    return [draftMessageKeyPrefix, roomId];
+}
+
+export function draftDm(user: User): void {
+    session.setSessionItem(draftDmUserKey, user);
+}
+
+export function getDraftDm(): User | null {
+    return session.getSessionItem<User>(draftDmUserKey);
+}
+
+export function removeDraftDm(): void {
+    session.removeSessionItem(draftDmUserKey);
+}
+
+export function draftMsg(
+    roomId: string,
+    content: string,
+    action: DraftMessageAction = DraftMessageAction.Display,
+): void {
+    if (content.length === 0) {
+        removeDraftMsg(roomId);
+        return;
+    }
+
+    const draft: DraftMessage = {
+        content,
+        action,
+        updatedAt: Date.now(),
+    };
+
+    session.setSessionItem(getDraftMessageKey(roomId), draft);
+}
+
+export function getDraftMsg(roomId: string): DraftMessage | null {
+    return session.getSessionItem<DraftMessage>(getDraftMessageKey(roomId));
+}
+
+export function removeDraftMsg(roomId: string): void {
+    session.removeSessionItem(getDraftMessageKey(roomId));
+}
+
+export function clearDrafts(): void {
+    removeDraftDm();
+    session.removeSessionItemsByPrefix(draftMessageKeyPrefix);
+}
+
+export const DraftStorage = {
+    draftDm,
+    getDraftDm,
+    removeDraftDm,
+    draftMsg,
+    getDraftMsg,
+    removeDraftMsg,
+    clearDrafts,
+};

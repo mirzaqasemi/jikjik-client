@@ -57,6 +57,7 @@ Every script has both a Bash version and a PowerShell version:
 - `logs.sh` / `logs.ps1`: follows Synapse logs.
 - `add-user.sh <username> <password> [--admin]` / `add-user.ps1 <username> <password> [-Admin]`: creates a local Matrix user using the configured dev registration secret.
 - `seed.sh` / `seed.ps1`: creates sample users, rooms, and messages for local UI testing.
+- `delete-chats.sh [--yes]`: deletes and purges all local Matrix rooms while keeping users and server config.
 - `set-config.sh dev|locked` / `set-config.ps1 dev|locked`: enables local dev registration, user-directory search, and relaxed local rate limits, or locks registration.
 - `reset.sh` / `reset.ps1`: deletes the local container and all local Matrix data after confirmation.
 
@@ -124,6 +125,12 @@ alex92 / password
 ```
 
 The seed creates direct chats with Bob and Maya plus a group room. Re-running the seed creates another set of rooms and messages.
+
+To delete all local chats without resetting users:
+
+```bash
+dev-backend/matrix/delete-chats.sh
+```
 
 ## Configuration Overrides
 
