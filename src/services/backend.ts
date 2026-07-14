@@ -14,6 +14,7 @@ import { Preset, Visibility } from "matrix-js-sdk/lib/@types/partials";
 import type { IContent } from "matrix-js-sdk/lib/models/event";
 import { attachBackendEventClient, detachBackendEventClient } from "./backend-event";
 import {
+    type DirectRooms,
     findDirectRoomId,
     isVisibleRoom,
 } from "./direct-room";
@@ -314,6 +315,27 @@ async function markDirectRoom(userId: string, roomId: string): Promise<void> {
     });
 }
 
+async function unmarkDirectRoom(roomId: string): Promise<void> {
+    const client = getClient();
+    const directRooms = (await client.getAccountDataFromServer(EventType.Direct) || {}) as DirectRooms;
+    const updatedDirectRooms: DirectRooms = {};
+    let changed = false;
+
+    Object.entries(directRooms).forEach(([userId, roomIds]) => {
+        const updatedRoomIds = roomIds.filter(id => id !== roomId);
+        if (updatedRoomIds.length !== roomIds.length) {
+            changed = true;
+        }
+        if (updatedRoomIds.length > 0) {
+            updatedDirectRooms[userId] = updatedRoomIds;
+        }
+    });
+
+    if (changed) {
+        await client.setAccountData(EventType.Direct, updatedDirectRooms);
+    }
+}
+
 function userFromMember(member: RoomMember): User {
     return userFromUserId(member.userId, {
         displayName: member.name || displayNameFromUserId(member.userId),
@@ -568,6 +590,16 @@ export async function declineChatInvitation(chatId: string): Promise<void> {
     const client = getClient();
     await client.leave(chatId);
     await client.forget(chatId).catch(() => undefined);
+}
+
+export async function deleteRoom(roomId: string): Promise<void> {
+    const client = getClient();
+
+    // Matrix does not have a client API to delete a room for everyone.
+    // Leave/reject removes this user from the room, then forget removes it from this user's room history.
+    await client.leave(roomId);
+    await client.forget(roomId);
+    await unmarkDirectRoom(roomId).catch(() => undefined);
 }
 
 export async function blockUser(username: string): Promise<void> {
