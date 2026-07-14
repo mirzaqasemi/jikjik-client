@@ -1,6 +1,6 @@
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, useNavigate } from 'react-router-dom';
 import * as hooks from '../../hooks/useDebounce.ts';
 import * as router from '../../router.tsx';
@@ -11,6 +11,7 @@ import ChatList from "./chat-list/ChatList.tsx";
 import ContactList from "./contact-list/ContactList.tsx";
 import SearchBar from "../search-bar/SearchBar.tsx";
 import './Chats.css';
+import { subscribeBackendEvent } from "@/services/backend-event.ts";
 
 
 export default function Chats() {
@@ -23,28 +24,40 @@ export default function Chats() {
         chats: backend.Chat[],
         contacts: backend.User[]
     }
+
     const {
         data = { chats: [], contacts: [] },
         isLoading,
         isError,
-        error
+        error,
+        refetch
     } = useQuery<Data>({
-        queryKey: ["allChats", user?.username, debouncedSearchQuery], // "allChats" is the name/address of the cached data
+        queryKey: ["allChats", user?.userId, debouncedSearchQuery], // "allChats" is the name/address of the cached data
         queryFn: async () => {
             const chats = await backend.getChats(debouncedSearchQuery);
             const contacts = await backend.searchContacts(debouncedSearchQuery);
             return { chats, contacts }
         },
-        enabled: user != null, ////Do not run queryFn until user exists.
+        enabled: user != null, // Do not run queryFn until user exists.
         retry: 2,
-        refetchInterval: 1000,
+        // If the component is unmounted, the listener is removed and might miss the chatsChanged enevt, 
+        // so we tell the useQuery to refetch data on mount and don't use from cached data:
+        refetchOnMount: "always"
     });
     const { chats, contacts } = data; // onrolling data
 
+    useEffect(() => {
+        const cleanup = subscribeBackendEvent("chatsChanged", () => {
+            refetch();
+        });
+        return cleanup;
+    }, [refetch]); //TODO: Is it needed to add refetch to dependency array?
+
     if (user == null) {
-        return <Navigate to={router.LOGIN_ROUTE} replace />;    // replace: The new webpage (login page) replaces the page you are currently viewing (chats page) in the history list. 
+        // replace: The new webpage (login page) replaces the page you are currently viewing (chats page) in the history list. 
         // Clicking the browser's "Back" button will skip the old page and take you to the page you visited before it.
         // It avoids a weird back-button loop. [Login, Chats] -> Chats redirects you to login so: [Login] -> Notice Chats disappeared (Login replace).
+        return <Navigate to={router.LOGIN_ROUTE} replace />;
     }
 
     function logout() {
