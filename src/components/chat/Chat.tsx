@@ -1,14 +1,15 @@
 import { Spinner } from "@/components/ui/spinner.tsx";
+import { subscribeChatChanged } from "@/services/backend-event.ts";
+import { DraftStorage } from "@/services/draft-storage.ts";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLoaderData, useParams } from 'react-router-dom';
 import * as backend from "../../services/backend.ts";
 import * as session from '../../services/session.ts';
 import './Chat.css';
-import Message from "./message/Message.tsx";
 import Header from "./header/Header.tsx";
 import MessageInput from "./message-input/MessageInput.tsx";
-import { DraftStorage } from "@/services/draft-storage.ts";
+import Message from "./message/Message.tsx";
 
 export type MessageWithStatus = backend.Message & { status: "pending" | "error" };
 
@@ -33,12 +34,20 @@ export default function Chat() {
         data: serverMessages = [], // Rename "data" to "messages" 
         isLoading,
         isError,
+        refetch
     } = useQuery<backend.Message[]>({
         queryKey: ["messagesId", chatId],
         queryFn: () => backend.getMessages(chatId),
         enabled: !!user && !!chatId,
-        refetchInterval: 500,
+        refetchOnMount: "always"
     });
+
+    useEffect(() => {
+        const cleanup = subscribeChatChanged(chatId, () => {
+            refetch();
+        });
+        return cleanup;
+    }, [refetch, chatId]);
 
     useEffect(() => {
         const draftMsg = DraftStorage.getDraftMsg(chatId);
@@ -140,7 +149,7 @@ export default function Chat() {
             uid: failedMsg.transactionId!,
         })
     }
-    
+
     return (
         <div className="flex flex-col chat-page">
             {/* <!-- Top: Header Section --> */}

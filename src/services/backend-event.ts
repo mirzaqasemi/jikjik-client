@@ -240,28 +240,7 @@ type ChatChangedEventPayload =
     | Omit<ChatUsersChangedEvent, "chatId">
     | Omit<ChatMessagesChangedEvent, "chatId">;
 
-/**
- * Legacy global backend events keyed by event name.
- *
- * @deprecated Prefer the exported per-event subscribe functions instead of this
- * generic map. It only exists to type the deprecated `subscribeBackendEvent`
- * compatibility API.
- */
-export interface BackendEventMap {
-    /** Draft DM resolution event payload. */
-    draftDmResolved: DraftDmResolvedEvent;
 
-    /** Broad chat-list invalidation event payload. */
-    chatsChanged: ChatsChangedEvent;
-}
-
-/**
- * Legacy generic backend event listener type.
- *
- * @deprecated Prefer concrete listener types such as `DraftDmResolvedListener`,
- * `ChatsChangedListener`, `ChatChangedListener`, and `InvitationChangedListener`.
- */
-type BackendEventListener<TEvent extends keyof BackendEventMap> = (payload: BackendEventMap[TEvent]) => void;
 type DraftDmResolvedListener = (payload: DraftDmResolvedEvent) => void;
 type ChatsChangedListener = (payload: ChatsChangedEvent) => void;
 type InvitationChangedListener = (payload: InvitationChangedEvent) => void;
@@ -282,29 +261,6 @@ const CHAT_METADATA_EVENT_TYPES = new Set<string>([
 ]);
 
 let attachedClient: MatrixClient | null = null;
-
-/**
- * Subscribe to a global backend event by name.
- *
- * @deprecated Prefer the event-specific subscribe functions, such as
- * `subscribeDraftDmResolved`, `subscribeChatsChanged`, `subscribeChatChanged`,
- * and `subscribeInvitationChanged`. Some backend events require parameters
- * during subscription, so the named functions are clearer and harder to misuse.
- *
- * @param event Event name from `BackendEventMap`.
- * @param listener Callback invoked with the typed payload for `event`.
- * @returns Cleanup function that removes this listener.
- */
-export function subscribeBackendEvent<TEvent extends keyof BackendEventMap>(
-    event: TEvent,
-    listener: BackendEventListener<TEvent>,
-): () => void {
-    if (event === "draftDmResolved") {
-        return subscribeDraftDmResolved(listener as DraftDmResolvedListener);
-    }
-
-    return subscribeChatsChanged(listener as ChatsChangedListener);
-}
 
 /**
  * Subscribe to draft DM resolution events.

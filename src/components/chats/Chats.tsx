@@ -1,4 +1,5 @@
 import { Spinner } from "@/components/ui/spinner.tsx";
+import { subscribeChatsChanged } from "@/services/backend-event.ts";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Navigate, useNavigate } from 'react-router-dom';
@@ -7,11 +8,10 @@ import * as router from '../../router.tsx';
 import * as backend from '../../services/backend.ts';
 import * as session from '../../services/session.ts';
 import Menu from "../menu/Menu.tsx";
-import ChatList from "./chat-list/ChatList.tsx";
-import ContactList from "./contact-list/ContactList.tsx";
 import SearchBar from "../search-bar/SearchBar.tsx";
+import ChatList from "./chat-list/ChatList.tsx";
 import './Chats.css';
-import { subscribeBackendEvent } from "@/services/backend-event.ts";
+import ContactList from "./contact-list/ContactList.tsx";
 
 
 export default function Chats() {
@@ -47,7 +47,7 @@ export default function Chats() {
     const { chats, contacts } = data; // onrolling data
 
     useEffect(() => {
-        const cleanup = subscribeBackendEvent("chatsChanged", () => {
+        const cleanup = subscribeChatsChanged(() => {
             refetch();
         });
         return cleanup;

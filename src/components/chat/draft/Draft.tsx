@@ -1,15 +1,15 @@
 import emptyGif from "@/assets/icons8-ghost.gif";
 import { Spinner } from "@/components/ui/spinner";
-import { subscribeBackendEvent } from "@/services/backend-event.ts";
+import { subscribeDraftDmResolved } from "@/services/backend-event.ts";
 import * as backend from "@/services/backend.ts";
 import * as DraftStorage from "@/services/draft-storage";
 import * as session from "@/services/session";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import '../Chat.css';
 import Header from "../header/Header";
 import MessageInput from "../message-input/MessageInput";
-import '../Chat.css';
 
 export default function Draft() {
     const [disabled, setDisabled] = useState(false)
@@ -40,7 +40,7 @@ export default function Draft() {
 
     //If the user on the other side sends a message, the app navigates to the specific `roomId` and a chat component is created.
     useEffect(() => {
-        const cleanup = subscribeBackendEvent("draftDmResolved", (e) => {
+        const cleanup = subscribeDraftDmResolved((e) => {
             navigate(`/chats/${e.roomId}`);
         });
         return cleanup;
@@ -86,7 +86,7 @@ export default function Draft() {
                     <Spinner className="flex-1 m-auto size-9 opacity-30" />
                 }
             </div>
-            <MessageInput sendMessage={sendMessage} disabled={disabled} keepInputOnSend={true}/>
+            <MessageInput sendMessage={sendMessage} disabled={disabled} keepInputOnSend={true} />
 
         </div>
     );
