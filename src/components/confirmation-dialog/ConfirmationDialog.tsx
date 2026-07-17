@@ -17,8 +17,9 @@ type Params = {
     description: string,
     open: boolean,
     loading: boolean,
+    // Called when the action is confirmed
     onConfirm: () => void,
-    // It's called when the dialog is closed
+    // Called when the dialog is closed
     onClose: () => void
 }
 

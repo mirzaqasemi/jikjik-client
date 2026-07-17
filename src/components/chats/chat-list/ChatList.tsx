@@ -63,8 +63,6 @@ export default function ChatList(params: Params) {
                             } key={chat.id} className="flex m-auto h-18 items-center w-full chat-item select-none">
                                 <div className="relative h-10 w-10 shrink-0">
                                     <img src="https://i.pravatar.cc/150?img=11" alt="David" className="h-full w-full rounded-full object-cover" />
-                                    {/* {username.img != null && <img src={username.img} alt="David" class="avatar"/>} */}
-                                    {/* {chat.img != null && <img src={chat.img} alt="David" class="avatar" />} */}
                                     <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-chart-2  border-2 border-white" aria-label="Online" />
                                 </div>
                                 <div className="flex-1 pb-2.5 pt-2.5 ml-3 border-b truncate chat-info">
