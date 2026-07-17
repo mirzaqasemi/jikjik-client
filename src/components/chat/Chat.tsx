@@ -1,9 +1,10 @@
 import { Spinner } from "@/components/ui/spinner.tsx";
+import { CHATS_ROUTE } from "@/router.tsx";
 import { subscribeChatChanged } from "@/services/backend-event.ts";
 import { DraftStorage } from "@/services/draft-storage.ts";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { useLoaderData, useParams } from 'react-router-dom';
+import { useLoaderData, useNavigate, useParams } from 'react-router-dom';
 import * as backend from "../../services/backend.ts";
 import * as session from '../../services/session.ts';
 import './Chat.css';
@@ -11,10 +12,12 @@ import Header from "./header/Header.tsx";
 import MessageInput from "./message-input/MessageInput.tsx";
 import Message from "./message/Message.tsx";
 
+
 export type MessageWithStatus = backend.Message & { status: "pending" | "error" };
 
 export default function Chat() {
     const params = useParams<{ chatId: string }>();
+    const navigate = useNavigate();
     const chat = useLoaderData<backend.Chat>();
     const rawUser = session.getUser();
     const bottomRef = useRef<HTMLDivElement>(null);
@@ -43,12 +46,16 @@ export default function Chat() {
     });
 
     useEffect(() => {
-        const cleanup = subscribeChatChanged(chatId, () => {
-            refetch();
+        const cleanup = subscribeChatChanged(chatId, (e) => {
+            if (e.type == "roomChanged" && e.roomChange.type == "deleted") {
+                navigate(CHATS_ROUTE);
+            } else if (e.type == "messagesChanged") {
+                refetch();
+            }
         });
         return cleanup;
     }, [refetch, chatId]);
-
+    
     useEffect(() => {
         const draftMsg = DraftStorage.getDraftMsg(chatId);
         // If there is any drafted message and its action is 'send', then send it to backend throughout sendMessageMutation
@@ -65,8 +72,8 @@ export default function Chat() {
                 (pending) =>
                     !serverMessages.some(
                         (serverMsg) => serverMsg.uid === pending.uid
-                    )
-            )
+                    ),
+            ),
         );
     }, [serverMessages]);
 
