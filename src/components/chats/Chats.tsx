@@ -12,7 +12,7 @@ import SearchBar from "../search-bar/SearchBar.tsx";
 import ChatList from "./chat-list/ChatList.tsx";
 import './Chats.css';
 import ContactList from "./contact-list/ContactList.tsx";
-
+import { normalizeError } from "@/utilities/normalized-error.ts";
 
 export default function Chats() {
     const [searchQuery, setSearchQuery] = useState("");
@@ -69,20 +69,52 @@ export default function Chats() {
         setSearchQuery("");
     }
 
-    if (isError) {
-        console.error(error.message);
-        return (
-            <div className="flex justify-center items-center h-full">
-                Failed to load chats.
+    let content = <></>;
+    if (isLoading) {
+        content =
+            <div className="flex items-center mt-15 justify-center">
+                <Spinner className="size-8" />
             </div>
-        );
+    } else if (isError) {
+        content =
+            <div className="grid grid-rows-3 h-full px-4">
+                <div className=" self-end">
+                    <h3 className="font-semibold mb-3">Failed to load chats</h3>
+                    <span className="inline-block font-normal muted-text tracking-wide xl:px-3">{normalizeError(error).message}</span>
+                </div>
+            </div>
+
+    } else {
+        if ((chats.length > 0 || contacts.length > 0)) {
+            content = <>
+                <ChatList chats={chats} onSelect={clearSearch} />
+                {
+                    contacts.length > 0 &&
+                    <ContactList contacts={contacts} onSelect={clearSearch} />
+                }
+            </>
+        }
+        // If chats.length == 0 and contacts.length == 0 and debouncedSearchQuery == "" it means the user has no chats and doesn't search anything
+        else if (debouncedSearchQuery == "") {
+            content = <div className="grid grid-rows-3 h-full px-4">
+                <div className=" self-end">
+                    <h3 className="font-semibold mb-3">No chats yet</h3>
+                    <span className="inline-block font-normal muted-text tracking-wide xl:px-3">Get started by messaging someone or by creating a room</span>
+                </div>
+            </div>
+        } else { // If debouncedSearchQuery != ""  it means the user searches something and chats.length == 0 and contacts.length == 0 so there is no results
+            content = <div className="flex flex-col gap-y-2 mt-15 muted-text font-medium">
+                No Results
+                <span className="font-normal text-[15px] tracking-wide">There were no results for {debouncedSearchQuery}.</span>
+            </div>
+        }
     }
 
     return (
-        <div className="w-full h-full pt-5 pb-3 chats-page">
+        <div className="flex flex-col w-full h-full pt-5 pb-3">
 
             {/* <!-- Top: Header Section --> */}
-            <div className="flex px-4 items-center gap-4">
+            <div className="flex w-full px-4 items-center gap-4">
                 {/* <!-- Hamburger Menu --> */}
                 <Menu logout={logout} user={user} />
 
@@ -91,31 +123,8 @@ export default function Chats() {
             </div>
 
             {/* <!-- Middle: Chat List --> */}
-            {isLoading ?
-                <div className="flex items-center mt-15 justify-center">
-                    <Spinner className="size-8" />
-                </div>
-                : (chats.length > 0 || contacts.length > 0) ?
-                    <>
-                        <ChatList chats={chats} onSelect={clearSearch} />
-                        {
-                            contacts.length > 0 &&
-                            <ContactList contacts={contacts} onSelect={clearSearch} />
-                        }
-                    </> :
-                    (debouncedSearchQuery == "") ?
-                        <div className="grid grid-rows-3 h-full px-4">
-                            <div className=" self-end">
-                                <h3 className="font-semibold mb-3">No chats yet</h3>
-                                <span className="inline-block font-normal muted-text tracking-wide w-2xs">Get started by messaging someone or by creating a room</span>
-                            </div>
-                        </div>
-                        :
-                        <div className="flex flex-col gap-y-2 mt-15 muted-text font-medium">
-                            No Results
-                            <span className="font-normal text-[15px] tracking-wide">There were no results for "{debouncedSearchQuery}".</span>
-                        </div>
-            }
+            {content}
+
         </div>
     );
 }

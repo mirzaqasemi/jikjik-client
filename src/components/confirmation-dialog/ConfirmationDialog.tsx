@@ -10,8 +10,6 @@ import {
 } from "@/components/ui/dialog";
 import { Trash2Icon } from "lucide-react";
 
-
-
 type Params = {
     title: string,
     description: string,
@@ -22,7 +20,6 @@ type Params = {
     // Called when the dialog is closed
     onClose: () => void
 }
-
 
 export default function ConfirmationDialog(params: Params) {
     return (

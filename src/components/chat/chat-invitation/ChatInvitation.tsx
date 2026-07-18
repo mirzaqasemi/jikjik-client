@@ -4,8 +4,10 @@ import * as session from "@/services/session";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useLoaderData, useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
 import { Button } from "../../ui/button";
 import Header from "../header/Header";
+import { normalizeError } from "@/utilities/normalized-error";
 
 
 export default function ChatInvitation() {
@@ -32,14 +34,16 @@ export default function ChatInvitation() {
     const joinMutation = useMutation({
         mutationFn: () => backend.acceptChatInvitation(chatId),
         onError: (error) => {
-            console.error("Failed to join", error);
+            toast.error(normalizeError(error).message);
+            console.error("Failed to join user", error);
         },
     });
 
     const declineMutation = useMutation({
         mutationFn: () => backend.declineChatInvitation(chatId),
         onError: (error) => {
-            console.error("Failed to decline", error);
+            toast.error(normalizeError(error).message);
+            console.error("Failed to decline user", error);
         },
     });
 
@@ -51,6 +55,10 @@ export default function ChatInvitation() {
             return backend.blockUser(otherUser.userId);
         },
         onSuccess: () => declineMutation.mutate(),
+        onError: (error) => {
+            toast.error(normalizeError(error).message);
+            console.error("Failed to block user")
+        }
     });
 
     if (rawUser == null) {

@@ -1,16 +1,10 @@
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
-import * as utilities from "../../../utilities/utilities.ts";
 import * as backend from "../../../services/backend.ts";
-import * as session from "../../../services/session.ts";
+import * as utilities from "../../../utilities/utilities.ts";
 import "./Header.css";
 
 export default function Header({ chat} : {chat: backend.Chat}) {
-    const rawUser = session.getUser();
-     if (rawUser == null) {
-        throw new Error("User not authenticated");
-    }
-    const user = rawUser;
     return (
         <>
             {/* <!-- Top: Header Section --> */}

@@ -2,11 +2,13 @@ import { Spinner } from "@/components/ui/spinner.tsx";
 import { CHATS_ROUTE } from "@/router.tsx";
 import { subscribeChatChanged } from "@/services/backend-event.ts";
 import { DraftStorage } from "@/services/draft-storage.ts";
+import { normalizeError } from "@/utilities/normalized-error.ts";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLoaderData, useNavigate, useParams } from 'react-router-dom';
 import * as backend from "../../services/backend.ts";
 import * as session from '../../services/session.ts';
+import { AlertDestructive } from "../alert-destructive/AlertDestructive.tsx";
 import './Chat.css';
 import Header from "./header/Header.tsx";
 import MessageInput from "./message-input/MessageInput.tsx";
@@ -37,6 +39,7 @@ export default function Chat() {
         data: serverMessages = [], // Rename "data" to "messages" 
         isLoading,
         isError,
+        error,
         refetch
     } = useQuery<backend.Message[]>({
         queryKey: ["messagesId", chatId],
@@ -55,7 +58,7 @@ export default function Chat() {
         });
         return cleanup;
     }, [refetch, chatId]);
-    
+
     useEffect(() => {
         const draftMsg = DraftStorage.getDraftMsg(chatId);
         // If there is any drafted message and its action is 'send', then send it to backend throughout sendMessageMutation
@@ -122,7 +125,7 @@ export default function Chat() {
     if (isError) {
         return (
             <div className="flex justify-center items-center h-full">
-                Failed to load chats.
+                <AlertDestructive title="Failed to load messages." description={normalizeError(error).message} />
             </div>
         );
     }

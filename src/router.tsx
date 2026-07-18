@@ -22,7 +22,7 @@ export const router = createBrowserRouter([
   {
     path: LOGIN_ROUTE,
     element: <RootLayout />,
-    errorElement: <ErrorPage />,
+    errorElement: <ErrorPage name={"home"} url={LOGIN_ROUTE}/>,
     children: [
       {
         index: true,
@@ -42,16 +42,19 @@ export const router = createBrowserRouter([
             path: RELATIVE_DRAFT_CHAT, // 1. We define just "draft" because it's a child of Chats. So it will be: /chats/draft
             loader: loaders.protectedLoader,
             element: <Draft />,
+            errorElement: <ErrorPage name={"chats"} url={CHATS_ROUTE}/>,
           },
           {
             path: RELATIVE_INVITE_CHAT, // 2. This is a single route path with two URL segments:
             loader: loaders.inviteChatLoader,
-            element: <ChatInvitation />
+            element: <ChatInvitation />,
+            errorElement: <ErrorPage name={"chats"} url={CHATS_ROUTE}/>,
           },
           {
             path: RELATIVE_CHAT_ROUTE,
             loader: loaders.chatLoader,
             element: <Chat />,
+            errorElement: <ErrorPage name={"chats"} url={CHATS_ROUTE}/>,
           },
         ],
       },

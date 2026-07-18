@@ -4,9 +4,11 @@ import { subscribeDraftDmResolved } from "@/services/backend-event.ts";
 import * as backend from "@/services/backend.ts";
 import * as DraftStorage from "@/services/draft-storage";
 import * as session from "@/services/session";
+import { normalizeError } from "@/utilities/normalized-error";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import '../Chat.css';
 import Header from "../header/Header";
 import MessageInput from "../message-input/MessageInput";
@@ -55,8 +57,9 @@ export default function Draft() {
             DraftStorage.draftMsg(data.id, params.inputStr, "send");
             navigate(`/chats/${data.id}`);
         },
-        onError: () => {
+        onError: (error) => {
             setDisabled(false);
+            toast.error(normalizeError(error).message);
         },
 
     });
