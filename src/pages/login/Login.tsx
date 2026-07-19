@@ -17,40 +17,39 @@ import {
 } from "@/components/ui/item";
 import { CHATS_ROUTE } from "@/router.tsx";
 import { useMutation } from "@tanstack/react-query";
-import { ChevronRight, CircleAlert, EyeIcon, EyeOffIcon, LockKeyhole, MessageSquareMore, UserRound, Users } from "lucide-react";
+import { ChevronRight, EyeIcon, EyeOffIcon, LockKeyhole, MessageSquareMore, UserRound, Users } from "lucide-react";
 import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from "sonner";
 import * as backend from '../../services/backend.ts';
 import './login.css';
+import { normalizeError } from "@/utilities/normalized-error.ts";
+import { AlertDestructive } from "@/components/alert-destructive/AlertDestructive.tsx";
 
 
 export default function Login() {
     const navigate = useNavigate();
-    const [warning, setWarning] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const usernameRef = useRef<HTMLInputElement>(null);
     const passRef = useRef<HTMLInputElement>(null);
 
+
+    // Mutation flow: mutate(credentials) → mutationFn(credentials) → onSuccess(user)
     const loginMutation = useMutation({
         mutationFn: ({ username, password }: { username: string; password: string }) => {
             return backend.login(username, password);
         },
-        onSuccess: (user) => {
-            if (user != null) {
-                navigate(CHATS_ROUTE);
-            } else {
-                setWarning("This username is not found!");
-            }
+        onSuccess: () => {
+            navigate(CHATS_ROUTE);
         },
         onError: (err) => {
-            console.error(err)
-            setWarning("Username or password is wrong!");
+            console.error(err);
+            toast.error(normalizeError(err, { action: "login" }).message);
         }
     });
 
-    async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
+    function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
         e.preventDefault();
-
         const usernameInput = usernameRef.current;
         const passwordInput = passRef.current;
 
@@ -58,25 +57,10 @@ export default function Login() {
             return;
         }
 
-        setWarning("");
         loginMutation.mutate({
             username: usernameInput.value,
             password: passwordInput.value,
-        }); // React Query internally does something like:
-        // const data = await mutationFn({username: usernameInput.value, password: passwordInput.value})
-        // storeResultInsideReactQuery(data) Which stores data in "mutation.data"
-        //      mutate(...)
-        //          ↓
-        //      mutationFn runs
-        //          ↓
-        //      backend.login(...)
-        //          ↓
-        //      returns user
-        //          ↓
-        //      TanStack saves it to:
-        //      loginMutation.data
-        //          ↓
-        //      calls onSuccess(user)
+        });
     }
 
     return (
@@ -146,6 +130,7 @@ export default function Login() {
                                             type='text'
                                             placeholder="Jordan Lee"
                                             ref={usernameRef}
+                                            required
                                         />
                                     </InputGroup>
                                 </Field>
@@ -160,6 +145,7 @@ export default function Login() {
                                             id="fieldgroup-pass"
                                             defaultValue="password"
                                             ref={passRef}
+                                            required
                                         />
                                         <InputGroupAddon align="inline-end">
                                             <button
@@ -171,15 +157,14 @@ export default function Login() {
                                                     <EyeOffIcon className="size-4" /> :
                                                     <EyeIcon className="size-4" />
                                                 }
-
                                             </button>
                                         </InputGroupAddon>
                                     </InputGroup>
                                 </Field>
-                                {warning != "" && <div className='flex error-message' id="login-error">
-                                    <CircleAlert className="circle-alert-icon" />
-                                    <span>{warning}</span>
-                                </div>}
+                                {
+                                    loginMutation.isError &&
+                                    <AlertDestructive title={normalizeError(loginMutation.error, { action: "login" }).message} description="" />
+                                }
                                 <Field orientation="horizontal">
                                     <Button className='w-full' type="submit" variant={"default"} disabled={loginMutation.isPending}>Login</Button>
                                 </Field>

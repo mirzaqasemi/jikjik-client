@@ -7,6 +7,7 @@ import {
     ContextMenuTrigger
 } from "@/components/ui/context-menu";
 import * as backend from "@/services/backend.ts";
+import { normalizeError } from "@/utilities/normalized-error";
 import * as utils from "@/utilities/utilities";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 
 type Params = {
@@ -27,11 +29,11 @@ export default function ChatList(params: Params) {
 
     const deleteChatMutation = useMutation({
         mutationFn: (params: { chatId: string }) => backend.deleteRoom(params.chatId),
-
         onSuccess: () => {
             setChatToDelete(null);
         },
         onError: (err) => {
+            toast.error(normalizeError(err).message);
             console.error(err);
         },
     });

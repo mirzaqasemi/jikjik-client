@@ -26,7 +26,7 @@
   --primary-foreground: oklch(0.421 0.095 57.708);
   --secondary: oklch(0.967 0.001 286.375);
   --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.71 0 0);
+  --muted: oklch(0.966 0.005 106.5);
   --muted-foreground: oklch(0.487 0 0);
   --accent: oklch(0.852 0.199 91.936);
   --accent-foreground: oklch(0.421 0.095 57.708);
@@ -141,6 +141,7 @@ body,
 body {
   -webkit-font-smoothing: antialiased;
 }
+
 
 /* Custom Scrollbar for a polished feel */
 ::-webkit-scrollbar {

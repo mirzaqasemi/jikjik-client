@@ -1,20 +1,39 @@
-import { useRouteError, isRouteErrorResponse } from 'react-router-dom';
+import { useRouteError, isRouteErrorResponse, useNavigate } from 'react-router-dom';
+import errorImg from '@/assets/error-page-image.png';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
+import { normalizeError } from '@/utilities/normalized-error';
 
-export default function ErrorPage() {
+type Params = {
+  name: string,
+  url: string
+}
+
+export default function ErrorPage(params: Params) {
+  //useRouteError() is typed as unknown because errors can come from loaders, actions, component rendering, or arbitrary thrown values.
   const error = useRouteError();
-
-  let errorMessage = "An unknown error occurred";
+  const navigate = useNavigate();
+  let errorMessage;
   if (isRouteErrorResponse(error)) {
     errorMessage = error.statusText || error.data;
-  } else if (error instanceof Error) {
-    errorMessage = error.message;
+  } else {
+    errorMessage = normalizeError(error).message;
   }
 
   return (
-    <div style={{ padding: '2rem', color: 'red' }} className='flex flex-col h-full justify-center items-center gap-6'>
-      <h1 className='text-4xl'>Oops!</h1>
-      <p className='text-3xl'>Sorry, an unexpected error has occurred.</p>
-      <p className='text-3xl'><i>{errorMessage}</i></p>
+    <div className='flex flex-col m-auto justify-center self-center bg-card w-[360px] sm:w-[500px] p-8 sm:p-15 h-fit rounded-4xl shadow-2xl gap-5'>
+      <img src={errorImg} alt="" className='min-w-2xs mb-7' />
+      <div className='flex flex-col'>
+        <p className='text-2xl font-medium mb-6'>Oops! Something went wrong</p>
+        <p className='text-muted-foreground font-medium leading-normal'>{errorMessage}
+          <br /> You can go back to {params.name} and try again.</p>
+      </div>
+      <div className='flex flex-col gap-3'>
+        <Button variant={'default'} onClick={() => navigate(params.url)}>
+          <ArrowLeft />
+          Go Back</Button>
+        <Button variant={'ghost'} className='' onClick={() => window.location.reload()}>Try Again</Button>
+      </div>
     </div>
   );
 }

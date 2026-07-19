@@ -19,7 +19,7 @@ export default function Menu(params: Params) {
         <div>
             <Sheet>
                 <SheetTrigger asChild>
-                    <AlignJustify className="text-muted cursor-pointer" />
+                    <AlignJustify className="text-muted-foreground cursor-pointer" />
                 </SheetTrigger>
                 <SheetContent showCloseButton={false} side="left" className="gap-5">
                     <SheetHeader className="gap-4 border-b pb-4">
