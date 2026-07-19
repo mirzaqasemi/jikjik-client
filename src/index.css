@@ -82,10 +82,6 @@ body,
   box-sizing: border-box;
 }
 
-p{
-   line-height: normal !important;
-}
-
 *:focus-visible {
   outline: none !important;
 }

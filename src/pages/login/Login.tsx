@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import * as backend from '../../services/backend.ts';
 import './login.css';
 import { normalizeError } from "@/utilities/normalized-error.ts";
+import { AlertDestructive } from "@/components/alert-destructive/AlertDestructive.tsx";
 
 
 export default function Login() {
@@ -32,21 +33,8 @@ export default function Login() {
     const usernameRef = useRef<HTMLInputElement>(null);
     const passRef = useRef<HTMLInputElement>(null);
 
-    // React Query internally does something like:
-    // const data = await mutationFn({username: usernameInput.value, password: passwordInput.value})
-    // storeResultInsideReactQuery(data) Which stores data in "mutation.data"
-    //      mutate(...)
-    //          ↓
-    //      mutationFn runs
-    //          ↓
-    //      backend.login(...)
-    //          ↓
-    //      returns user
-    //          ↓
-    //      TanStack saves it to:
-    //      loginMutation.data
-    //          ↓
-    //      calls onSuccess(user)
+
+    // Mutation flow: mutate(credentials) → mutationFn(credentials) → onSuccess(user)
     const loginMutation = useMutation({
         mutationFn: ({ username, password }: { username: string; password: string }) => {
             return backend.login(username, password);
@@ -142,6 +130,7 @@ export default function Login() {
                                             type='text'
                                             placeholder="Jordan Lee"
                                             ref={usernameRef}
+                                            required
                                         />
                                     </InputGroup>
                                 </Field>
@@ -156,6 +145,7 @@ export default function Login() {
                                             id="fieldgroup-pass"
                                             defaultValue="password"
                                             ref={passRef}
+                                            required
                                         />
                                         <InputGroupAddon align="inline-end">
                                             <button
@@ -167,11 +157,14 @@ export default function Login() {
                                                     <EyeOffIcon className="size-4" /> :
                                                     <EyeIcon className="size-4" />
                                                 }
-
                                             </button>
                                         </InputGroupAddon>
                                     </InputGroup>
                                 </Field>
+                                {
+                                    loginMutation.isError &&
+                                    <AlertDestructive title={normalizeError(loginMutation.error, { action: "login" }).message} description="" />
+                                }
                                 <Field orientation="horizontal">
                                     <Button className='w-full' type="submit" variant={"default"} disabled={loginMutation.isPending}>Login</Button>
                                 </Field>
