@@ -28,6 +28,7 @@ export default function Draft() {
     const contact = rawContact;
     const chat: backend.Chat = {
         id: "",
+        isDm: true,
         title: contact?.displayName,
         users: [contact, user],
         lastMsg: null,

@@ -16,6 +16,8 @@ import { attachBackendEventClient, detachBackendEventClient } from "./backend-ev
 import {
     type DirectRooms,
     findDirectRoomId,
+    getDirectRoomInviter,
+    isDirectRoom,
     isVisibleRoom,
 } from "./direct-room";
 import * as session from "./session";
@@ -90,6 +92,9 @@ export interface Chat {
     /** Matrix room id, for example "!room:localhost". */
     id: string;
 
+    /** True when this room is marked as a direct-message conversation. */
+    isDm: boolean;
+
     /** Current user's Matrix membership in this room, for example "join" or "invite". */
     membership?: string;
 
@@ -123,6 +128,8 @@ export interface Chat {
     /** Room topic from m.room.topic. */
     topic?: string;
 }
+
+type ChatWithoutDm = Omit<Chat, "isDm">;
 
 export interface CreateRoomRequest {
     /** Human-readable room name shown in chat lists and room headers. */
@@ -336,6 +343,10 @@ async function unmarkDirectRoom(roomId: string): Promise<void> {
     }
 }
 
+async function getDirectRooms(): Promise<DirectRooms> {
+    return (await getClient().getAccountDataFromServer(EventType.Direct) || {}) as DirectRooms;
+}
+
 function userFromMember(member: RoomMember): User {
     return userFromUserId(member.userId, {
         displayName: member.name || displayNameFromUserId(member.userId),
@@ -380,7 +391,7 @@ function stateContent<TContent extends IContent>(room: Room, eventType: string):
     return room.currentState.getStateEvents(eventType, "")?.getContent<TContent>();
 }
 
-function chatFromSdkRoom(room: Room): Chat {
+function chatFromSdkRoom(room: Room): ChatWithoutDm {
     const users = room.getMembers().map(userFromMember); //TODO add support for invited members
 
     const messages = room.getLiveTimeline()
@@ -414,7 +425,10 @@ function userFromMemberState(userId: string, content: IContent): User {
     });
 }
 
-function chatFromInitialSync(roomId: string, response: Awaited<ReturnType<MatrixClient["roomInitialSync"]>>): Chat {
+function chatFromInitialSync(
+    roomId: string,
+    response: Awaited<ReturnType<MatrixClient["roomInitialSync"]>>,
+): ChatWithoutDm {
     const state = response.state || [];
     const users = state //TODO add support for join/invited and other types of membership
         .filter(event => event.type === EventType.RoomMember && event.state_key) // && event.content.membership === "join"
@@ -446,10 +460,10 @@ function chatFromInitialSync(roomId: string, response: Awaited<ReturnType<Matrix
     };
 }
 
-async function getSdkRoomOrInitialSync(roomId: string): Promise<Chat> {
+async function getSdkRoomOrInitialSync(roomId: string, directRooms?: DirectRooms): Promise<Chat> {
     const client = getClient();
     const room = client.getRoom(roomId);
-    let chat: Chat;
+    let chat: ChatWithoutDm;
     if (room != null) {
         chat = chatFromSdkRoom(room);
     } else {
@@ -458,6 +472,7 @@ async function getSdkRoomOrInitialSync(roomId: string): Promise<Chat> {
 
     return {
         ...chat,
+        isDm: isDirectRoom(client, roomId, directRooms || await getDirectRooms()),
         users: await withPresenceForUsers(chat.users),
     };
 }
@@ -538,8 +553,11 @@ export async function currentUser(): Promise<User | null> {
 }
 
 export async function getChats(filter?: string): Promise<Chat[]> {
-    const roomIds = await getVisibleRoomIds();
-    const chats = await Promise.all(roomIds.map(getSdkRoomOrInitialSync));
+    const [roomIds, directRooms] = await Promise.all([
+        getVisibleRoomIds(),
+        getDirectRooms(),
+    ]);
+    const chats = await Promise.all(roomIds.map(roomId => getSdkRoomOrInitialSync(roomId, directRooms)));
     const normalizedFilter = (filter || "").trim().toLowerCase();
 
     const sortedChats = chats.sort((a, b) => {
@@ -566,9 +584,7 @@ export async function getChats(filter?: string): Promise<Chat[]> {
 
 export async function getChat(chatId: string): Promise<Chat> {
     await waitForInitialSync(getClient()).catch(() => undefined);
-    return getSdkRoomOrInitialSync(chatId).then(c=>{
-        return c;
-    });
+    return getSdkRoomOrInitialSync(chatId);
 }
 
 export async function getDirectRoomId(username: string): Promise<string | null> {
@@ -582,7 +598,12 @@ export async function getDirectRoomId(username: string): Promise<string | null> 
 }
 
 export async function acceptChatInvitation(chatId: string): Promise<Chat> {
-    const room = await getClient().joinRoom(chatId);
+    const client = getClient();
+    const directRoomInviter = getDirectRoomInviter(client, chatId);
+    const room = await client.joinRoom(chatId);
+    if (directRoomInviter != null) {
+        await markDirectRoom(directRoomInviter, room.roomId);
+    }
     return getSdkRoomOrInitialSync(room.roomId);
 }
 

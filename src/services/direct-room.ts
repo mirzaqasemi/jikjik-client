@@ -22,6 +22,29 @@ function directRoomsFromAccountData(client: MatrixClient): DirectRooms {
     return client.getAccountData(EventType.Direct)?.getContent<DirectRooms>() || {};
 }
 
+export function getDirectRoomInviter(client: MatrixClient, roomId: string): string | null {
+    const room = client.getRoom(roomId);
+    const currentUserId = client.getUserId();
+    if (room == null || currentUserId == null || !isVisibleRoom(room)) {
+        return null;
+    }
+
+    return room.getMember(currentUserId)?.getDMInviter() || null;
+}
+
+export function isDirectRoom(
+    client: MatrixClient,
+    roomId: string,
+    directRooms: DirectRooms = directRoomsFromAccountData(client),
+): boolean {
+    const isMarkedDirect = Object.values(directRooms).some(roomIds => roomIds.includes(roomId));
+    if (isMarkedDirect) {
+        return true;
+    }
+
+    return getDirectRoomInviter(client, roomId) != null;
+}
+
 function directRoomIdFromAccountData(
     client: MatrixClient,
     directRooms: DirectRooms,
