@@ -95,8 +95,11 @@ export interface Chat {
     /** True when this room is marked as a direct-message conversation. */
     isDm: boolean;
 
-    /** Current user's Matrix membership in this room, for example "join" or "invite". */
+    /** Current user's Matrix membership in this room, for example "join", "invite", or "leave". */
     membership?: string;
+
+    /** User who invited the current user. Only available while membership is "invite". */
+    inviter?: User;
 
     /** Room display title from m.room.name, or derived by the SDK when room state is available. */
     title?: string;
@@ -393,6 +396,14 @@ function stateContent<TContent extends IContent>(room: Room, eventType: string):
 
 function chatFromSdkRoom(room: Room): ChatWithoutDm {
     const users = room.getMembers().map(userFromMember); //TODO add support for invited members
+    const currentUserId = getClient().getUserId();
+    const inviterId = room.getMyMembership() === "invite" && currentUserId != null
+        ? room.getMember(currentUserId)?.events.member?.getSender()
+        : undefined;
+    const inviter = inviterId != null
+        ? users.find(user => user.userId === inviterId)
+            || userFromUserId(inviterId, { displayName: displayNameFromUserId(inviterId) })
+        : undefined;
 
     const messages = room.getLiveTimeline()
         .getEvents()
@@ -404,6 +415,7 @@ function chatFromSdkRoom(room: Room): ChatWithoutDm {
     return {
         id: room.roomId,
         membership: room.getMyMembership(),
+        inviter,
         title: room.name || undefined,
         users,
         lastMsg: messages.at(-1) || null,
@@ -433,6 +445,18 @@ function chatFromInitialSync(
     const users = state
         .filter(event => event.type === EventType.RoomMember && event.state_key)
         .map(event => userFromMemberState(event.state_key!, event.content));
+    const currentUserId = getClient().getUserId();
+    const inviterId = response.membership === "invite" && currentUserId != null
+        ? state.find(event =>
+            event.type === EventType.RoomMember
+            && event.state_key === currentUserId
+            && event.content.membership === "invite"
+        )?.sender
+        : undefined;
+    const inviter = inviterId != null
+        ? users.find(user => user.userId === inviterId)
+            || userFromUserId(inviterId, { displayName: displayNameFromUserId(inviterId) })
+        : undefined;
     const events = (response.messages?.chunk || []).map(event => new MatrixEvent(event));
     const messages = events
         .map(event => messageFromEvent(event, users))
@@ -447,6 +471,7 @@ function chatFromInitialSync(
     return {
         id: roomId,
         membership: response.membership,
+        inviter,
         title: roomName,
         users,
         lastMsg: messages.at(-1) || null,
