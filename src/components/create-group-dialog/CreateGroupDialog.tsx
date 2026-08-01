@@ -4,16 +4,18 @@ import {
 } from "@/components/ui/dialog";
 import * as backend from '@/services/backend';
 import { useMutation } from "@tanstack/react-query";
+import type { Preset } from "matrix-js-sdk";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Spinner } from "../ui/spinner";
-import AddMembers from "./add-members/AddMembers";
-import TitleAndAvatar from "./title-and-avatar/TitleAndAvatar";
+import GroupDetailsStep from "./group-details-step/GroupDetailsStep";
+import GroupMembersStep from "./group-members-step/GroupMembersStep";
 
 export type Step = "title" | "members";
-type GroupInfo = {
+export type GroupDetails = {
     title: string,
     avatar: string,
+    preset: Preset
 }
 
 type Params = {
@@ -25,17 +27,19 @@ type Params = {
 
 export default function CreateGroupDialog(params: Params) {
     const [step, setStep] = useState<Step>("title");
-    const [groupInfo, setGroupInfo] = useState<GroupInfo>({ title: "", avatar: "" });
+    const [groupDetails, setGroupDetails] = useState<GroupDetails>();
     const navigate = useNavigate();
 
     const createGroupMutation = useMutation({
         mutationFn: async (params: { invitees: string[] }) => {
-            return await backend.createRoom({ title: groupInfo.title, invitees: params.invitees })
+            if (groupDetails === undefined) {
+                throw new Error("Group information should not be undefined");
+            }
+            return await backend.createRoom({ title: groupDetails.title, invitees: params.invitees, preset: groupDetails.preset })
         },
         onSuccess: (data) => {
             params.onCloseRequest();
             navigate(`/chats/${data.id}`);
-            // setTimeout(() => setStep("title"), 1500);
         },
     });
 
@@ -66,15 +70,15 @@ export default function CreateGroupDialog(params: Params) {
                         </div>
                     }
                     {step === "title" &&
-                        <TitleAndAvatar
+                        <GroupDetailsStep
                             onClose={() => setStep("title")}
-                            onNext={(groupInfo) => {
-                                setGroupInfo(groupInfo);
+                            onNext={(groupDetails) => {
+                                setGroupDetails(groupDetails);
                                 setStep("members");
                             }} />
                     }
                     {step === "members" &&
-                        <AddMembers key="members"
+                        <GroupMembersStep key="members"
                             onClose={() => { setStep("title") }}
                             onNext={createGroup} />
                     }

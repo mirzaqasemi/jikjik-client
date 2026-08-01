@@ -2,6 +2,8 @@ import { redirect, type LoaderFunctionArgs } from "react-router-dom";
 import * as session from "../services/session";
 import * as backend from "../services/backend";
 import { CHATS_ROUTE, LOGIN_ROUTE } from "../router";
+import { toast } from "sonner";
+import { NormalizedError, normalizeError } from "@/utilities/normalized-error";
 
 
 // Loader for protected routes
@@ -28,9 +30,12 @@ export async function chatLoader({ params }: LoaderFunctionArgs) {
       throw new Error("Missing chatId");
     }
     const chat = await backend.getChat(chatId);
-    
     if (chat.membership == "invite") {
       return redirect(`/chats/${chatId}/invite`);
+    } else if (chat.membership == "leave") {
+      const normalizeError = new NormalizedError("forbidden");
+      normalizeError.message = "You have left this room!"
+      throw normalizeError;
     }
     return chat;
   }

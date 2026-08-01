@@ -15,14 +15,14 @@ import * as backend from '../../../services/backend.ts';
 import ContactList from "../../contact-list/ContactList.tsx";
 import SearchBar from "../../search-bar/SearchBar.tsx";
 import { Button } from "../../ui/button.tsx";
-import './AddMembers.css';
+import './GroupMembersStep.css';
 
 type Params = {
     onNext: (members: Map<string, backend.User>) => void,
     onClose: () => void,
 }
 
-export default function AddMembers(params: Params) {
+export default function GroupMembersStep(params: Params) {
     const [searchQuery, setSearchQuery] = useState("");
     const debouncedSearchQuery = hooks.useDebounce(searchQuery, 300);
     const user = useSession();
