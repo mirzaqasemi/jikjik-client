@@ -82,30 +82,8 @@ body,
   box-sizing: border-box;
 }
 
-*:focus-visible {
-  outline: none !important;
-}
-
-@layer base {
-
-  [data-radix-collection-item]:focus,
-  [data-radix-collection-item]:focus-visible,
-  [data-highlighted] {
-    outline: none !important;
-    box-shadow: none !important;
-    background-color: unset;
-  }
-}
-
-@layer base {
-  .focus-visible\:ring-\[3px\]:focus-visible {
-    --tw-ring-shadow: 0 0 #0000 !important;
-    box-shadow: none !important;
-  }
-
-  .focus-visible\:border-ring:focus-visible {
-    border-color: transparent !important;
-  }
+Button{
+  cursor: pointer;
 }
 
 @layer base {
@@ -150,11 +128,6 @@ body {
 
 ::-webkit-scrollbar-thumb {
   border-radius: 10px;
-}
-
-button,
-[role="button"] {
-  cursor: pointer;
 }
 
 /* =========================================

@@ -33,7 +33,7 @@ export default function Chat() {
         throw new Error("Missing chatId");
     }
     const chatId = params.chatId;
-
+    
     // Fetching data from backend
     const {
         data: serverMessages = [], // Rename "data" to "messages" 

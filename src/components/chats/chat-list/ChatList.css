@@ -1,34 +1,3 @@
-/* =========================================
-   1.HEADER SECTION
-   ========================================= */
-.search-bar [data-slot="input-group-control"] {
-    font-size: 13px;
-}
-
-.sidebar-icons li button {
-    width: 100%;
-    color: var(--color-foreground);
-    gap: 16px;
-    padding-left: 24px;
-    padding-block: 20px;
-    border-radius: 0px;
-    justify-content: start;
-}
-
-.sidebar-icons li button:hover {
-    background-color: var(--color-secondary);
-}
-
-.sidebar-icons li svg {
-    color: var(--color-foreground);
-    stroke-width: 1.5;
-    width: 20px;
-    height: 20px;
-}
-
-/* =========================================
-   2.MIDDLE SECTION
-   ========================================= */
 .chat-item {
     cursor: pointer;
     transition: background-color 0.2s ease;

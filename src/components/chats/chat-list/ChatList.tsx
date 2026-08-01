@@ -16,7 +16,7 @@ import {
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-
+import './ChatList.css'
 
 type Params = {
     chats: backend.Chat[],
@@ -67,7 +67,7 @@ export default function ChatList(params: Params) {
                                     <img src="https://i.pravatar.cc/150?img=11" alt="David" className="h-full w-full rounded-full object-cover" />
                                     <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-chart-2  border-2 border-white" aria-label="Online" />
                                 </div>
-                                <div className="flex-1 pb-2.5 pt-2.5 ml-3 border-b truncate chat-info">
+                                <div className="flex-1 pb-2.5 pt-2.5 ml-3 truncate chat-info">
                                     <div className="flex label-row">
                                         <div className="chat-name">{chat.title}</div>
                                         <span className="text-muted-foreground chat-meta unread-time">{utils.formatDate(chat.lastMsg?.date)}</span>

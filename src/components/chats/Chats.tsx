@@ -10,9 +10,9 @@ import * as session from '../../services/session.ts';
 import Menu from "../menu/Menu.tsx";
 import SearchBar from "../search-bar/SearchBar.tsx";
 import ChatList from "./chat-list/ChatList.tsx";
-import './Chats.css';
-import ContactList from "./contact-list/ContactList.tsx";
+import ContactList from "../contact-list/ContactList.tsx";
 import { normalizeError } from "@/utilities/normalized-error.ts";
+import { draftDm } from "@/services/draft-storage";
 
 export default function Chats() {
     const [searchQuery, setSearchQuery] = useState("");
@@ -32,7 +32,7 @@ export default function Chats() {
         error,
         refetch
     } = useQuery<Data>({
-        queryKey: ["allChats", user?.userId, debouncedSearchQuery], // "allChats" is the name/address of the cached data
+        queryKey: ["allChatsAndContacts", user?.userId, debouncedSearchQuery], // "allChats" is the name/address of the cached data
         queryFn: async () => {
             const chats = await backend.getChats(debouncedSearchQuery);
             const contacts = await backend.searchContacts(debouncedSearchQuery);
@@ -90,7 +90,16 @@ export default function Chats() {
                 <ChatList chats={chats} onSelect={clearSearch} />
                 {
                     contacts.length > 0 &&
-                    <ContactList contacts={contacts} onSelect={clearSearch} />
+                    <>
+                        <div className="flex h-7 px-5 mt-3 text-[13.5px] muted-text font-light muted-background text-start items-center">Contacts</div>
+                        <ContactList contacts={contacts} onSelect={(contact) => {
+                            draftDm(contact);
+                            navigate(`/chats/draft`);
+                            clearSearch();
+                        }} />
+                    </>
+
+
                 }
             </>
         }

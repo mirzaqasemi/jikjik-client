@@ -1,0 +1,14 @@
+.avatar-wrapper:hover>.avatar {
+    cursor: pointer;
+}
+
+.avatar-wrapper:hover .remove-icon,
+.avatar-wrapper .fallback-text {
+    display: block;
+}
+
+.avatar-wrapper:hover .fallback-text,
+.avatar-wrapper:hover .avatar-image,
+.avatar-wrapper .remove-icon {
+    display: none;
+}
