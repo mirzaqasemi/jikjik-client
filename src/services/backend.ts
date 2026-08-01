@@ -430,8 +430,8 @@ function chatFromInitialSync(
     response: Awaited<ReturnType<MatrixClient["roomInitialSync"]>>,
 ): ChatWithoutDm {
     const state = response.state || [];
-    const users = state //TODO add support for join/invited and other types of membership
-        .filter(event => event.type === EventType.RoomMember && event.state_key) // && event.content.membership === "join"
+    const users = state
+        .filter(event => event.type === EventType.RoomMember && event.state_key)
         .map(event => userFromMemberState(event.state_key!, event.content));
     const events = (response.messages?.chunk || []).map(event => new MatrixEvent(event));
     const messages = events
@@ -446,7 +446,7 @@ function chatFromInitialSync(
 
     return {
         id: roomId,
-        membership: "join",
+        membership: response.membership,
         title: roomName,
         users,
         lastMsg: messages.at(-1) || null,
