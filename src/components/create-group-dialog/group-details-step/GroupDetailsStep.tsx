@@ -27,7 +27,7 @@ export default function GroupDetailsStep(params: Params) {
   function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const title = String(formData.get("title"));
+    const title = String(formData.get("title")).trim();
     const avatar = String(formData.get("avatar"));
     const preset = formData.get("preset") as Preset;
     params.onNext({ title, avatar, preset });

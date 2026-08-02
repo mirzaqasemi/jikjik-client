@@ -16,7 +16,7 @@ import {
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import './ChatList.css'
+import './ChatList.css';
 
 type Params = {
     chats: backend.Chat[],
@@ -73,7 +73,13 @@ export default function ChatList(params: Params) {
                                         <span className="text-muted-foreground chat-meta unread-time">{utils.formatDate(chat.lastMsg?.date)}</span>
                                     </div>
                                     <div className="flex label-row">
-                                        <div className="chat-preview unread-text">{chat.lastMsg != null ? chat.lastMsg.content : `Do you want to chat with ${chat.title}?`}</div>
+                                        <div className="chat-preview unread-text">{chat.lastMsg != null ? chat.lastMsg.content
+                                            : chat.isDm ?
+                                                `Do you want to chat with`
+                                                : `Do you want to join`}
+                                            {` `}
+                                            <span className="font-medium">{chat.title}</span>
+                                        </div>
                                         <div className="w-4 h-4 flex justify-center rounded-full shrink-0 unread-badge">2</div>
                                     </div>
                                 </div>
