@@ -395,6 +395,7 @@ function stateContent<TContent extends IContent>(room: Room, eventType: string):
 }
 
 function chatFromSdkRoom(room: Room): ChatWithoutDm {
+    console.log("sdk room", room);
     const users = room.getMembers().map(userFromMember); //TODO add support for invited members
     const currentUserId = getClient().getUserId();
     const inviterId = room.getMyMembership() === "invite" && currentUserId != null
@@ -402,7 +403,7 @@ function chatFromSdkRoom(room: Room): ChatWithoutDm {
         : undefined;
     const inviter = inviterId != null
         ? users.find(user => user.userId === inviterId)
-            || userFromUserId(inviterId, { displayName: displayNameFromUserId(inviterId) })
+        || userFromUserId(inviterId, { displayName: displayNameFromUserId(inviterId) })
         : undefined;
 
     const messages = room.getLiveTimeline()
@@ -443,7 +444,10 @@ function chatFromInitialSync(
 ): ChatWithoutDm {
     const state = response.state || [];
     const users = state
-        .filter(event => event.type === EventType.RoomMember && event.state_key)
+        .filter(event => {
+            console.log("event", event);
+            return event.type === EventType.RoomMember && event.state_key;
+        })
         .map(event => userFromMemberState(event.state_key!, event.content));
     const currentUserId = getClient().getUserId();
     const inviterId = response.membership === "invite" && currentUserId != null
@@ -455,7 +459,7 @@ function chatFromInitialSync(
         : undefined;
     const inviter = inviterId != null
         ? users.find(user => user.userId === inviterId)
-            || userFromUserId(inviterId, { displayName: displayNameFromUserId(inviterId) })
+        || userFromUserId(inviterId, { displayName: displayNameFromUserId(inviterId) })
         : undefined;
     const events = (response.messages?.chunk || []).map(event => new MatrixEvent(event));
     const messages = events

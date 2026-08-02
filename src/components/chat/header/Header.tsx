@@ -10,20 +10,18 @@ export default function Header({ chat }: { chat: backend.Chat }) {
     return (
         <>
             {/* <!-- Top: Header Section --> */}
-            <div className="flex w-full absolute top-0 z-50 items-center conversation-header">
+            <div className="flex w-full sticky top-0 z-50 items-center conversation-header">
                 <div className="flex gap-2.5">
                     <Link to={"../"} className="lg:hidden flex justify-center items-center btn-back w-10 h-10 rounded-full">
                         <ArrowLeft strokeWidth={"1.5"} />
                     </Link>
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 items-center">
                         <div className="avatar-container">
                             <img src="https://i.pravatar.cc/150?img=32" alt="" className="size-11 rounded-full lg:hidden" />
                         </div>
                         <div className="flex flex-col items-start user-details">
                             <span className="user-name">{utilities.getTitle(chat)}</span>
-                            {chat.isDm ? <span className="user-status">Online</span>
-                                : <span>{membersNum} {membersNum > 1 ? "members" : "member"}</span>
-                            }
+                            {chat.isDm && <span className="font-normal text-[12px] text-muted-foreground">Online</span>}
                         </div>
                     </div>
                 </div>

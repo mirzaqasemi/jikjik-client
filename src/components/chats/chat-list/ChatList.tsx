@@ -77,8 +77,7 @@ export default function ChatList(params: Params) {
                                             : chat.isDm ?
                                                 `Do you want to chat with`
                                                 : `Do you want to join`}
-                                            {` `}
-                                            <span className="font-medium">{chat.title}</span>
+                                            <span className="font-medium">{` `}{chat.title}</span>
                                         </div>
                                         <div className="w-4 h-4 flex justify-center rounded-full shrink-0 unread-badge">2</div>
                                     </div>
