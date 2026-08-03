@@ -8,8 +8,13 @@ import {
 } from "@/components/ui/dialog";
 import {
   Field,
+  FieldContent,
+  FieldDescription,
   FieldGroup,
-  FieldLabel
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+  FieldTitle
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -17,9 +22,9 @@ import { Preset } from "matrix-js-sdk";
 import type { GroupDetails } from "../CreateGroupDialog";
 
 type Params = {
-    onNext: (p: GroupDetails) => void,
-    onClose: () => void
-  }
+  groupDetails: GroupDetails | undefined,
+  onNext: (p: GroupDetails) => void,
+}
 
 
 export default function GroupDetailsStep(params: Params) {
@@ -45,28 +50,40 @@ export default function GroupDetailsStep(params: Params) {
         <FieldGroup>
           <Field>
             <FieldLabel htmlFor="title">Group name</FieldLabel>
-            <Input id="title" name="title" type="text" placeholder="" required />
+            <Input defaultValue={params.groupDetails?.title} id="title" name="title" type="text" placeholder="" required />
           </Field>
-
-          <RadioGroup name="preset" defaultValue={Preset.PrivateChat}>
-            <Field orientation="horizontal">
-              <RadioGroupItem value={Preset.PrivateChat} id="preset-private" />
+          <FieldSet className="w-full">
+            <FieldLegend variant="label">Group Type</FieldLegend>
+            <RadioGroup name="preset" defaultValue={params.groupDetails?.preset}>
               <FieldLabel htmlFor="preset-private" className="font-normal">
-                Private
+                <Field orientation="horizontal">
+                  <RadioGroupItem value={Preset.PrivateChat} id="preset-private" />
+                  <FieldContent>
+                    <FieldTitle>Private</FieldTitle>
+                    <FieldDescription>
+                      People can only join if they are added
+                    </FieldDescription>
+                  </FieldContent>
+                </Field>
               </FieldLabel>
-            </Field>
-            <Field orientation="horizontal">
-              <RadioGroupItem value={Preset.PublicChat} id="preset-public" />
               <FieldLabel htmlFor="preset-public" className="font-normal">
-                Public
+                <Field orientation="horizontal">
+                  <RadioGroupItem value={Preset.PublicChat} id="preset-public" />
+                  <FieldContent>
+                    <FieldTitle>Public</FieldTitle>
+                    <FieldDescription>
+                      Anyone can find the group in search and join, chat history is available to everybody
+                    </FieldDescription>
+                  </FieldContent>
+                </Field>
               </FieldLabel>
-            </Field>
-          </RadioGroup>
+            </RadioGroup>
+          </FieldSet>
         </FieldGroup>
 
         <DialogFooter className="grid grid-cols-4 mt-10">
           <DialogClose asChild className="col-start-3">
-            <Button variant="outline" onClick={() => params.onClose()}>Cancel</Button>
+            <Button variant="outline">Cancel</Button>
           </DialogClose>
           <Button type="submit" className="col-start-4">Next</Button>
         </DialogFooter>

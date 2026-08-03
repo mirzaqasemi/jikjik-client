@@ -4,7 +4,7 @@ import {
 } from "@/components/ui/dialog";
 import * as backend from '@/services/backend';
 import { useMutation } from "@tanstack/react-query";
-import type { Preset } from "matrix-js-sdk";
+import { Preset } from "matrix-js-sdk";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Spinner } from "../ui/spinner";
@@ -25,9 +25,11 @@ type Params = {
     open: boolean
 }
 
+
 export default function CreateGroupDialog(params: Params) {
     const [step, setStep] = useState<Step>("title");
-    const [groupDetails, setGroupDetails] = useState<GroupDetails>();
+    const groupDetailsDefaultValue = {title: "", avatar: "", preset: Preset.PrivateChat};
+    const [groupDetails, setGroupDetails] = useState<GroupDetails>(groupDetailsDefaultValue);
     const navigate = useNavigate();
 
     const createGroupMutation = useMutation({
@@ -38,6 +40,7 @@ export default function CreateGroupDialog(params: Params) {
             return await backend.createRoom({ title: groupDetails.title, invitees: params.invitees, preset: groupDetails.preset })
         },
         onSuccess: (data) => {
+            setGroupDetails(groupDetailsDefaultValue);
             params.onCloseRequest();
             navigate(`/chats/${data.id}`);
         },
@@ -71,7 +74,7 @@ export default function CreateGroupDialog(params: Params) {
                     }
                     {step === "title" &&
                         <GroupDetailsStep
-                            onClose={() => setStep("title")}
+                            groupDetails={groupDetails}
                             onNext={(groupDetails) => {
                                 setGroupDetails(groupDetails);
                                 setStep("members");
@@ -79,7 +82,7 @@ export default function CreateGroupDialog(params: Params) {
                     }
                     {step === "members" &&
                         <GroupMembersStep key="members"
-                            onClose={() => { setStep("title") }}
+                            onBack={() => setStep("title")}
                             onNext={createGroup} />
                     }
                 </DialogContent>

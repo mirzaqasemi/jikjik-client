@@ -395,7 +395,6 @@ function stateContent<TContent extends IContent>(room: Room, eventType: string):
 }
 
 function chatFromSdkRoom(room: Room): ChatWithoutDm {
-    console.log("sdk room", room);
     const users = room.getMembers().map(userFromMember); //TODO add support for invited members
     const currentUserId = getClient().getUserId();
     const inviterId = room.getMyMembership() === "invite" && currentUserId != null

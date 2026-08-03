@@ -19,7 +19,7 @@ import './GroupMembersStep.css';
 
 type Params = {
     onNext: (members: Map<string, backend.User>) => void,
-    onClose: () => void,
+    onBack: () => void,
 }
 
 export default function GroupMembersStep(params: Params) {
@@ -109,8 +109,8 @@ export default function GroupMembersStep(params: Params) {
 
             {/* Footer */}
             <DialogFooter className="grow-0 grid grid-cols-4">
-                <Button className="col-start-3" variant="outline" onClick={() => params.onClose()}>Cancel</Button>
-                <Button type="submit" className="col-start-4" onClick={() => params.onNext(selectedMembers)}>Next</Button>
+                <Button className="col-start-3" variant="outline" onClick={() => params.onBack()}>Back</Button>
+                <Button type="submit" className="col-start-4" onClick={() => params.onNext(selectedMembers)}>Create</Button>
             </DialogFooter>
         </div>
     );
