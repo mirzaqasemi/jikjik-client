@@ -5,8 +5,7 @@ import * as utilities from "../../../utilities/utilities.ts";
 import "./Header.css";
 
 export default function Header({ chat }: { chat: backend.Chat }) {
-    const membersNum = chat.users.filter((user) =>
-        user.membership === "join").length;
+
     return (
         <>
             {/* <!-- Top: Header Section --> */}

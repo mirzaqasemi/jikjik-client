@@ -1,9 +1,8 @@
+import { NormalizedError } from "@/utilities/normalized-error";
 import { redirect, type LoaderFunctionArgs } from "react-router-dom";
-import * as session from "../services/session";
-import * as backend from "../services/backend";
 import { CHATS_ROUTE, LOGIN_ROUTE } from "../router";
-import { toast } from "sonner";
-import { NormalizedError, normalizeError } from "@/utilities/normalized-error";
+import * as backend from "../services/backend";
+import * as session from "../services/session";
 
 
 // Loader for protected routes
