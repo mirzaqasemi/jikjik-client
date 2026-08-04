@@ -13,20 +13,15 @@ import type { ICreateRoomOpts } from "matrix-js-sdk/lib/@types/requests";
 import { Preset, Visibility } from "matrix-js-sdk/lib/@types/partials";
 import type { IContent } from "matrix-js-sdk/lib/models/event";
 import { attachBackendEventClient, detachBackendEventClient } from "./backend-event";
-import {
-    type DirectRooms,
-    findDirectRoomId,
-    getDirectRoomInviter,
-    isDirectRoom,
-    isVisibleRoom,
-} from "./direct-room";
+import { type DirectRooms, findDirectRoomId, getDirectRoomInviter, isDirectRoom, isVisibleRoom, } from "./direct-room";
 import * as session from "./session";
 
 // -----------------------------------------
 // Types
 // -----------------------------------------
 // TODO: Move these app-facing backend models to a dedicated models file or folder later.
-export interface User {
+export interface User
+{
     /** Canonical Matrix user id, for example "@alex92:localhost". */
     userId: string;
 
@@ -57,7 +52,8 @@ export interface User {
     membership?: string;
 }
 
-export interface Message {
+export interface Message
+{
     /** User who sent the message. */
     sender: User;
 
@@ -88,12 +84,16 @@ export interface Message {
     age?: number;
 }
 
-export interface Chat {
+export interface Chat
+{
     /** Matrix room id, for example "!room:localhost". */
     id: string;
 
     /** True when this room is marked as a direct-message conversation. */
     isDm: boolean;
+
+    /** True when this room is published in the public room directory. */
+    isPublic: boolean;
 
     /** Current user's Matrix membership in this room, for example "join", "invite", or "leave". */
     membership?: string;
@@ -132,9 +132,10 @@ export interface Chat {
     topic?: string;
 }
 
-type ChatWithoutDm = Omit<Chat, "isDm">;
+type UnclassifiedChat = Omit<Chat, "isDm" | "isPublic">;
 
-export interface CreateRoomRequest {
+export interface CreateRoomRequest
+{
     /** Human-readable room name shown in chat lists and room headers. */
     title: string;
 
@@ -394,7 +395,7 @@ function stateContent<TContent extends IContent>(room: Room, eventType: string):
     return room.currentState.getStateEvents(eventType, "")?.getContent<TContent>();
 }
 
-function chatFromSdkRoom(room: Room): ChatWithoutDm {
+function chatFromSdkRoom(room: Room): UnclassifiedChat {
     const users = room.getMembers().map(userFromMember); //TODO add support for invited members
     const currentUserId = getClient().getUserId();
     const inviterId = room.getMyMembership() === "invite" && currentUserId != null
@@ -402,7 +403,7 @@ function chatFromSdkRoom(room: Room): ChatWithoutDm {
         : undefined;
     const inviter = inviterId != null
         ? users.find(user => user.userId === inviterId)
-        || userFromUserId(inviterId, { displayName: displayNameFromUserId(inviterId) })
+        || userFromUserId(inviterId, {displayName: displayNameFromUserId(inviterId)})
         : undefined;
 
     const messages = room.getLiveTimeline()
@@ -440,13 +441,11 @@ function userFromMemberState(userId: string, content: IContent): User {
 function chatFromInitialSync(
     roomId: string,
     response: Awaited<ReturnType<MatrixClient["roomInitialSync"]>>,
-): ChatWithoutDm {
+): UnclassifiedChat {
     const state = response.state || [];
     const users = state
-        .filter(event => {
-            console.log("event", event);
-            return event.type === EventType.RoomMember && event.state_key;
-        })
+        .filter(event =>
+            event.type === EventType.RoomMember && event.state_key)
         .map(event => userFromMemberState(event.state_key!, event.content));
     const currentUserId = getClient().getUserId();
     const inviterId = response.membership === "invite" && currentUserId != null
@@ -458,7 +457,7 @@ function chatFromInitialSync(
         : undefined;
     const inviter = inviterId != null
         ? users.find(user => user.userId === inviterId)
-        || userFromUserId(inviterId, { displayName: displayNameFromUserId(inviterId) })
+        || userFromUserId(inviterId, {displayName: displayNameFromUserId(inviterId)})
         : undefined;
     const events = (response.messages?.chunk || []).map(event => new MatrixEvent(event));
     const messages = events
@@ -488,20 +487,56 @@ function chatFromInitialSync(
     };
 }
 
+type PublicRoomSummary = Awaited<ReturnType<MatrixClient["publicRooms"]>>["chunk"][number];
+
+function chatFromPublicRoom(room: PublicRoomSummary): Chat {
+    return {
+        id: room.room_id,
+        isDm: false,
+        isPublic: true,
+        membership: getClient().getRoom(room.room_id)?.getMyMembership(),
+        title: room.name || room.canonical_alias || room.room_id,
+        users: [],
+        lastMsg: null,
+        avatarUrl: room.avatar_url,
+        canonicalAlias: room.canonical_alias,
+        topic: room.topic,
+    };
+}
+
+async function isRoomListedPublicly(roomId: string): Promise<boolean> {
+    try {
+        const response = await getClient().getRoomDirectoryVisibility(roomId);
+        return response.visibility === Visibility.Public;
+    } catch {
+        // Directory visibility can be unavailable for remote rooms or on
+        // homeservers which restrict this endpoint. Such rooms should not be
+        // presented as locally discoverable unless publicRooms returned them.
+        return false;
+    }
+}
+
 async function getSdkRoomOrInitialSync(roomId: string, directRooms?: DirectRooms): Promise<Chat> {
     const client = getClient();
     const room = client.getRoom(roomId);
-    let chat: ChatWithoutDm;
+    let chat: UnclassifiedChat;
     if (room != null) {
         chat = chatFromSdkRoom(room);
     } else {
         chat = chatFromInitialSync(roomId, await client.roomInitialSync(roomId, 1));
     }
 
+    const [resolvedDirectRooms, isPublic, users] = await Promise.all([
+        directRooms ? Promise.resolve(directRooms) : getDirectRooms(),
+        isRoomListedPublicly(roomId),
+        withPresenceForUsers(chat.users),
+    ]);
+
     return {
         ...chat,
-        isDm: isDirectRoom(client, roomId, directRooms || await getDirectRooms()),
-        users: await withPresenceForUsers(chat.users),
+        isDm: isDirectRoom(client, roomId, resolvedDirectRooms),
+        isPublic,
+        users,
     };
 }
 
@@ -540,7 +575,7 @@ async function getRoomUsers(roomId: string): Promise<User[]> {
 // -----------------------------------------
 export async function login(loginIdentifier: string, password: string): Promise<User | null> {
     resetClient();
-    const loginClient = createClient({ baseUrl: MATRIX_BASE_URL });
+    const loginClient = createClient({baseUrl: MATRIX_BASE_URL});
     const loginResponse = await loginClient.loginRequest({
         type: "m.login.password",
         identifier: {
@@ -581,13 +616,18 @@ export async function currentUser(): Promise<User | null> {
 }
 
 export async function getChats(filter?: string): Promise<Chat[]> {
-    const [roomIds, directRooms] = await Promise.all([
+    const normalizedFilter = (filter || "").trim().toLowerCase();
+    const [roomIds, directRooms, publicRooms] = await Promise.all([
         getVisibleRoomIds(),
         getDirectRooms(),
+        normalizedFilter
+            ? getClient().publicRooms({
+                limit: 20,
+                filter: {generic_search_term: normalizedFilter},
+            })
+            : Promise.resolve(null),
     ]);
     const chats = await Promise.all(roomIds.map(roomId => getSdkRoomOrInitialSync(roomId, directRooms)));
-    const normalizedFilter = (filter || "").trim().toLowerCase();
-
     const sortedChats = chats.sort((a, b) => {
         const aTime = a.lastMsg?.date.getTime() || 0;
         const bTime = b.lastMsg?.date.getTime() || 0;
@@ -598,7 +638,7 @@ export async function getChats(filter?: string): Promise<Chat[]> {
         return sortedChats;
     }
 
-    return sortedChats.filter(chat => {
+    const matchingChats = sortedChats.filter(chat => {
         const haystack = [
             chat.title,
             chat.lastMsg?.content,
@@ -608,6 +648,14 @@ export async function getChats(filter?: string): Promise<Chat[]> {
 
         return haystack.includes(normalizedFilter);
     });
+
+    const chatsById = new Map(sortedChats.map(chat => [chat.id, chat]));
+    const resultsById = new Map(matchingChats.map(chat => [chat.id, chat]));
+    publicRooms?.chunk.forEach(room => {
+        const chat = chatsById.get(room.room_id) || chatFromPublicRoom(room);
+        resultsById.set(room.room_id, chat);
+    });
+    return [...resultsById.values()];
 }
 
 export async function getChat(chatId: string): Promise<Chat> {
@@ -632,6 +680,11 @@ export async function acceptChatInvitation(chatId: string): Promise<Chat> {
     if (directRoomInviter != null) {
         await markDirectRoom(directRoomInviter, room.roomId);
     }
+    return getSdkRoomOrInitialSync(room.roomId);
+}
+
+export async function joinPublicRoom(roomId: string): Promise<Chat> {
+    const room = await getClient().joinRoom(roomId);
     return getSdkRoomOrInitialSync(room.roomId);
 }
 
@@ -686,12 +739,16 @@ export async function createDm(username: string): Promise<Chat> {
 }
 
 export async function createRoom(req: CreateRoomRequest): Promise<Chat> {
+    const preset = req.preset
+        ?? (req.visibility === Visibility.Public ? Preset.PublicChat : Preset.PrivateChat);
+    const visibility = req.visibility
+        ?? (preset === Preset.PublicChat ? Visibility.Public : Visibility.Private);
     const response = await getClient().createRoom({
         name: req.title,
         topic: req.topic,
         invite: req.invitees?.map(normalizeUserId),
-        visibility: req.visibility || Visibility.Private,
-        preset: req.preset,
+        visibility,
+        preset,
         room_alias_name: req.roomAliasName,
         room_version: req.roomVersion,
         initial_state: req.initialState,
@@ -701,6 +758,7 @@ export async function createRoom(req: CreateRoomRequest): Promise<Chat> {
 
     return getSdkRoomOrInitialSync(response.room_id);
 }
+
 //TODO handle not found error
 export async function getMessages(chatId: string): Promise<Message[]> {
     const client = getClient();
@@ -736,17 +794,26 @@ export async function sendMessage(req: {
 
 export async function searchContacts(query: string, limit: number = 20): Promise<User[]> {
     const currentUserId = session.getMatrixSession()?.userId;
-    const response = await getClient().searchUserDirectory({ term: query, limit });
+    const users =
+        query == "" ? getClient().getUsers() :
+            (await getClient().searchUserDirectory({term: query, limit})).results.map(u => {
+                return {
+                    userId: u.user_id,
+                    displayName: u.display_name,
+                    avatarUrl: u.avatar_url
+                };
+            })
+    ;
     const contacts: User[] = [];
 
-    for (const result of response.results) {
-        if (result.user_id === currentUserId) {
+    for (const user of users) {
+        if (user.userId === currentUserId) {
             continue;
         }
 
-        contacts.push(userFromUserId(result.user_id, {
-            displayName: result.display_name || displayNameFromUserId(result.user_id),
-            avatarUrl: result.avatar_url,
+        contacts.push(userFromUserId(user.userId, {
+            displayName: user.displayName || displayNameFromUserId(user.userId),
+            avatarUrl: user.avatarUrl,
         }));
     }
 
