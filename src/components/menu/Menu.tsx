@@ -18,9 +18,21 @@ type Params = {
     user: backend.User
 }
 
+
 export default function Menu(params: Params) {
     const [open, setOpen] = useState<boolean>(false);
-    const [newGroupOpen, setNewGroupOpen] = useState(false);
+    const [newGroupState, setNewGroupState] = useState({ open: false, sessionId: 0 });
+
+
+    function openNewGroup() {
+        // useState does not merge objects. You must create a new object
+        setNewGroupState((prev) => ({
+            sessionId: prev.sessionId + 1,
+            open: true
+        }));
+        setOpen(false);
+    }
+
     return (
         <div>
             <Sheet open={open} onOpenChange={(open) => {
@@ -38,11 +50,11 @@ export default function Menu(params: Params) {
                     <SheetHeader className="gap-4 border-b pb-3">
                         <img src="user-profile" alt="" className="size-9 rounded-full" />
                         <SheetTitle>{params.user.displayName}</SheetTitle>
-                        <SheetDescription/>
+                        <SheetDescription />
                     </SheetHeader>
                     <ul className="flex flex-col">
                         <li>
-                            <Button variant="ghost" className="w-full justify-start rounded-none" onClick={() => { setOpen(false); setNewGroupOpen(true) }}>
+                            <Button variant="ghost" className="w-full justify-start rounded-none" onClick={openNewGroup}>
                                 <UsersRound className="sidebar-icon" />
                                 New Group
                             </Button>
@@ -63,7 +75,7 @@ export default function Menu(params: Params) {
                     </ul>
                 </SheetContent>
             </Sheet>
-            <CreateGroupDialog open={newGroupOpen} onCloseRequest={() => setNewGroupOpen(false)} />
+            <CreateGroupDialog key={newGroupState.sessionId} open={newGroupState.open} onCloseRequest={() => setNewGroupState((prev) => ({ ...prev, open: false }))} />
         </div>
     );
 }

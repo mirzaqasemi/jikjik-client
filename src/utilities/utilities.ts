@@ -31,7 +31,7 @@ export function getTitle(chat: backend.Chat): string {
     const user: backend.User | null = session.getUser();
     const currentUserId = user?.userId;
     const users = chat.users;
-    let names: string[] = [];
+    const names: string[] = [];
     if (chat.title != null && chat.title != "") {
         return chat.title;
     }

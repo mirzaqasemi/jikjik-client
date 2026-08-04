@@ -5,7 +5,7 @@ import {
 import * as backend from '@/services/backend';
 import { useMutation } from "@tanstack/react-query";
 import { Preset } from "matrix-js-sdk";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Spinner } from "../ui/spinner";
 import GroupDetailsStep from "./group-details-step/GroupDetailsStep";
@@ -28,8 +28,7 @@ type Params = {
 
 export default function CreateGroupDialog(params: Params) {
     const [step, setStep] = useState<Step>("title");
-    const groupDetailsDefaultValue = {title: "", avatar: "", preset: Preset.PrivateChat};
-    const [groupDetails, setGroupDetails] = useState<GroupDetails>(groupDetailsDefaultValue);
+    const [groupDetails, setGroupDetails] = useState<GroupDetails>({ title: "", avatar: "", preset: Preset.PrivateChat });
     const navigate = useNavigate();
 
     const createGroupMutation = useMutation({
@@ -40,17 +39,10 @@ export default function CreateGroupDialog(params: Params) {
             return await backend.createRoom({ title: groupDetails.title, invitees: params.invitees, preset: groupDetails.preset })
         },
         onSuccess: (data) => {
-            setGroupDetails(groupDetailsDefaultValue);
             params.onCloseRequest();
             navigate(`/chats/${data.id}`);
         },
     });
-
-    useEffect(() => {
-        if (params.open) {
-            setStep("title");
-        }
-    }, [params.open]);
 
     function createGroup(members: Map<string, backend.User>) {
         const userIds: string[] = [...members.values()].map((user) => user.userId);
