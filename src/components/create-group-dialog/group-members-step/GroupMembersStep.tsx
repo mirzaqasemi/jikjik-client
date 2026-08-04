@@ -44,6 +44,7 @@ export default function GroupMembersStep(params: Params) {
         retry: 2,
         refetchOnMount: "always"
     });
+    console.log(contacts);
 
     function handleSelect(contact: backend.User) {
         const newSelectedMembers = new Map(selectedMembers);
@@ -71,7 +72,7 @@ export default function GroupMembersStep(params: Params) {
     )
 
     let content = <></>;
-    if (debouncedSearchQuery == "" || isLoading) {
+    if (isLoading) {
         content = <div className="flex flex-col gap-4.5">
             {renderSkeleton()}
             {renderSkeleton()}
@@ -83,16 +84,26 @@ export default function GroupMembersStep(params: Params) {
                 <span className="inline-block font-normal muted-text tracking-wide xl:px-3">{normalizeError(error).message}</span>
             </div>
     } else if (isSuccess) {
-        content = <>
-            <ContactList key="list" contacts={contacts} onSelect={(contact) => handleSelect(contact)} selectedMembers={selectedMembers} />
-        </>
+        if (contacts.length === 0) {
+            content =
+                <span className="inline-block text-center text-[16px] pt-3 self-center font-normal muted-text tracking-wide xl:px-3">
+                    {debouncedSearchQuery === ""
+                        ? "Type to search for users"
+                        : "No users found."}
+                </span>
+        } else {
+            content = <>
+                {debouncedSearchQuery === "" && <div className="flex h-7 px-5 text-[13.5px] muted-text font-light muted-background text-start items-center">Recent</div>}
+                <ContactList key="list" contacts={contacts} onSelect={(contact) => handleSelect(contact)} selectedMembers={selectedMembers} />
+            </>
+        }
     }
 
     return (
         <div className="flex flex-col justify-between w-full max-w-full min-w-0">
             <DialogHeader className="hidden">
                 <DialogTitle />
-                <DialogDescription/>
+                <DialogDescription />
             </DialogHeader>
             <div className="flex max-w-full gap-y-1 mb-3 max-h-27 overflow-y-auto no-scrollbar">
                 <ContactChips contacts={[...selectedMembers.values()]} onRemove={unselectMember} />
@@ -103,7 +114,7 @@ export default function GroupMembersStep(params: Params) {
             </div>
 
             {/* Middle Section */}
-            <div className="grow no-scrollbar overflow-y-auto h-[50vh] mt-5 mb-3">
+            <div className="grow flex flex-col w-full no-scrollbar overflow-y-auto h-[50vh] mt-5 mb-3">
                 {content}
             </div>
 

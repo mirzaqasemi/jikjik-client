@@ -35,8 +35,11 @@ export default function Chats() {
         queryKey: ["allChatsAndContacts", user?.userId, debouncedSearchQuery], // "allChats" is the name/address of the cached data
         queryFn: async () => {
             const chats = await backend.getChats(debouncedSearchQuery);
-            const contacts = await backend.searchContacts(debouncedSearchQuery);
-            return { chats, contacts }
+            if (debouncedSearchQuery != "") {
+                const contacts = await backend.searchContacts(debouncedSearchQuery);
+                return { chats, contacts }
+            }
+            return { chats, contacts: [] };
         },
         enabled: user != null, // Do not run queryFn until user exists.
         retry: 2,
@@ -83,25 +86,23 @@ export default function Chats() {
                     <span className="inline-block font-normal muted-text tracking-wide xl:px-3">{normalizeError(error).message}</span>
                 </div>
             </div>
-
     } else {
         if ((chats.length > 0 || contacts.length > 0)) {
-            content = <>
-                <ChatList chats={chats} onSelect={clearSearch} />
-                {
-                    contacts.length > 0 &&
-                    <>
-                        <div className="flex h-7 px-5 mt-3 text-[13.5px] muted-text font-light muted-background text-start items-center">Contacts</div>
-                        <ContactList contacts={contacts} onSelect={(contact) => {
-                            draftDm(contact);
-                            navigate(`/chats/draft`);
-                            clearSearch();
-                        }} />
-                    </>
-
-
-                }
-            </>
+            content =
+                <div>
+                    <ChatList chats={chats} onSelect={clearSearch} />
+                    {
+                        contacts.length > 0 &&
+                        <>
+                            <div className="flex h-7 px-5 mt-3 text-[13.5px] muted-text font-light muted-background text-start items-center">Contacts</div>
+                            <ContactList contacts={contacts} onSelect={(contact) => {
+                                draftDm(contact);
+                                navigate(`/chats/draft`);
+                                clearSearch();
+                            }} />
+                        </>
+                    }
+                </div>
         }
         // If chats.length == 0 and contacts.length == 0 and debouncedSearchQuery == "" it means the user has no chats and doesn't search anything
         else if (debouncedSearchQuery == "") {

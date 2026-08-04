@@ -9,10 +9,8 @@ type Params = {
 }
 
 export default function ContactList(params: Params) {
-    // console.log("the set is: ",params.selectedMembers);
-
     return (
-        <div>
+        <div className="w-full px-4">
             {
                 params.contacts.map((contact) => (
                     <ContactListItem key={contact.userId} contact={contact} onSelect={() => params.onSelect(contact)} selected={params.selectedMembers?.has(contact.userId) || false} />
