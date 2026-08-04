@@ -29,6 +29,7 @@ export default function Draft() {
     const chat: backend.Chat = {
         id: "",
         isDm: true,
+        isPublic: false,
         title: contact?.displayName,
         users: [contact, user],
         lastMsg: null,

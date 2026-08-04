@@ -131,6 +131,8 @@ $overrides = @(
     "rc_user_directory:"
     "  per_second: 100"
     "  burst_count: 1000"
+    "room_list_publication_rules:"
+    "  - action: allow"
 )
 
 Assert-ConfigWritable
