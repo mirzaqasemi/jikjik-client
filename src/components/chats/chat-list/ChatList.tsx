@@ -20,7 +20,7 @@ import './ChatList.css';
 
 type Params = {
     chats: backend.Chat[],
-    onSelect: () => void
+    onSelect: (chat: backend.Chat) => void
 }
 
 export default function ChatList(params: Params) {
@@ -53,16 +53,7 @@ export default function ChatList(params: Params) {
                     <ContextMenu key={chat.id}>
                         {/* ContextMenuTrigger: detects right-click or long-press */}
                         <ContextMenuTrigger asChild>
-                            <button onClick={() => {
-                                if (chat.membership === "invite") {
-                                    navigate(`/chats/${chat.id}/invite`);
-                                }
-                                else if (chat.membership === "join") {
-                                    navigate(`/chats/${chat.id}`)
-                                };
-                                params.onSelect();
-                            }
-                            } key={chat.id} className="flex m-auto h-18 items-center w-full chat-item select-none">
+                            <button onClick={() => params.onSelect(chat)} key={chat.id} className="flex m-auto h-18 items-center w-full chat-item select-none">
                                 <div className="relative h-10 w-10 shrink-0">
                                     <img src="https://i.pravatar.cc/150?img=11" alt="David" className="h-full w-full rounded-full object-cover" />
                                     <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-chart-2  border-2 border-white" aria-label="Online" />

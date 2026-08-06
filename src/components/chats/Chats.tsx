@@ -13,6 +13,7 @@ import ChatList from "./chat-list/ChatList.tsx";
 import ContactList from "../contact-list/ContactList.tsx";
 import { normalizeError } from "@/utilities/normalized-error.ts";
 import { draftDm } from "@/services/draft-storage";
+import { toast } from "sonner";
 
 export default function Chats() {
     const [searchQuery, setSearchQuery] = useState("");
@@ -68,7 +69,22 @@ export default function Chats() {
         navigate(router.LOGIN_ROUTE);
     }
 
-    function clearSearch() {
+    function selectChat(chat: backend.Chat) {
+        if (chat.membership === "invite") {
+            navigate(`/chats/${chat.id}/invite`);
+        }
+        else if (chat.membership === "join") {
+            navigate(`/chats/${chat.id}`)
+        } else if (chat.membership === undefined){
+            navigate(`/chats/${chat.id}`);
+            toast("You are not a member!");
+        }
+        setSearchQuery("");
+    }
+
+    function selectContact(contact: backend.User) {
+        draftDm(contact);
+        navigate(`/chats/draft`);
         setSearchQuery("");
     }
 
@@ -90,16 +106,12 @@ export default function Chats() {
         if ((chats.length > 0 || contacts.length > 0)) {
             content =
                 <div>
-                    <ChatList chats={chats} onSelect={clearSearch} />
+                    <ChatList chats={chats} onSelect={selectChat} />
                     {
                         contacts.length > 0 &&
                         <>
                             <div className="flex h-7 px-5 mt-3 text-[13.5px] muted-text font-light muted-background text-start items-center">Contacts</div>
-                            <ContactList contacts={contacts} onSelect={(contact) => {
-                                draftDm(contact);
-                                navigate(`/chats/draft`);
-                                clearSearch();
-                            }} />
+                            <ContactList contacts={contacts} onSelect={selectContact} />
                         </>
                     }
                 </div>

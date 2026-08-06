@@ -35,14 +35,10 @@ export default function Menu(params: Params) {
 
     return (
         <div>
-            <Sheet open={open} onOpenChange={(open) => {
-                if (!open) {
-                    setOpen(false);
-                }
-            }}>
+            <Sheet open={open} onOpenChange={setOpen}>
                 {/* Hamburger icon */}
                 <SheetTrigger asChild>
-                    <AlignJustify className="text-muted-foreground cursor-pointer" onClick={() => setOpen(true)} />
+                    <AlignJustify className="text-muted-foreground cursor-pointer" />
                 </SheetTrigger>
 
                 {/* Opend Menu */}

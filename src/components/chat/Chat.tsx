@@ -121,7 +121,6 @@ export default function Chat() {
         },
     });
 
-
     if (isError) {
         return (
             <div className="flex justify-center items-center h-full">
@@ -159,8 +158,6 @@ export default function Chat() {
             uid: failedMsg.transactionId!,
         })
     }
-    console.log(chat.users);
-
     return (
         <div className="flex flex-col chat-page">
             {/* <!-- Top: Header Section --> */}
