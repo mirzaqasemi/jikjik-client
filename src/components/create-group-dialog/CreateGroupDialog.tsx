@@ -10,6 +10,9 @@ import { useNavigate } from "react-router-dom";
 import { Spinner } from "../ui/spinner";
 import GroupDetailsStep from "./group-details-step/GroupDetailsStep";
 import GroupMembersStep from "./group-members-step/GroupMembersStep";
+import { normalizeError } from "@/utilities/normalized-error";
+import { toast } from "sonner";
+import { CHATS_ROUTE } from "@/router";
 
 export type Step = "title" | "members";
 export type GroupDetails = {
@@ -42,6 +45,10 @@ export default function CreateGroupDialog(params: Params) {
             params.onCloseRequest();
             navigate(`/chats/${data.id}`);
         },
+        onError: (error) => {
+            navigate(CHATS_ROUTE);
+            toast(normalizeError(error).message);
+        },
     });
 
     function createGroup(members: Map<string, backend.User>) {
@@ -54,7 +61,7 @@ export default function CreateGroupDialog(params: Params) {
             {/* onOpenChange is called when Radix itself requests an open-state change */}
             <Dialog open={params.open} onOpenChange={(open) => {
                 if (!open && !createGroupMutation.isPending) {
-                    //So change the open = {true} to open = {false} 
+                    //So change the open = {true} (open property in Dialog) to open = {false} 
                     params.onCloseRequest();
                 }
             }}>

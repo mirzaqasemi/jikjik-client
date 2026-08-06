@@ -159,6 +159,7 @@ export default function Chat() {
             uid: failedMsg.transactionId!,
         })
     }
+    console.log(chat.users);
 
     return (
         <div className="flex flex-col chat-page">
@@ -171,11 +172,6 @@ export default function Chat() {
                 :
                 <div className="flex flex-col messages-area">
                     <div className="flex justify-center items-center date-separator bg-black/25 font-medium">Today</div>
-                    {chat.users.map((user) => {
-                        if (user.membership === "leave") {
-                            return <div className="flex justify-center items-center date-separator bg-black/25 font-medium">{user.displayName} rejected the invitation</div>
-                        }
-                    })}
                     {serverMessages.map((message) =>
                         <Message user={user} chat={chat} message={message} key={message.eventId} status="success" retryMessage={retryMessage} />)
                     }

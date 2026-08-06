@@ -44,7 +44,6 @@ export default function GroupMembersStep(params: Params) {
         retry: 2,
         refetchOnMount: "always"
     });
-    console.log(contacts);
 
     function handleSelect(contact: backend.User) {
         const newSelectedMembers = new Map(selectedMembers);
@@ -53,6 +52,7 @@ export default function GroupMembersStep(params: Params) {
         } else {
             setSelectedMembers(newSelectedMembers.set(contact.userId, contact));
         }
+        setSearchQuery("");
     }
 
     function unselectMember(contact: backend.User) {
