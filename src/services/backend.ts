@@ -9,10 +9,10 @@ import {
     type RoomMember,
     SyncState,
 } from "matrix-js-sdk";
-import type { ICreateRoomOpts } from "matrix-js-sdk/lib/@types/requests";
 import { Preset, Visibility } from "matrix-js-sdk/lib/@types/partials";
+import type { ICreateRoomOpts } from "matrix-js-sdk/lib/@types/requests";
 import type { IContent } from "matrix-js-sdk/lib/models/event";
-import { attachBackendEventClient, detachBackendEventClient } from "./backend-event";
+import { attachBackendEventClient, detachBackendEventClient, subscribeChatChanged } from "./backend-event";
 import { type DirectRooms, findDirectRoomId, getDirectRoomInviter, isDirectRoom, isVisibleRoom, } from "./direct-room";
 import * as session from "./session";
 
@@ -20,8 +20,7 @@ import * as session from "./session";
 // Types
 // -----------------------------------------
 // TODO: Move these app-facing backend models to a dedicated models file or folder later.
-export interface User
-{
+export interface User {
     /** Canonical Matrix user id, for example "@alex92:localhost". */
     userId: string;
 
@@ -52,8 +51,7 @@ export interface User
     membership?: string;
 }
 
-export interface Message
-{
+export interface Message {
     /** User who sent the message. */
     sender: User;
 
@@ -84,8 +82,7 @@ export interface Message
     age?: number;
 }
 
-export interface Chat
-{
+export interface Chat {
     /** Matrix room id, for example "!room:localhost". */
     id: string;
 
@@ -134,8 +131,7 @@ export interface Chat
 
 type UnclassifiedChat = Omit<Chat, "isDm" | "isPublic">;
 
-export interface CreateRoomRequest
-{
+export interface CreateRoomRequest {
     /** Human-readable room name shown in chat lists and room headers. */
     title: string;
 
@@ -403,7 +399,7 @@ function chatFromSdkRoom(room: Room): UnclassifiedChat {
         : undefined;
     const inviter = inviterId != null
         ? users.find(user => user.userId === inviterId)
-        || userFromUserId(inviterId, {displayName: displayNameFromUserId(inviterId)})
+        || userFromUserId(inviterId, { displayName: displayNameFromUserId(inviterId) })
         : undefined;
 
     const messages = room.getLiveTimeline()
@@ -457,7 +453,7 @@ function chatFromInitialSync(
         : undefined;
     const inviter = inviterId != null
         ? users.find(user => user.userId === inviterId)
-        || userFromUserId(inviterId, {displayName: displayNameFromUserId(inviterId)})
+        || userFromUserId(inviterId, { displayName: displayNameFromUserId(inviterId) })
         : undefined;
     const events = (response.messages?.chunk || []).map(event => new MatrixEvent(event));
     const messages = events
@@ -575,7 +571,7 @@ async function getRoomUsers(roomId: string): Promise<User[]> {
 // -----------------------------------------
 export async function login(loginIdentifier: string, password: string): Promise<User | null> {
     resetClient();
-    const loginClient = createClient({baseUrl: MATRIX_BASE_URL});
+    const loginClient = createClient({ baseUrl: MATRIX_BASE_URL });
     const loginResponse = await loginClient.loginRequest({
         type: "m.login.password",
         identifier: {
@@ -623,7 +619,7 @@ export async function getChats(filter?: string): Promise<Chat[]> {
         normalizedFilter
             ? getClient().publicRooms({
                 limit: 20,
-                filter: {generic_search_term: normalizedFilter},
+                filter: { generic_search_term: normalizedFilter },
             })
             : Promise.resolve(null),
     ]);
@@ -683,9 +679,31 @@ export async function acceptChatInvitation(chatId: string): Promise<Chat> {
     return getSdkRoomOrInitialSync(room.roomId);
 }
 
-export async function joinPublicRoom(roomId: string): Promise<Chat> {
-    const room = await getClient().joinRoom(roomId);
-    return getSdkRoomOrInitialSync(room.roomId);
+export async function joinPublicRoom(roomId: string): Promise<void> {
+    await getClient().joinRoom(roomId);
+}
+
+export async function waitForJoinRoom(roomId: string): Promise<void> {
+    let resolved = false;
+    return new Promise(async (resolve) => {
+        const cleanup = subscribeChatChanged(roomId, (e) => {
+            if (e.type == "roomChanged" && e.roomChange.type == "membership" && e.roomChange.membership == "join") {
+                cleanup();
+                if (!resolved) {
+                    resolved = true;
+                    resolve();
+                }
+            }
+        });
+        const room = await getSdkRoomOrInitialSync(roomId);
+        if (room.membership == "join") {
+            cleanup();
+            if (!resolved) {
+                resolved = true;
+                resolve();
+            }
+        }
+    });
 }
 
 export async function declineChatInvitation(chatId: string): Promise<void> {
@@ -796,14 +814,14 @@ export async function searchContacts(query: string, limit: number = 20): Promise
     const currentUserId = session.getMatrixSession()?.userId;
     const users =
         query == "" ? getClient().getUsers() :
-            (await getClient().searchUserDirectory({term: query, limit})).results.map(u => {
+            (await getClient().searchUserDirectory({ term: query, limit })).results.map(u => {
                 return {
                     userId: u.user_id,
                     displayName: u.display_name,
                     avatarUrl: u.avatar_url
                 };
             })
-    ;
+        ;
     const contacts: User[] = [];
 
     for (const user of users) {

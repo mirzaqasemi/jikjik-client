@@ -3,8 +3,10 @@ import { subscribeChatsChanged } from "@/services/backend-event.ts";
 import { draftDm } from "@/services/draft-storage";
 import { normalizeError } from "@/utilities/normalized-error.ts";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { UsersRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Navigate, useNavigate } from 'react-router-dom';
+import { toast } from "sonner";
 import * as hooks from '../../hooks/useDebounce.ts';
 import * as router from '../../router.tsx';
 import * as backend from '../../services/backend.ts';
@@ -14,8 +16,6 @@ import ContactList from "../contact-list/ContactList.tsx";
 import Menu from "../menu/Menu.tsx";
 import SearchBar from "../search-bar/SearchBar.tsx";
 import ChatList from "./chat-list/ChatList.tsx";
-import { toast } from "sonner";
-import { UsersRound } from "lucide-react";
 
 export default function Chats() {
     const [searchQuery, setSearchQuery] = useState("");
@@ -54,10 +54,13 @@ export default function Chats() {
     const { chats, contacts } = data; // onrolling data
 
     const joinPublicChatMutation = useMutation({
-        mutationFn: (params: { publicChatId: string }) => backend.joinPublicRoom(params.publicChatId),
-        onSuccess: (data) => {
+        mutationFn: async (params: { publicChatId: string }) => {
+            await backend.joinPublicRoom(params.publicChatId);
+            await backend.waitForJoinRoom(params.publicChatId);
+        },
+        onSuccess: (_, params) => {
             setPublicChat(null);
-            navigate(`/chats/${data.id}`)
+            navigate(`/chats/${params.publicChatId}`);
         },
         onError: (error) => toast(normalizeError(error).message),
     });
