@@ -31,9 +31,10 @@ export async function chatLoader({ params }: LoaderFunctionArgs) {
     const chat = await backend.getChat(chatId);
     if (chat.membership == "invite") {
       return redirect(`/chats/${chatId}/invite`);
-    } else if (chat.membership == "leave") {
+    } 
+    else if (chat.membership == "leave" || chat.membership === undefined) {
       const normalizeError = new NormalizedError("forbidden");
-      normalizeError.message = "You have left this room!"
+      normalizeError.message = "You are not a member!"
       throw normalizeError;
     }
     return chat;

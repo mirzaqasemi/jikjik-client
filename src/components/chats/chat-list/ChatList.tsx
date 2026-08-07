@@ -11,10 +11,10 @@ import { normalizeError } from "@/utilities/normalized-error";
 import * as utils from "@/utilities/utilities";
 import { useMutation } from "@tanstack/react-query";
 import {
+    Trash2Icon,
     TrashIcon
 } from "lucide-react";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import './ChatList.css';
 
@@ -24,7 +24,6 @@ type Params = {
 }
 
 export default function ChatList(params: Params) {
-    const navigate = useNavigate();
     const [chatToDelete, setChatToDelete] = useState<backend.Chat | null>(null);
 
     const deleteChatMutation = useMutation({
@@ -92,8 +91,8 @@ export default function ChatList(params: Params) {
             }
             {/* Shared confirmation dialog */}
 
-            <ConfirmationDialog title={"Delete chat?"} description={`This will permanently delete this chat conversation. Are you sure you want to delete chat with ${chatToDelete?.title}?`}
-                open={chatToDelete != null} loading={deleteChatMutation.isPending} onConfirm={deleteChat} onClose={() => setChatToDelete(null)} />
+            <ConfirmationDialog title={"Delete chat?"} confirmAction="Delete" rejectAction="Cancel" description={`This will permanently delete this chat conversation. Are you sure you want to delete chat with ${chatToDelete?.title}?`}
+                open={chatToDelete != null} loading={deleteChatMutation.isPending} onConfirm={deleteChat} onClose={() => setChatToDelete(null)} icon={ <Trash2Icon />}/>
 
         </div>
     );
