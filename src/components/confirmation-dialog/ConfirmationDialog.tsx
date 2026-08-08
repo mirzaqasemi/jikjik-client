@@ -8,9 +8,10 @@ import {
     DialogHeader,
     DialogTitle
 } from "@/components/ui/dialog";
-import { Trash2Icon } from "lucide-react";
 
 type Params = {
+    confirmAction: string,
+    rejectAction: string
     title: string,
     description: string,
     open: boolean,
@@ -18,7 +19,8 @@ type Params = {
     // Called when the action is confirmed
     onConfirm: () => void,
     // Called when the dialog is closed
-    onClose: () => void
+    onClose: () => void,
+    icon?: React.ReactNode
 }
 
 export default function ConfirmationDialog(params: Params) {
@@ -31,24 +33,25 @@ export default function ConfirmationDialog(params: Params) {
             }}>
                 <DialogContent showCloseButton={false}>
                     <DialogHeader className="gap-4">
-                        <DialogTitle className="flex flex-col gap-4 justify-center items-center">
-                            <div className="inline-flex items-center justify-center mb-2 bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive rounded-[8px] size-10">
-                                <Trash2Icon />
-                            </div>
+                        <DialogTitle className="flex gap-4 items-center">
+                            {params.icon &&
+                                <div className="inline-flex items-center justify-center bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive rounded-[8px] size-10">
+                                    {params.icon}
+                                </div>}
                             {params.title}
                         </DialogTitle>
-                        <DialogDescription className="text-center">
+                        <DialogDescription>
                             {params.description}
                         </DialogDescription>
                     </DialogHeader>
 
-                    <DialogFooter className="flex sm:justify-center">
-                        <DialogClose className="w-full sm:w-auto" asChild>
-                            <Button variant="outline" className="w-full" disabled={params.loading}>Cancel</Button>
+                    <DialogFooter className="grid grid-cols-3">
+                        <DialogClose className="w-auto col-start-2" asChild>
+                            <Button variant="outline" className="w-full" disabled={params.loading}>{params.rejectAction}</Button>
                         </DialogClose>
-                        <Button type="submit" onClick={() => {
+                        <Button type="submit" className="col-start-3" onClick={() => {
                             params.onConfirm();
-                        }} disabled={params.loading}>Delete</Button>
+                        }} disabled={params.loading}>{params.confirmAction}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

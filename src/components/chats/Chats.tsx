@@ -1,24 +1,28 @@
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { subscribeChatsChanged } from "@/services/backend-event.ts";
-import { useQuery } from "@tanstack/react-query";
+import { draftDm } from "@/services/draft-storage";
+import { normalizeError } from "@/utilities/normalized-error.ts";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { UsersRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Navigate, useNavigate } from 'react-router-dom';
+import { toast } from "sonner";
 import * as hooks from '../../hooks/useDebounce.ts';
 import * as router from '../../router.tsx';
 import * as backend from '../../services/backend.ts';
 import * as session from '../../services/session.ts';
+import ConfirmationDialog from "../confirmation-dialog/ConfirmationDialog.tsx";
+import ContactList from "../contact-list/ContactList.tsx";
 import Menu from "../menu/Menu.tsx";
 import SearchBar from "../search-bar/SearchBar.tsx";
 import ChatList from "./chat-list/ChatList.tsx";
-import './Chats.css';
-import ContactList from "./contact-list/ContactList.tsx";
-import { normalizeError } from "@/utilities/normalized-error.ts";
 
 export default function Chats() {
     const [searchQuery, setSearchQuery] = useState("");
     const debouncedSearchQuery = hooks.useDebounce(searchQuery, 300);
     const user: backend.User | null = session.useSession();
     const navigate = useNavigate();
+    const [publicChat, setPublicChat] = useState<backend.Chat | null>(null);
 
     type Data = {
         chats: backend.Chat[],
@@ -32,11 +36,14 @@ export default function Chats() {
         error,
         refetch
     } = useQuery<Data>({
-        queryKey: ["allChats", user?.userId, debouncedSearchQuery], // "allChats" is the name/address of the cached data
+        queryKey: ["allChatsAndContacts", user?.userId, debouncedSearchQuery], // "allChats" is the name/address of the cached data
         queryFn: async () => {
             const chats = await backend.getChats(debouncedSearchQuery);
-            const contacts = await backend.searchContacts(debouncedSearchQuery);
-            return { chats, contacts }
+            if (debouncedSearchQuery != "") {
+                const contacts = await backend.searchContacts(debouncedSearchQuery);
+                return { chats, contacts }
+            }
+            return { chats, contacts: [] };
         },
         enabled: user != null, // Do not run queryFn until user exists.
         retry: 2,
@@ -45,6 +52,18 @@ export default function Chats() {
         refetchOnMount: "always"
     });
     const { chats, contacts } = data; // onrolling data
+
+    const joinPublicChatMutation = useMutation({
+        mutationFn: async (params: { publicChatId: string }) => {
+            await backend.joinPublicRoom(params.publicChatId);
+            await backend.waitForJoinRoom(params.publicChatId);
+        },
+        onSuccess: (_, params) => {
+            setPublicChat(null);
+            navigate(`/chats/${params.publicChatId}`);
+        },
+        onError: (error) => toast(normalizeError(error).message),
+    });
 
     useEffect(() => {
         const cleanup = subscribeChatsChanged(() => {
@@ -65,8 +84,30 @@ export default function Chats() {
         navigate(router.LOGIN_ROUTE);
     }
 
-    function clearSearch() {
+    function selectChat(chat: backend.Chat) {
+        if (chat.membership === "invite") {
+            navigate(`/chats/${chat.id}/invite`);
+        }
+        else if (chat.membership === "join") {
+            navigate(`/chats/${chat.id}`)
+        } else if (chat.isPublic) {
+            setPublicChat(chat);
+        }
         setSearchQuery("");
+    }
+
+    function selectContact(contact: backend.User) {
+        draftDm(contact);
+        navigate(`/chats/draft`);
+        setSearchQuery("");
+    }
+
+    function joinPublicChat() {
+        if (publicChat != null) {
+            joinPublicChatMutation.mutate({
+                publicChatId: publicChat.id
+            });
+        }
     }
 
     let content = <></>;
@@ -83,16 +124,19 @@ export default function Chats() {
                     <span className="inline-block font-normal muted-text tracking-wide xl:px-3">{normalizeError(error).message}</span>
                 </div>
             </div>
-
     } else {
         if ((chats.length > 0 || contacts.length > 0)) {
-            content = <>
-                <ChatList chats={chats} onSelect={clearSearch} />
-                {
-                    contacts.length > 0 &&
-                    <ContactList contacts={contacts} onSelect={clearSearch} />
-                }
-            </>
+            content =
+                <div>
+                    <ChatList chats={chats} onSelect={selectChat} />
+                    {
+                        contacts.length > 0 &&
+                        <>
+                            <div className="flex h-7 px-5 mt-3 text-[13.5px] muted-text font-light muted-background text-start items-center">Contacts</div>
+                            <ContactList contacts={contacts} onSelect={selectContact} />
+                        </>
+                    }
+                </div>
         }
         // If chats.length == 0 and contacts.length == 0 and debouncedSearchQuery == "" it means the user has no chats and doesn't search anything
         else if (debouncedSearchQuery == "") {
@@ -124,7 +168,9 @@ export default function Chats() {
 
             {/* <!-- Middle: Chat List --> */}
             {content}
-
+            <ConfirmationDialog confirmAction="Join chat" rejectAction="Cancel" title="Join this public chat?" description="This chat is open to everyone. Join now to participate in the conversation."
+                open={publicChat != null} loading={joinPublicChatMutation.isPending} onConfirm={joinPublicChat} onClose={() => setPublicChat(null)} icon={<UsersRound className="sidebar-icon" />}
+            />
         </div>
     );
 }

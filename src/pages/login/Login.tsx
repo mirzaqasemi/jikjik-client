@@ -66,7 +66,7 @@ export default function Login() {
     return (
         <div className='flex items-center justify-center h-full w-full xl:bg-secondary login-page-outer-container'>
 
-            <div className="flex items-center justify-center w-full h-full xl:w-[90%] max-w-[1280px] xl:max-h-[600px] xl:rounded-4xl overflow-hidden login-page-inner-container">
+            <div className="flex items-center justify-center w-full h-full xl:w-[90%] max-w-7xl xl:max-h-150 xl:rounded-4xl overflow-hidden login-page-inner-container">
                 {/* DESKTOP VIEW - LEFT SIDE */}
                 <div className="relative hidden xl:flex xl:flex-col xl:w-[52%] items-center h-full justify-center py-8 overflow-hidden login-left-side">
                     <div className='max-w-150 relative z-10 text-start'>
@@ -105,7 +105,7 @@ export default function Login() {
 
                 {/* RIGHT SIDE */}
                 <div className='flex w-full h-full xl:w-[48%] xl:bg-background overflow-auto login-right-side'>
-                    <div className='flex flex-col items-center justify-center w-full m-auto p-7 sm:p-0 max-w-[420px] py-8'>
+                    <div className='flex flex-col items-center justify-center w-full m-auto p-7 sm:p-0 max-w-105 py-8'>
                         {/* LOGO */}
                         <div className='flex mb-10 items-center justify-center w-12 h-12 text-white font-bold brand-logo'>J</div>
 

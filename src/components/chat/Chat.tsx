@@ -121,7 +121,6 @@ export default function Chat() {
         },
     });
 
-
     if (isError) {
         return (
             <div className="flex justify-center items-center h-full">
@@ -159,34 +158,28 @@ export default function Chat() {
             uid: failedMsg.transactionId!,
         })
     }
-
     return (
         <div className="flex flex-col chat-page">
             {/* <!-- Top: Header Section --> */}
             <Header chat={chat} />
 
             {/* <!-- Middle: Messages Section --> */}
-            {
-                isLoading ?
-                    <Spinner className="flex-1 m-auto size-9 opacity-30" />
-                    :
-                    <div className="flex flex-col messages-area">
-                        <div className="date-separator">TODAY</div>
-                        {
-                            serverMessages.map((message) =>
-                                <Message user={user} chat={chat} message={message} key={message.eventId} status="success" retryMessage={retryMessage} />
-                            )
-                        }
-                        {
-                            pendingMsgs.filter((pendingMsg) =>
-                                !serverMessages.some((serverMsg) => serverMsg.uid === pendingMsg.uid)
-                            ).map((pendingMsg) =>
-                                < Message user={user} chat={chat} message={pendingMsg} key={pendingMsg.uid} status={pendingMsg.status}
-                                    retryMessage={retryMessage} />
-                            )
-                        }
-                        <div ref={bottomRef}></div>
-                    </div>
+            {isLoading ?
+                <Spinner className="flex-1 m-auto size-9 opacity-30" />
+                :
+                <div className="flex flex-col messages-area">
+                    <div className="flex justify-center items-center date-separator bg-black/25 font-medium">Today</div>
+                    {serverMessages.map((message) =>
+                        <Message user={user} chat={chat} message={message} key={message.eventId} status="success" retryMessage={retryMessage} />)
+                    }
+                    {pendingMsgs.filter((pendingMsg) =>
+                        !serverMessages.some((serverMsg) => serverMsg.uid === pendingMsg.uid)
+                    ).map((pendingMsg) =>
+                        < Message user={user} chat={chat} message={pendingMsg} key={pendingMsg.uid} status={pendingMsg.status}
+                            retryMessage={retryMessage} />)
+                    }
+                    <div ref={bottomRef}></div>
+                </div>
             }
 
             {/* <!-- Bottom: Input Section --> */}

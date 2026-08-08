@@ -112,6 +112,8 @@ rc_room_creation:
 rc_user_directory:
   per_second: 100
   burst_count: 1000
+room_list_publication_rules:
+  - action: allow
 EOF
 chmod 0644 "$tmp"
 chown --reference="$config" "$tmp" 2>/dev/null || true
@@ -242,6 +244,8 @@ rc_room_creation:
 rc_user_directory:
   per_second: 100
   burst_count: 1000
+room_list_publication_rules:
+  - action: allow
 EOF
 
 chmod 0644 "$tmp_file"

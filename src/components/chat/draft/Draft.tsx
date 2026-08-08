@@ -28,6 +28,8 @@ export default function Draft() {
     const contact = rawContact;
     const chat: backend.Chat = {
         id: "",
+        isDm: true,
+        isPublic: false,
         title: contact?.displayName,
         users: [contact, user],
         lastMsg: null,
@@ -78,7 +80,7 @@ export default function Draft() {
             <div className="flex flex-col h-full items-center justify-center rounded-xl">
                 {
                     createDmMutation.isIdle &&
-                    <div className="flex flex-col justify-center items-center gap-1 w-[250px] lg:w-[300px] py-7 px-3 rounded-4xl text-xl bg-black/40 text-white">
+                    <div className="flex flex-col justify-center items-center gap-1 w-62.5 lg:w-75 py-7 px-3 rounded-4xl text-xl bg-black/40 text-white">
                         <div className="text-[14px] font-medium tracking-wider">No messages here yet...</div>
                         <span className="text-[14px] font-light tracking-wider">Send a message</span>
                         <img src={emptyGif} alt="No messages" />

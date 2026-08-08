@@ -1,7 +1,8 @@
+import { NormalizedError } from "@/utilities/normalized-error";
 import { redirect, type LoaderFunctionArgs } from "react-router-dom";
-import * as session from "../services/session";
-import * as backend from "../services/backend";
 import { CHATS_ROUTE, LOGIN_ROUTE } from "../router";
+import * as backend from "../services/backend";
+import * as session from "../services/session";
 
 
 // Loader for protected routes
@@ -28,9 +29,13 @@ export async function chatLoader({ params }: LoaderFunctionArgs) {
       throw new Error("Missing chatId");
     }
     const chat = await backend.getChat(chatId);
-    
     if (chat.membership == "invite") {
       return redirect(`/chats/${chatId}/invite`);
+    } 
+    else if (chat.membership == "leave" || chat.membership === undefined) {
+      const normalizeError = new NormalizedError("forbidden");
+      normalizeError.message = "You are not a member!"
+      throw normalizeError;
     }
     return chat;
   }

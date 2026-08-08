@@ -1,17 +1,15 @@
 import * as backend from "@/services/backend";
 import { subscribeInvitationChanged } from "@/services/backend-event";
-import * as session from "@/services/session";
+import { normalizeError } from "@/utilities/normalized-error";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useLoaderData, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "../../ui/button";
 import Header from "../header/Header";
-import { normalizeError } from "@/utilities/normalized-error";
 
 
 export default function ChatInvitation() {
-    const rawUser = session.getUser();
     const chat = useLoaderData<backend.Chat>();
     const navigate = useNavigate();
     const chatId = useParams().chatId!;
@@ -49,10 +47,11 @@ export default function ChatInvitation() {
 
     const blockMutation = useMutation({
         mutationFn: () => {
-            const otherUser = chat.users.find((u) =>
-                u.userId != user.userId
-            )!;
-            return backend.blockUser(otherUser.userId);
+            const inviter = chat.inviter;
+            if (inviter === undefined) {
+                throw new Error("Inviter is undefined");
+            }
+            return backend.blockUser(inviter.userId);
         },
         onSuccess: () => declineMutation.mutate(),
         onError: (error) => {
@@ -61,21 +60,25 @@ export default function ChatInvitation() {
         }
     });
 
-    if (rawUser == null) {
-        throw new Error("User not found!");
-    }
-    const user = rawUser;
     const btnDisabled = (declineMutation.isPending || declineMutation.isSuccess) || (joinMutation.isPending || joinMutation.isSuccess) || (blockMutation.isPending || blockMutation.isSuccess);
 
     return (
-        <div className="flex flex-col w-full items-center">
+        <div className="flex flex-col w-full h-full">
             <Header chat={chat} />
-            <div className="flex flex-col justify-center items-center gap-3 w-80 sm:w-90 lg:w-100 py-7 px-3 rounded-4xl text-xl bg-white">
+            <div className="flex flex-col m-auto justify-center items-center gap-3 w-80 sm:w-90 lg:w-100 py-7 px-3 rounded-4xl text-xl bg-white">
                 <div className="space-y-2.5 mb-3">
-                    <h3>Do you want to chat with {chat.title}?</h3>
+                    <h3>{chat.isDm ?
+                        `Do you want to chat with ${chat.title}?`
+                        : `Do you want to join "${chat.title}"?`}
+                    </h3>
                     <div className="flex justify-center items-center gap-x-2">
                         <div className="flex justify-center items-center font-bold w-12 h-12 rounded-full bg-chart-2 text-chart-4">{chat.title?.charAt(0).toUpperCase()}</div>
-                        <span className="muted-text">{chat.title} wants to chat</span>
+                        <span className="muted-text">
+                            {chat.isDm ?
+                                `${chat.title} wants to chat`
+                                : <> Invited by <span className="font-bold">{chat.inviter?.displayName}</span> </>
+                            }
+                        </span>
                     </div>
                 </div>
                 <div className="flex flex-col gap-y-2.5 gap-x-4 w-70 sm:w-75">
