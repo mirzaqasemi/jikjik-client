@@ -19,7 +19,7 @@ const colors = [
 
 export function formatDate(date?: Date | null): string {
     if (date == null) return "";
-    let hourNum = date.getHours();
+    const hourNum = date.getHours();
     const minute = date.getMinutes().toString().padStart(2, '0');
     const ampm = hourNum >= 12 ? "PM" : "AM";
     const hour = (hourNum % 12).toString().padStart(2, '0');

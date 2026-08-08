@@ -685,7 +685,7 @@ export async function joinPublicRoom(roomId: string): Promise<void> {
 
 export async function waitForJoinRoom(roomId: string): Promise<void> {
     let resolved = false;
-    return new Promise(async (resolve) => {
+    return new Promise((resolve) => {
         const cleanup = subscribeChatChanged(roomId, (e) => {
             if (e.type == "roomChanged" && e.roomChange.type == "membership" && e.roomChange.membership == "join") {
                 cleanup();
@@ -695,14 +695,15 @@ export async function waitForJoinRoom(roomId: string): Promise<void> {
                 }
             }
         });
-        const room = await getSdkRoomOrInitialSync(roomId);
-        if (room.membership == "join") {
-            cleanup();
-            if (!resolved) {
-                resolved = true;
-                resolve();
+        getSdkRoomOrInitialSync(roomId).then((room) => {
+            if (room.membership == "join") {
+                cleanup();
+                if (!resolved) {
+                    resolved = true;
+                    resolve();
+                }
             }
-        }
+        });
     });
 }
 

@@ -11,7 +11,7 @@ interface Params {
 }
 
 export default function Message(params: Params) {
-    let messageSide = params.message.sender.username === params.user.username ? "sent" : "received";
+    const messageSide = params.message.sender.username === params.user.username ? "sent" : "received";
     const showUserTitle = (params.chat.users.length > 2) && (params.message.sender.username != params.user.username);
 
     return (

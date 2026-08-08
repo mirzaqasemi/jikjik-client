@@ -57,7 +57,7 @@ export default function Chat() {
             }
         });
         return cleanup;
-    }, [refetch, chatId]);
+    }, [refetch, chatId, navigate]);
 
     useEffect(() => {
         const draftMsg = DraftStorage.getDraftMsg(chatId);
@@ -66,16 +66,14 @@ export default function Chat() {
             sendMessage(draftMsg.content);
             DraftStorage.removeDraftMsg(chatId);
         }
-    }, []);
+    }, [chatId]);
+
 
     useEffect(() => {
         if (serverMessages.length == 0) return;
         setPendingMsgs((oldPending) =>
-            oldPending.filter(
-                (pending) =>
-                    !serverMessages.some(
-                        (serverMsg) => serverMsg.uid === pending.uid
-                    ),
+            oldPending.filter((pending) =>
+                !serverMessages.some((serverMsg) => serverMsg.uid === pending.uid),
             ),
         );
     }, [serverMessages]);
@@ -132,7 +130,7 @@ export default function Chat() {
     function sendMessage(inputStr: string) {
         if (!inputStr.trim()) return;
         sendMessageMutation.mutate({
-            username: user.username,
+            username: user.userId,
             chat: chat,
             content: inputStr,
             uid: crypto.randomUUID()
