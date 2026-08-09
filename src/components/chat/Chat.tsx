@@ -2,6 +2,7 @@ import { Spinner } from "@/components/ui/spinner.tsx";
 import { CHATS_ROUTE } from "@/router.tsx";
 import { subscribeChatChanged } from "@/services/backend-event.ts";
 import { DraftStorage } from "@/services/draft-storage.ts";
+import { PendingMessageStorage } from "@/services/pending-message-storage.ts";
 import { normalizeError } from "@/utilities/normalized-error.ts";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -23,7 +24,6 @@ export default function Chat() {
     const chat = useLoaderData<backend.Chat>();
     const rawUser = session.getUser();
     const bottomRef = useRef<HTMLDivElement>(null);
-    const [pendingMsgs, setPendingMsgs] = useState<MessageWithStatus[]>([]);
     if (rawUser == null) {
         throw new Error("User not authenticated");
     }
@@ -33,6 +33,7 @@ export default function Chat() {
         throw new Error("Missing chatId");
     }
     const chatId = params.chatId;
+    const [pendingMsgs, setPendingMsgs] = useState<MessageWithStatus[]>(PendingMessageStorage.getPendingMsgs(chatId));
 
     // Fetching data from backend
     const {
@@ -68,6 +69,9 @@ export default function Chat() {
         }
     }, [chatId]);
 
+    useEffect(() => {
+        PendingMessageStorage.setPendingMsgs(chatId, pendingMsgs);
+    }, [chatId, pendingMsgs]);
 
     useEffect(() => {
         if (serverMessages.length == 0) return;
@@ -113,7 +117,7 @@ export default function Chat() {
                         } as MessageWithStatus;
                     }
                     return pendingMsg;
-                })
+                });
             });
             console.error("failed to send message", params, err);
         },
@@ -154,8 +158,9 @@ export default function Chat() {
             chat: chat,
             content: failedMsg.content,
             uid: failedMsg.transactionId!,
-        })
+        });
     }
+
     return (
         <div className="flex flex-col chat-page">
             {/* <!-- Top: Header Section --> */}

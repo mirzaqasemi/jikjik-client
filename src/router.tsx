@@ -8,6 +8,7 @@ import ErrorPage from './pages/error/ErrorPage';
 import Login from './pages/login/Login';
 import Draft from './components/chat/draft/Draft';
 import ChatInvitation from './components/chat/chat-invitation/ChatInvitation';
+import { ChatPage } from './pages/chat-page/ChatPage';
 
 export const LOGIN_ROUTE = "/";
 export const CHATS_ROUTE = "/chats";
@@ -53,7 +54,7 @@ export const router = createBrowserRouter([
           {
             path: RELATIVE_CHAT_ROUTE,
             loader: loaders.chatLoader,
-            element: <Chat />,
+            element: <ChatPage />,
             errorElement: <ErrorPage name={"chats"} url={CHATS_ROUTE}/>,
           },
         ],
