@@ -17,7 +17,7 @@ export default function Message(params: Params) {
     return (
         <div className={`flex items-center ${messageSide}`}>
             {
-                params.status == "error" &&
+                params.status === "error" &&
                 <RotateCw className='size-5 mr-2 cursor-pointer' onClick={() => params.retryMessage(params.message)} />
             }
             <div className="flex flex-col message-wrapper">

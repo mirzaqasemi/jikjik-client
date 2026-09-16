@@ -5,7 +5,7 @@ import { DraftStorage } from "@/services/draft-storage.ts";
 import { PendingMessageStorage } from "@/services/pending-message-storage.ts";
 import { normalizeError } from "@/utilities/normalized-error.ts";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { useLoaderData, useNavigate, useParams } from 'react-router-dom';
 import * as backend from "../../services/backend.ts";
 import * as session from '../../services/session.ts';
@@ -33,7 +33,7 @@ export default function Chat() {
         throw new Error("Missing chatId");
     }
     const chatId = params.chatId;
-    const [pendingMsgs, setPendingMsgs] = useState<MessageWithStatus[]>(PendingMessageStorage.getPendingMsgs(chatId));
+    const pendingMessages = PendingMessageStorage.usePendingMsgs(chatId);
 
     // Fetching data from backend
     const {
@@ -60,27 +60,16 @@ export default function Chat() {
         return cleanup;
     }, [refetch, chatId, navigate]);
 
+    // Once a pending message appears in serverMessages, it shouldn't be considered pending anymore.
     useEffect(() => {
-        const draftMsg = DraftStorage.getDraftMsg(chatId);
-        // If there is any drafted message and its action is 'send', then send it to backend throughout sendMessageMutation
-        if (draftMsg?.action == "send") {
-            sendMessage(draftMsg.content);
-            DraftStorage.removeDraftMsg(chatId);
+        if (pendingMessages === undefined || serverMessages.length === 0) return;
+        const newPendingMsgs = pendingMessages.filter((pendingMsg) =>
+            !serverMessages.some((serverMsg) => serverMsg.uid === pendingMsg.uid)
+        ) ?? [];
+        if (pendingMessages.length !== newPendingMsgs.length) {
+            PendingMessageStorage.setPendingMsgs(chatId, newPendingMsgs);
         }
-    }, [chatId]);
-
-    useEffect(() => {
-        PendingMessageStorage.setPendingMsgs(chatId, pendingMsgs);
-    }, [chatId, pendingMsgs]);
-
-    useEffect(() => {
-        if (serverMessages.length == 0) return;
-        setPendingMsgs((oldPending) =>
-            oldPending.filter((pending) =>
-                !serverMessages.some((serverMsg) => serverMsg.uid === pending.uid),
-            ),
-        );
-    }, [serverMessages]);
+    }, [serverMessages, pendingMessages, chatId]);
 
     //At first: Chat component Render -> DOM updated -> useLayoutEffect runs -> scroll -> PAINT 🎨 (The browser actually draws pixels on the screen so the user can see something.)
     useLayoutEffect(() => {
@@ -95,7 +84,7 @@ export default function Chat() {
         },
         //onMutate() runs immediately before mutationFn executes
         onMutate: ({ content, uid }) => {
-            if (!pendingMsgs.some((pendingMsg) => pendingMsg.uid == uid)) {
+            if (!pendingMessages?.some((pendingMsg) => pendingMsg.uid == uid)) {
                 const msgObj: MessageWithStatus = {
                     sender: user,
                     content,
@@ -104,24 +93,48 @@ export default function Chat() {
                     transactionId: uid,
                     status: "pending"
                 }
-                setPendingMsgs((oldPendingMsgs) => [...oldPendingMsgs, msgObj]);
+                if (pendingMessages === undefined) {
+                    return;
+                }
+                PendingMessageStorage.setPendingMsgs(chatId, [...pendingMessages, msgObj]);
             }
         },
         onError: (err, params) => {
-            setPendingMsgs((oldPendingMsgs) => {
-                return oldPendingMsgs.map((pendingMsg) => {
-                    if (pendingMsg.uid === params.uid) {
-                        return {
-                            ...pendingMsg,
-                            status: "error"
-                        } as MessageWithStatus;
-                    }
-                    return pendingMsg;
-                });
+            if (pendingMessages === undefined) {
+                return;
+            }
+            const newArr: MessageWithStatus[] = pendingMessages?.map((pendingMsg) => {
+                if (pendingMsg.uid === params.uid) {
+                    return { ...pendingMsg, status: "error" }
+                }
+                return pendingMsg;
             });
+            PendingMessageStorage.setPendingMsgs(chatId, newArr);
             console.error("failed to send message", params, err);
         },
     });
+
+    const mutateSendMsg = sendMessageMutation.mutate;
+    // useCallback lets you to cache a function definition between re-renders.
+    // Without useCallback a new sendMessage function is created on every render. so the Effect can run again unnecessarily
+    const sendMessage = useCallback((inputStr: string) => {
+        if (!inputStr.trim()) return;
+        mutateSendMsg({
+            username: user.userId,
+            chat: chat,
+            content: inputStr,
+            uid: crypto.randomUUID()
+        });
+    }, [mutateSendMsg, chat, user.userId]);
+
+    useEffect(() => {
+        const draftMsg = DraftStorage.getDraftMsg(chatId);
+        // If there is any drafted message and its action is 'send', then send it to backend throughout sendMessageMutation
+        if (draftMsg?.action == "send") {
+            sendMessage(draftMsg.content);
+            DraftStorage.removeDraftMsg(chatId);
+        }
+    }, [chatId, sendMessage]);
 
     if (isError) {
         return (
@@ -131,29 +144,21 @@ export default function Chat() {
         );
     }
 
-    function sendMessage(inputStr: string) {
-        if (!inputStr.trim()) return;
-        sendMessageMutation.mutate({
-            username: user.userId,
-            chat: chat,
-            content: inputStr,
-            uid: crypto.randomUUID()
-        });
-    }
-
     function retryMessage(failedMsg: backend.Message) {
+        if (pendingMessages === undefined) {
+            return;
+        }
         // 1. change icon from error → pending
-        setPendingMsgs((oldPendingMsgs) =>
-            oldPendingMsgs.map((msg) => {
-                if (msg.uid == failedMsg.uid) {
-                    return { ...msg, status: "pending" }
-                }
-                return msg;
-            })
-        );
+        const newArr: MessageWithStatus[] = pendingMessages.map((pendingMsg) => {
+            if (pendingMsg.uid === failedMsg.uid) {
+                return { ...pendingMsg, status: "pending" }
+            }
+            return pendingMsg;
+        });
+        PendingMessageStorage.setPendingMsgs(chatId, newArr);
 
         // 2. resend same message to backend
-        sendMessageMutation.mutate({
+        mutateSendMsg({
             username: user.userId,
             chat: chat,
             content: failedMsg.content,
@@ -175,7 +180,7 @@ export default function Chat() {
                     {serverMessages.map((message) =>
                         <Message user={user} chat={chat} message={message} key={message.eventId} status="success" retryMessage={retryMessage} />)
                     }
-                    {pendingMsgs.filter((pendingMsg) =>
+                    {pendingMessages?.filter((pendingMsg) =>
                         !serverMessages.some((serverMsg) => serverMsg.uid === pendingMsg.uid)
                     ).map((pendingMsg) =>
                         < Message user={user} chat={chat} message={pendingMsg} key={pendingMsg.uid} status={pendingMsg.status}
