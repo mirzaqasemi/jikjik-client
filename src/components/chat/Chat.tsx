@@ -28,7 +28,7 @@ export default function Chat() {
         throw new Error("User not authenticated");
     }
     const user = rawUser;
-
+    
     if (params?.chatId == null) {
         throw new Error("Missing chatId");
     }

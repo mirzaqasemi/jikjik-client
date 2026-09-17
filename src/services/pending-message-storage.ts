@@ -16,7 +16,7 @@ export function setPendingMsgs(chatId: string, pendingMsgs: MessageWithStatus[])
     session.setSessionItem(getPendingMsgsKey(chatId), pendingMsgs);
     const chatListeners = getListeners(chatId);
     // Call all listeners
-    for (let listener of chatListeners) {
+    for (const listener of chatListeners) {
         listener();
     }
 }
@@ -43,16 +43,17 @@ function unsubscribeFromPendingMsgs(chatId: string, listener: Listener, chatList
 }
 
 export function usePendingMsgs(chatId: string) {
-    //if pendingMsgs = undefined; so it represents “the hook hasn't loaded the pending messages yet.”
-    const [pendingMsgs, setPendingMsgs] = useState<MessageWithStatus[]>();
+    const [, forceRender] = useState(0);
     useEffect(() => {
-        setPendingMsgs(getPendingMsgs(chatId));
+        // tells React that storage changed
         const cleanup = subscribeToPendingMsgs(chatId, () => {
-            setPendingMsgs(getPendingMsgs(chatId));
+            // causes a re-render
+            forceRender(previous => previous + 1);
         });
         return cleanup;
     }, [chatId]);
-    return pendingMsgs;
+    // reads the current data
+    return getPendingMsgs(chatId);
 }
 
 export const PendingMessageStorage = {
