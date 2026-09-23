@@ -683,27 +683,33 @@ export async function joinPublicRoom(roomId: string): Promise<void> {
     await getClient().joinRoom(roomId);
 }
 
-export async function waitForJoinRoom(roomId: string): Promise<void> {
-    let resolved = false;
-    return new Promise((resolve) => {
+export function waitForJoinRoom(roomId: string): Promise<void> {
+    let settled = false;
+    return new Promise((resolve, reject) => {
         const cleanup = subscribeChatChanged(roomId, (e) => {
             if (e.type == "roomChanged" && e.roomChange.type == "membership" && e.roomChange.membership == "join") {
                 cleanup();
-                if (!resolved) {
-                    resolved = true;
+                if (!settled) {
+                    settled = true;
                     resolve();
                 }
             }
         });
-        getSdkRoomOrInitialSync(roomId).then((room) => {
-            if (room.membership == "join") {
+        getSdkRoomOrInitialSync(roomId)
+            .then((room) => {
+                if (room.membership == "join") {
+                    cleanup();
+                    if (!settled) {
+                        settled = true;
+                        resolve();
+                    }
+                }
+            })
+            .catch((error) => {
+                settled = true;
                 cleanup();
-                if (!resolved) {
-                    resolved = true;
-                    resolve();
-                }
-            }
-        });
+                reject(error);
+            });
     });
 }
 
