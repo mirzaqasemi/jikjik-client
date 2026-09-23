@@ -12,7 +12,11 @@ function getPendingMsgsKey(chatId: string): string[] {
     return [pendingMsgsKeyPrefix, chatId];
 }
 
-export function setPendingMsgs(chatId: string, pendingMsgs: MessageWithStatus[]): void {
+export function getPendingMsgs(chatId: string): MessageWithStatus[] {
+    return session.getSessionItem(getPendingMsgsKey(chatId)) ?? [];
+}
+
+function setPendingMsgs(chatId: string, pendingMsgs: MessageWithStatus[]): void {
     session.setSessionItem(getPendingMsgsKey(chatId), pendingMsgs);
     const chatListeners = getListeners(chatId);
     // Call all listeners
@@ -21,14 +25,19 @@ export function setPendingMsgs(chatId: string, pendingMsgs: MessageWithStatus[])
     }
 }
 
-export function getPendingMsgs(chatId: string): MessageWithStatus[] {
-    return session.getSessionItem(getPendingMsgsKey(chatId)) ?? [];
+export function updatePendingMsgs(chatId: string, updater: (msgs: MessageWithStatus[]) => MessageWithStatus[]) {
+    const current = getPendingMsgs(chatId);
+    const newValue = updater(current);
+    // if nothing changed, newValue and current are literally the same array object.
+    if (newValue === current) {
+        return;
+    }
+    setPendingMsgs(chatId, newValue);
 }
 
 function getListeners(chatId: string): Set<Listener> {
     return listeners.get(chatId) ?? new Set();
 }
-
 
 export function subscribeToPendingMsgs(chatId: string, listener: Listener): () => void {
     const chatListeners = getListeners(chatId);
@@ -57,7 +66,7 @@ export function usePendingMsgs(chatId: string) {
 }
 
 export const PendingMessageStorage = {
-    setPendingMsgs,
+    updatePendingMsgs,
     getPendingMsgs,
     subscribeToPendingMsgs,
     usePendingMsgs

@@ -28,7 +28,7 @@ export default function Chat() {
         throw new Error("User not authenticated");
     }
     const user = rawUser;
-    
+
     if (params?.chatId == null) {
         throw new Error("Missing chatId");
     }
@@ -62,14 +62,21 @@ export default function Chat() {
 
     // Once a pending message appears in serverMessages, it shouldn't be considered pending anymore.
     useEffect(() => {
-        if (pendingMessages === undefined || serverMessages.length === 0) return;
-        const newPendingMsgs = pendingMessages.filter((pendingMsg) =>
-            !serverMessages.some((serverMsg) => serverMsg.uid === pendingMsg.uid)
-        ) ?? [];
-        if (pendingMessages.length !== newPendingMsgs.length) {
-            PendingMessageStorage.setPendingMsgs(chatId, newPendingMsgs);
+        if (serverMessages.length === 0) return;
+
+        PendingMessageStorage.updatePendingMsgs(chatId, (currentPendingMsgs) => {
+            const newPendingMsgs = currentPendingMsgs.filter((currentPendingMsg) =>
+                !serverMessages.some(serverMessage =>
+                    serverMessage.uid === currentPendingMsg.uid)
+            );
+            //if nothing changed
+            if (newPendingMsgs.length === currentPendingMsgs.length) {
+                return currentPendingMsgs;
+            }
+            return newPendingMsgs;
         }
-    }, [serverMessages, pendingMessages, chatId]);
+        );
+    }, [serverMessages, chatId]);
 
     //At first: Chat component Render -> DOM updated -> useLayoutEffect runs -> scroll -> PAINT 🎨 (The browser actually draws pixels on the screen so the user can see something.)
     useLayoutEffect(() => {
@@ -81,35 +88,41 @@ export default function Chat() {
     const sendMessageMutation = useMutation({
         mutationFn: (params: { username: string, chat: backend.Chat, content: string, uid: string }) => {
             return backend.sendMessage(params);
+            // return Promise.reject(new Error("TEST: send failed"));
         },
         //onMutate() runs immediately before mutationFn executes
         onMutate: ({ content, uid }) => {
-            if (!pendingMessages?.some((pendingMsg) => pendingMsg.uid == uid)) {
-                const msgObj: MessageWithStatus = {
-                    sender: user,
-                    content,
-                    date: new Date(),
-                    uid,
-                    transactionId: uid,
-                    status: "pending"
-                }
-                if (pendingMessages === undefined) {
-                    return;
-                }
-                PendingMessageStorage.setPendingMsgs(chatId, [...pendingMessages, msgObj]);
+            const msgObj: MessageWithStatus = {
+                sender: user,
+                content,
+                date: new Date(),
+                uid,
+                transactionId: uid,
+                status: "pending"
             }
+            PendingMessageStorage.updatePendingMsgs(chatId, (currentPendingMsgs) => {
+                if (currentPendingMsgs.some((currentPendingMsg) => currentPendingMsg.uid === uid)) {
+                    return currentPendingMsgs;
+                }
+                return [...currentPendingMsgs, msgObj]
+            });
         },
         onError: (err, params) => {
-            if (pendingMessages === undefined) {
-                return;
-            }
-            const newArr: MessageWithStatus[] = pendingMessages?.map((pendingMsg) => {
-                if (pendingMsg.uid === params.uid) {
-                    return { ...pendingMsg, status: "error" }
+            PendingMessageStorage.updatePendingMsgs(chatId, (currentPendingMsgs) => {
+                const message = currentPendingMsgs.find((currentPendingMsg) =>
+                    currentPendingMsg.uid === params.uid
+                );
+                // newValue === current optimization in the storage won't catch the case where 
+                // the message doesn't exist or is already "error"
+                if (!message || message.status === "error") {
+                    return currentPendingMsgs;
                 }
-                return pendingMsg;
+                return currentPendingMsgs.map((currentPendingMsg) =>
+                    currentPendingMsg.uid === params.uid
+                        ? { ...currentPendingMsg, status: "error" }
+                        : currentPendingMsg
+                );
             });
-            PendingMessageStorage.setPendingMsgs(chatId, newArr);
             console.error("failed to send message", params, err);
         },
     });
@@ -145,17 +158,16 @@ export default function Chat() {
     }
 
     function retryMessage(failedMsg: backend.Message) {
-        if (pendingMessages === undefined) {
-            return;
-        }
         // 1. change icon from error → pending
-        const newArr: MessageWithStatus[] = pendingMessages.map((pendingMsg) => {
-            if (pendingMsg.uid === failedMsg.uid) {
-                return { ...pendingMsg, status: "pending" }
-            }
-            return pendingMsg;
+        PendingMessageStorage.updatePendingMsgs(chatId, (currentPendingMsgs) => {
+            const newArr: MessageWithStatus[] = currentPendingMsgs.map((currentPendingMsg) => {
+                if (currentPendingMsg.uid === failedMsg.uid) {
+                    return { ...currentPendingMsg, status: "pending" }
+                }
+                return currentPendingMsg;
+            });
+            return newArr;
         });
-        PendingMessageStorage.setPendingMsgs(chatId, newArr);
 
         // 2. resend same message to backend
         mutateSendMsg({
