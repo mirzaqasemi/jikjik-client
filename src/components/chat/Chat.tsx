@@ -1,4 +1,5 @@
 import { Spinner } from "@/components/ui/spinner.tsx";
+import type { PendingMessage } from "@/models/pending-message";
 import { CHATS_ROUTE } from "@/router.tsx";
 import { subscribeChatChanged } from "@/services/backend-event.ts";
 import { DraftStorage } from "@/services/draft-storage.ts";
@@ -14,13 +15,6 @@ import './Chat.css';
 import Header from "./header/Header.tsx";
 import MessageInput from "./message-input/MessageInput.tsx";
 import Message from "./message/Message.tsx";
-
-export interface PendingMessage {
-    content: string;
-    date: Date;
-    transactionId?: string;
-    failed: boolean;
-};
 
 export default function Chat() {
     const params = useParams<{ chatId: string }>();

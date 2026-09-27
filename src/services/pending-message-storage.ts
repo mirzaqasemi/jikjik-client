@@ -1,4 +1,4 @@
-import type { PendingMessage } from "@/components/chat/Chat";
+import type { PendingMessage } from "@/models/pending-message";
 import { useEffect, useState } from "react";
 import * as session from "./session";
 
