@@ -15,8 +15,12 @@ import Header from "./header/Header.tsx";
 import MessageInput from "./message-input/MessageInput.tsx";
 import Message from "./message/Message.tsx";
 
-
-export type MessageWithStatus = backend.Message & { status: "pending" | "error" };
+export interface PendingMessage {
+    content: string;
+    date: Date;
+    transactionId?: string;
+    failed: boolean;
+};
 
 export default function Chat() {
     const params = useParams<{ chatId: string }>();
@@ -67,7 +71,7 @@ export default function Chat() {
         PendingMessageStorage.updatePendingMsgs(chatId, (currentPendingMsgs) => {
             const newPendingMsgs = currentPendingMsgs.filter((currentPendingMsg) =>
                 !serverMessages.some(serverMessage =>
-                    serverMessage.uid === currentPendingMsg.uid)
+                    serverMessage.transactionId === currentPendingMsg.transactionId)
             );
             //if nothing changed
             if (newPendingMsgs.length === currentPendingMsgs.length) {
@@ -86,22 +90,20 @@ export default function Chat() {
     }, [serverMessages.length, chatId]);
 
     const sendMessageMutation = useMutation({
-        mutationFn: (params: { username: string, chat: backend.Chat, content: string, uid: string }) => {
+        mutationFn: (params: { chat: backend.Chat, content: string, transactionId: string }) => {
             return backend.sendMessage(params);
             // return Promise.reject(new Error("TEST: send failed"));
         },
         //onMutate() runs immediately before mutationFn executes
-        onMutate: ({ content, uid }) => {
-            const msgObj: MessageWithStatus = {
-                sender: user,
+        onMutate: ({ content, transactionId }) => {
+            const msgObj: PendingMessage = {
                 content,
                 date: new Date(),
-                uid,
-                transactionId: uid,
-                status: "pending"
+                transactionId: transactionId,
+                failed: false
             }
             PendingMessageStorage.updatePendingMsgs(chatId, (currentPendingMsgs) => {
-                if (currentPendingMsgs.some((currentPendingMsg) => currentPendingMsg.uid === uid)) {
+                if (currentPendingMsgs.some((currentPendingMsg) => currentPendingMsg.transactionId === transactionId)) {
                     return currentPendingMsgs;
                 }
                 return [...currentPendingMsgs, msgObj]
@@ -109,17 +111,17 @@ export default function Chat() {
         },
         onError: (err, params) => {
             PendingMessageStorage.updatePendingMsgs(chatId, (currentPendingMsgs) => {
-                const message = currentPendingMsgs.find((currentPendingMsg) =>
-                    currentPendingMsg.uid === params.uid
+                const message: PendingMessage | undefined = currentPendingMsgs.find((currentPendingMsg) =>
+                    currentPendingMsg.transactionId === params.transactionId
                 );
                 // newValue === current optimization in the storage won't catch the case where 
                 // the message doesn't exist or is already "error"
-                if (!message || message.status === "error") {
+                if (!message || message.failed) {
                     return currentPendingMsgs;
                 }
                 return currentPendingMsgs.map((currentPendingMsg) =>
-                    currentPendingMsg.uid === params.uid
-                        ? { ...currentPendingMsg, status: "error" }
+                    currentPendingMsg.transactionId === params.transactionId
+                        ? { ...currentPendingMsg, failed: true }
                         : currentPendingMsg
                 );
             });
@@ -133,12 +135,11 @@ export default function Chat() {
     const sendMessage = useCallback((inputStr: string) => {
         if (!inputStr.trim()) return;
         mutateSendMsg({
-            username: user.userId,
             chat: chat,
             content: inputStr,
-            uid: crypto.randomUUID()
+            transactionId: crypto.randomUUID()
         });
-    }, [mutateSendMsg, chat, user.userId]);
+    }, [mutateSendMsg, chat]);
 
     useEffect(() => {
         const draftMsg = DraftStorage.getDraftMsg(chatId);
@@ -157,11 +158,11 @@ export default function Chat() {
         );
     }
 
-    function retryMessage(failedMsg: backend.Message) {
+    function retryMessage(failedMsg: PendingMessage) {
         // 1. change icon from error → pending
         PendingMessageStorage.updatePendingMsgs(chatId, (currentPendingMsgs) => {
-            const newArr: MessageWithStatus[] = currentPendingMsgs.map((currentPendingMsg) => {
-                if (currentPendingMsg.uid === failedMsg.uid) {
+            const newArr: PendingMessage[] = currentPendingMsgs.map((currentPendingMsg) => {
+                if (currentPendingMsg.transactionId === failedMsg.transactionId) {
                     return { ...currentPendingMsg, status: "pending" }
                 }
                 return currentPendingMsg;
@@ -171,10 +172,9 @@ export default function Chat() {
 
         // 2. resend same message to backend
         mutateSendMsg({
-            username: user.userId,
             chat: chat,
             content: failedMsg.content,
-            uid: failedMsg.transactionId!,
+            transactionId: failedMsg.transactionId!,
         });
     }
 
@@ -190,13 +190,20 @@ export default function Chat() {
                 <div className="flex flex-col messages-area">
                     <div className="flex justify-center items-center date-separator bg-black/25 font-medium">Today</div>
                     {serverMessages.map((message) =>
-                        <Message user={user} chat={chat} message={message} key={message.eventId} status="success" retryMessage={retryMessage} />)
+                        <Message chat={chat} message={{
+                            sender: message.sender,
+                            content: message.content,
+                            date: message.date
+                        }} key={message.eventId} status={"success"} />)
                     }
                     {pendingMessages?.filter((pendingMsg) =>
-                        !serverMessages.some((serverMsg) => serverMsg.uid === pendingMsg.uid)
+                        !serverMessages.some((serverMsg) => serverMsg.transactionId === pendingMsg.transactionId)
                     ).map((pendingMsg) =>
-                        < Message user={user} chat={chat} message={pendingMsg} key={pendingMsg.uid} status={pendingMsg.status}
-                            retryMessage={retryMessage} />)
+                        < Message chat={chat} message={{
+                            content: pendingMsg.content,
+                            date: pendingMsg.date
+                        }} key={pendingMsg.transactionId} status={"pending"}
+                            retryMessage={() => retryMessage(pendingMsg)} />)
                     }
                     <div ref={bottomRef}></div>
                 </div>

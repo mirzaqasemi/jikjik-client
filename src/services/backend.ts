@@ -807,13 +807,9 @@ export async function getMessages(chatId: string): Promise<Message[]> {
 export async function sendMessage(req: {
     chat: Chat;
     content: string;
-    /**
-     * @deprecated Use transactionId instead. This is the client-side Matrix transaction id and will be removed later.
-     */
-    uid?: string;
     transactionId?: string;
 }): Promise<void> {
-    const transactionId = req.transactionId || req.uid || crypto.randomUUID();
+    const transactionId = req.transactionId || crypto.randomUUID();
     await getClient().sendTextMessage(req.chat.id, req.content, transactionId);
 }
 

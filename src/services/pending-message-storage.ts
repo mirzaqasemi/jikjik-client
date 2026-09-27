@@ -1,22 +1,29 @@
-import type { MessageWithStatus } from "@/components/chat/Chat";
-import * as session from "./session";
+import type { PendingMessage } from "@/components/chat/Chat";
 import { useEffect, useState } from "react";
-
-const pendingMsgsKeyPrefix = "pendingMsgs"
+import * as session from "./session";
 
 type Listener = () => void;
+type StoredPendingMessage = Omit<PendingMessage, "date"> & {
+    date: string
+};
 
+const pendingMsgsKeyPrefix = "pendingMsgs"
 const listeners: Map<string, Set<Listener>> = new Map();
 
 function getPendingMsgsKey(chatId: string): string[] {
     return [pendingMsgsKeyPrefix, chatId];
 }
 
-export function getPendingMsgs(chatId: string): MessageWithStatus[] {
-    return session.getSessionItem(getPendingMsgsKey(chatId)) ?? [];
+export function getPendingMsgs(chatId: string): PendingMessage[] {
+    const storedMessages: StoredPendingMessage[] = session.getSessionItem(getPendingMsgsKey(chatId)) ?? [];
+    return storedMessages.map((msg) =>
+    ({
+        ...msg,
+        date: new Date(msg.date),
+    }));
 }
 
-function setPendingMsgs(chatId: string, pendingMsgs: MessageWithStatus[]): void {
+function setPendingMsgs(chatId: string, pendingMsgs: PendingMessage[]): void {
     session.setSessionItem(getPendingMsgsKey(chatId), pendingMsgs);
     const chatListeners = getListeners(chatId);
     // Call all listeners
@@ -25,7 +32,7 @@ function setPendingMsgs(chatId: string, pendingMsgs: MessageWithStatus[]): void 
     }
 }
 
-export function updatePendingMsgs(chatId: string, updater: (msgs: MessageWithStatus[]) => MessageWithStatus[]) {
+export function updatePendingMsgs(chatId: string, updater: (msgs: PendingMessage[]) => PendingMessage[]) {
     const current = getPendingMsgs(chatId);
     const newValue = updater(current);
     // if nothing changed, newValue and current are literally the same array object.
