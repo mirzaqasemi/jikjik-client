@@ -17,8 +17,8 @@ const colors = [
     "bg-orange-300",
 ];
 
-export function formatDate(date?: Date | null): string {
-    if (date == null) return "";
+export function formatDate(date: Date | null): string {
+    if (date === null) return "";
     const hourNum = date.getHours();
     const minute = date.getMinutes().toString().padStart(2, '0');
     const ampm = hourNum >= 12 ? "PM" : "AM";
@@ -32,7 +32,7 @@ export function getTitle(chat: backend.Chat): string {
     const currentUserId = user?.userId;
     const users = chat.users;
     const names: string[] = [];
-    if (chat.title != null && chat.title != "") {
+    if (chat.title !== undefined && chat.title !== "") {
         return chat.title;
     }
     for (let index = 0; index < users.length; index++) {

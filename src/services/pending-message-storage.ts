@@ -54,8 +54,10 @@ export function subscribeToPendingMsgs(chatId: string, listener: Listener): () =
 }
 
 function unsubscribeFromPendingMsgs(chatId: string, listener: Listener, chatListeners: Set<Listener>) {
-    chatListeners.delete(listener)
-    listeners.set(chatId, chatListeners);
+    chatListeners.delete(listener);
+    if (chatListeners.size === 0) {
+        listeners.delete(chatId);
+    }
 }
 
 export function usePendingMsgs(chatId: string) {

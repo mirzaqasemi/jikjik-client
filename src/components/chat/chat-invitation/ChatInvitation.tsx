@@ -16,7 +16,7 @@ export default function ChatInvitation() {
     // Add listener once, to know if invitation status be changed. 
     // If chatId or navigate are changed, so old listener should be cleaned and react adds new listener. 
     useEffect(() => {
-        const cleanup = subscribeInvitationChanged(chatId!, (e) => {
+        const cleanup = subscribeInvitationChanged(chatId, (e) => {
             switch (e.change) {
                 case "accepted":
                     navigate(`/chats/${chatId}`);

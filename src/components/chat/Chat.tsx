@@ -22,12 +22,12 @@ export default function Chat() {
     const chat = useLoaderData<backend.Chat>();
     const rawUser = session.getUser();
     const bottomRef = useRef<HTMLDivElement>(null);
-    if (rawUser == null) {
+    if (rawUser === null) {
         throw new Error("User not authenticated");
     }
     const user = rawUser;
 
-    if (params?.chatId == null) {
+    if (params.chatId === undefined) {
         throw new Error("Missing chatId");
     }
     const chatId = params.chatId;
@@ -49,9 +49,9 @@ export default function Chat() {
 
     useEffect(() => {
         const cleanup = subscribeChatChanged(chatId, (e) => {
-            if (e.type == "roomChanged" && e.roomChange.type == "deleted") {
+            if (e.type === "roomChanged" && e.roomChange.type === "deleted") {
                 navigate(CHATS_ROUTE);
-            } else if (e.type == "messagesChanged") {
+            } else if (e.type === "messagesChanged") {
                 refetch();
             }
         });
@@ -138,7 +138,7 @@ export default function Chat() {
     useEffect(() => {
         const draftMsg = DraftStorage.getDraftMsg(chatId);
         // If there is any drafted message and its action is 'send', then send it to backend throughout sendMessageMutation
-        if (draftMsg?.action == "send") {
+        if (draftMsg?.action === "send") {
             sendMessage(draftMsg.content);
             DraftStorage.removeDraftMsg(chatId);
         }
@@ -190,7 +190,7 @@ export default function Chat() {
                             date: message.date
                         }} key={message.eventId} status={"success"} />)
                     }
-                    {pendingMessages?.filter((pendingMsg) =>
+                    {pendingMessages.filter((pendingMsg) =>
                         !serverMessages.some((serverMsg) => serverMsg.transactionId === pendingMsg.transactionId)
                     ).map((pendingMsg) =>
                         < Message chat={chat} message={{

@@ -18,11 +18,11 @@ export default function Draft() {
     const navigate = useNavigate();
     const rawUser = session.getUser();
     const rawContact = DraftStorage.getDraftDm();
-    if (rawUser == null) {
+    if (rawUser === null) {
         throw new Error("User not found");
     }
     const user = rawUser;
-    if (rawContact == null) {
+    if (rawContact === null) {
         throw new Error("Contact not found");
     }
     const contact = rawContact;
@@ -63,7 +63,6 @@ export default function Draft() {
             setDisabled(false);
             toast.error(normalizeError(error).message);
         },
-
     });
 
     async function sendMessage(inputStr: string) {
@@ -90,7 +89,6 @@ export default function Draft() {
                 }
             </div>
             <MessageInput sendMessage={sendMessage} disabled={disabled} keepInputOnSend={true} />
-
         </div>
     );
 }

@@ -16,7 +16,7 @@ interface Params {
 }
 export default function Message(params: Params) {
     const rawUser = session.getUser();
-    if (rawUser == null) {
+    if (rawUser === null) {
         throw new Error("User not authenticated");
     }
     const currentUser = rawUser;
@@ -41,11 +41,11 @@ export default function Message(params: Params) {
                     <div className="flex gap-2 items-end message-meta">
                         <div className='text-[13px] font-normal leading-none'>{utils.formatDate(params.message.date)}</div>
                         {
-                            messageSide == "sent" &&
+                            messageSide === "sent" &&
                             <div className='sending-status flex'>
                                 {
-                                    params.status == "pending" ? <Clock4 className='size-4 translate-y-0.5' />
-                                        : (params.status == "error" ? <CircleAlert className='size-4 translate-y-0.5 rounded-full text-destructive' />
+                                    params.status === "pending" ? <Clock4 className='size-4 translate-y-0.5' />
+                                        : (params.status === "error" ? <CircleAlert className='size-4 translate-y-0.5 rounded-full text-destructive' />
                                             : <CheckCheck className='size-4 translate-y-0.5' />)
                                 }
                             </div>
