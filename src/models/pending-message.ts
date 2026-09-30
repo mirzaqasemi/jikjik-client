@@ -1,6 +1,6 @@
 export interface PendingMessage {
     content: string;
     date: Date;
-    transactionId?: string;
+    transactionId: string;
     failed: boolean;
 };

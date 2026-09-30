@@ -157,7 +157,7 @@ export default function Chat() {
         PendingMessageStorage.updatePendingMsgs(chatId, (currentPendingMsgs) => {
             const newArr: PendingMessage[] = currentPendingMsgs.map((currentPendingMsg) => {
                 if (currentPendingMsg.transactionId === failedMsg.transactionId) {
-                    return { ...currentPendingMsg, status: "pending" }
+                    return { ...currentPendingMsg, failed: false }
                 }
                 return currentPendingMsg;
             });
@@ -168,7 +168,7 @@ export default function Chat() {
         mutateSendMsg({
             chat: chat,
             content: failedMsg.content,
-            transactionId: failedMsg.transactionId!,
+            transactionId: failedMsg.transactionId,
         });
     }
 
