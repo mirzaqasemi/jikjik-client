@@ -1,5 +1,5 @@
 import type { PendingMessage } from "@/models/pending-message";
-import { useEffect, useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 import * as session from "./session";
 
 type Listener = () => void;
@@ -59,13 +59,10 @@ function unsubscribeFromPendingMsgs(chatId: string, listener: Listener, chatList
 }
 
 export function usePendingMsgs(chatId: string) {
-    const [, forceRender] = useState(0);
+    const [, forceRender] = useReducer((x) => x + 1, 0);
     useEffect(() => {
         // tells React that storage changed
-        const cleanup = subscribeToPendingMsgs(chatId, () => {
-            // causes a re-render
-            forceRender(previous => previous + 1);
-        });
+        const cleanup = subscribeToPendingMsgs(chatId, forceRender);
         return cleanup;
     }, [chatId]);
     // reads the current data
