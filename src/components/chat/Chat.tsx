@@ -76,7 +76,7 @@ export default function Chat() {
         );
     }, [serverMessages, chatId]);
 
-    //At first: Chat component Render -> DOM updated -> useLayoutEffect runs -> scroll -> PAINT 🎨 (The browser actually draws pixels on the screen so the user can see something.)
+    // Scroll before paint so the chat opens at the correct position without a visible jump.
     useLayoutEffect(() => {
         bottomRef.current?.scrollIntoView({
             behavior: "auto"
@@ -124,8 +124,7 @@ export default function Chat() {
     });
 
     const mutateSendMsg = sendMessageMutation.mutate;
-    // useCallback lets you to cache a function definition between re-renders.
-    // Without useCallback a new sendMessage function is created on every render. so the Effect can run again unnecessarily
+    // Memoize sendMessage to prevent dependent effects from rerunning on every render.
     const sendMessage = useCallback((inputStr: string) => {
         if (!inputStr.trim()) return;
         mutateSendMsg({
