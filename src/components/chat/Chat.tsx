@@ -195,7 +195,7 @@ export default function Chat() {
                         < Message chat={chat} message={{
                             content: pendingMsg.content,
                             date: pendingMsg.date
-                        }} key={pendingMsg.transactionId} status={"pending"}
+                        }} key={pendingMsg.transactionId} status={pendingMsg.failed ? "error" : "pending"}
                             retryMessage={() => retryMessage(pendingMsg)} />)
                     }
                     <div ref={bottomRef}></div>
