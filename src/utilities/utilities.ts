@@ -17,8 +17,8 @@ const colors = [
     "bg-orange-300",
 ];
 
-export function formatDate(date: Date | null): string {
-    if (date === null) return "";
+export function formatDate(date?: Date | null): string {
+    if (date === null || date === undefined) return "";
     const hourNum = date.getHours();
     const minute = date.getMinutes().toString().padStart(2, '0');
     const ampm = hourNum >= 12 ? "PM" : "AM";
