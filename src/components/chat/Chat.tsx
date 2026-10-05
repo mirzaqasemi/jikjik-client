@@ -182,22 +182,49 @@ export default function Chat() {
                 :
                 <div className="flex flex-col messages-area">
                     <div className="flex justify-center items-center date-separator bg-black/25 font-medium">Today</div>
-                    {serverMessages.map((message) =>
-                        <Message chat={chat} message={{
-                            sender: message.sender,
-                            content: message.content,
-                            date: message.date
-                        }} key={message.eventId} status={"success"} />)
-                    }
+                    {serverMessages.map((serverMsg) => {
+                        const message = {
+                            sender: serverMsg.sender,
+                            content: serverMsg.content,
+                            date: serverMsg.date,
+                        };
+                        return (
+                            <Message
+                                key={serverMsg.eventId}
+                                chat={chat}
+                                message={message}
+                                status={"success"}
+                            />
+                        );
+                    })}
+
                     {pendingMessages.filter((pendingMsg) =>
                         !serverMessages.some((serverMsg) => serverMsg.transactionId === pendingMsg.transactionId)
-                    ).map((pendingMsg) =>
-                        < Message chat={chat} message={{
+                    ).map((pendingMsg) => {
+                        const message = {
                             content: pendingMsg.content,
-                            date: pendingMsg.date
-                        }} key={pendingMsg.transactionId} status={pendingMsg.failed ? "error" : "pending"}
-                            retryMessage={() => retryMessage(pendingMsg)} />)
-                    }
+                            date: pendingMsg.date,
+                        };
+                        if (pendingMsg.failed) {
+                            return (
+                                < Message
+                                    key={pendingMsg.transactionId}
+                                    chat={chat}
+                                    message={message}
+                                    status={"error"}
+                                    retryMessage={() => retryMessage(pendingMsg)}
+                                />
+                            );
+                        }
+                        return (
+                            < Message
+                                key={pendingMsg.transactionId}
+                                chat={chat}
+                                message={message}
+                                status={"pending"}
+                            />
+                        );
+                    })}
                     <div ref={bottomRef}></div>
                 </div>
             }

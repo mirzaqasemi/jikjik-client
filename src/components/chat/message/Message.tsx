@@ -4,16 +4,28 @@ import * as session from '../../../services/session';
 import * as utils from '../../../utilities/utilities'
 import './Message.css';
 
-interface Params {
-    chat: backend.Chat,
-    message: {
-        sender?: backend.User,
-        content: string,
-        date: Date
-    },
-    status: "success" | "pending" | "error",
-    retryMessage?: () => void
-}
+type MessageData = {
+    sender?: backend.User;
+    content: string;
+    date: Date;
+};
+
+type Params =
+    //union: either the first object shape, or the second one
+    | {
+        chat: backend.Chat;
+        message: MessageData;
+        status: "success" | "pending";
+        //"?: never" -> this property must be absent in this branch of the union
+        retryMessage?: never;
+    }
+    | {
+        chat: backend.Chat;
+        message: MessageData;
+        status: "error";
+        retryMessage: () => void;
+    };
+
 export default function Message(params: Params) {
     const rawUser = session.getUser();
     if (rawUser === null) {
