@@ -86,14 +86,13 @@ export default function Chat() {
     const sendMessageMutation = useMutation({
         mutationFn: (params: { chat: backend.Chat, content: string, transactionId: string }) => {
             return backend.sendMessage(params);
-            // return Promise.reject(new Error("TEST: send failed"));
         },
         //onMutate() runs immediately before mutationFn executes
         onMutate: ({ content, transactionId }) => {
             const msgObj: PendingMessage = {
                 content,
                 date: new Date(),
-                transactionId: transactionId,
+                transactionId,
                 failed: false
             }
             PendingMessageStorage.updatePendingMsgs(chatId, (currentPendingMsgs) => {
@@ -154,13 +153,12 @@ export default function Chat() {
     function retryMessage(failedMsg: PendingMessage) {
         // 1. change icon from error → pending
         PendingMessageStorage.updatePendingMsgs(chatId, (currentPendingMsgs) => {
-            const newArr: PendingMessage[] = currentPendingMsgs.map((currentPendingMsg) => {
+            return currentPendingMsgs.map((currentPendingMsg) => {
                 if (currentPendingMsg.transactionId === failedMsg.transactionId) {
                     return { ...currentPendingMsg, failed: false }
                 }
                 return currentPendingMsg;
             });
-            return newArr;
         });
 
         // 2. resend same message to backend

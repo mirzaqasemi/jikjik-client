@@ -195,7 +195,7 @@ function getClient(): MatrixClient {
         throw new Error("User not logged in");
     }
 
-    if (matrixClient != null && matrixClient.getUserId() !== matrixSession.userId) {
+    if (matrixClient !== null && matrixClient.getUserId() !== matrixSession.userId) {
         resetClient();
     }
 
@@ -687,7 +687,7 @@ export function waitForJoinRoom(roomId: string): Promise<void> {
     let settled = false;
     return new Promise((resolve, reject) => {
         const cleanup = subscribeChatChanged(roomId, (e) => {
-            if (e.type == "roomChanged" && e.roomChange.type == "membership" && e.roomChange.membership == "join") {
+            if (e.type === "roomChanged" && e.roomChange.type === "membership" && e.roomChange.membership === "join") {
                 cleanup();
                 if (!settled) {
                     settled = true;
@@ -697,7 +697,7 @@ export function waitForJoinRoom(roomId: string): Promise<void> {
         });
         getSdkRoomOrInitialSync(roomId)
             .then((room) => {
-                if (room.membership == "join") {
+                if (room.membership === "join") {
                     cleanup();
                     if (!settled) {
                         settled = true;
@@ -816,7 +816,7 @@ export async function sendMessage(req: {
 export async function searchContacts(query: string, limit: number = 20): Promise<User[]> {
     const currentUserId = session.getMatrixSession()?.userId;
     const users =
-        query == "" ? getClient().getUsers() :
+        query === "" ? getClient().getUsers() :
             (await getClient().searchUserDirectory({ term: query, limit })).results.map(u => {
                 return {
                     userId: u.user_id,

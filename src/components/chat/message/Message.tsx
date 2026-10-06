@@ -1,7 +1,6 @@
 import { CheckCheck, CircleAlert, Clock4, RotateCw } from 'lucide-react';
 import * as backend from '../../../services/backend';
-import * as session from '../../../services/session';
-import * as utils from '../../../utilities/utilities'
+import * as utils from '../../../utilities/utilities';
 import './Message.css';
 
 type MessageData = {
@@ -15,10 +14,9 @@ type Params = {
     chat: backend.Chat;
     message: MessageData;
 } & (
-        //union: either the first object shape, or the second one
         | {
             status: "success" | "pending";
-            //"?: never" -> this property must be absent in this branch of the union
+            // Retry is only valid for failed messages.
             retryMessage?: never;
         }
         | {
@@ -38,7 +36,7 @@ export default function Message(params: Params) {
         <div className={`flex items-center ${messageSide}`}>
             {
                 params.status === "error" &&
-                <RotateCw className='size-5 mr-2 cursor-pointer' onClick={() => params.retryMessage!()} />
+                <RotateCw className='size-5 mr-2 cursor-pointer' onClick={params.retryMessage} />
             }
             <div className="flex flex-col message-wrapper">
                 <div className="flex flex-col message-bubble">
