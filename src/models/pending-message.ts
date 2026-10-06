@@ -3,4 +3,4 @@ export interface PendingMessage {
     date: Date;
     transactionId: string;
     failed: boolean;
-};
+}

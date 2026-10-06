@@ -7,7 +7,7 @@ type StoredPendingMessage = Omit<PendingMessage, "date"> & {
     date: string
 };
 
-const pendingMsgsKeyPrefix = "pendingMsgs"
+const pendingMsgsKeyPrefix = "pendingMsgs";
 const listeners: Map<string, Set<Listener>> = new Map();
 
 function getPendingMsgsKey(chatId: string): string[] {

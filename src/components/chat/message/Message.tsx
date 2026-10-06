@@ -3,8 +3,7 @@ import * as backend from '../../../services/backend';
 import * as utils from '../../../utilities/utilities';
 import './Message.css';
 
-type MessageData = {
-    sender?: backend.User;
+type MessageContent = {
     content: string;
     date: Date;
 };
@@ -12,25 +11,35 @@ type MessageData = {
 type Params = {
     currentUser: backend.User;
     chat: backend.Chat;
-    message: MessageData;
 } & (
         | {
-            status: "success" | "pending";
+            status: "success";
+            message: MessageContent & {
+                sender: backend.User;
+            };
             // Retry is only valid for failed messages.
             retryMessage?: never;
-        }
-        | {
+        } | {
+            status: "pending";
+            message: MessageContent;
+            retryMessage?: never;
+        } | {
             status: "error";
+            message: MessageContent;
             retryMessage: () => void;
         }
     );
 
 export default function Message(params: Params) {
-
-    const isCurrentUser = params.message.sender === undefined ||
-        params.message.sender.userId === params.currentUser.userId;
+    let isCurrentUser = true;
+    if (params.status === "success") {
+        isCurrentUser = params.message.sender.userId === params.currentUser.userId;
+    }
     const messageSide = isCurrentUser ? "sent" : "received";
-    const showUserTitle = (params.chat.users.length > 2) && (!isCurrentUser);
+    const showUserTitle =
+        params.status === "success" &&
+        params.chat.users.length > 2 &&
+        !isCurrentUser;
 
     return (
         <div className={`flex items-center ${messageSide}`}>
@@ -42,7 +51,7 @@ export default function Message(params: Params) {
                 <div className="flex flex-col message-bubble">
                     {
                         showUserTitle &&
-                        <div className="flex sender-title">{params.message.sender?.displayName}</div>
+                        <div className="flex sender-title">{params.message.sender.displayName}</div>
                     }
                     <div className='pb-1'>{params.message.content}</div>
                     <div className="flex gap-2 items-end message-meta">

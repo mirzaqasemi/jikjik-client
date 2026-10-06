@@ -33,9 +33,8 @@ export default function Chat() {
     const chatId = params.chatId;
     const pendingMessages = PendingMessageStorage.usePendingMsgs(chatId);
 
-    // Fetching data from backend
     const {
-        data: serverMessages = [], // Rename "data" to "messages" 
+        data: serverMessages = [], // Rename "data" to "serverMessages" 
         isLoading,
         isError,
         error,
@@ -43,7 +42,6 @@ export default function Chat() {
     } = useQuery<backend.Message[]>({
         queryKey: ["messagesId", chatId],
         queryFn: () => backend.getMessages(chatId),
-        enabled: !!user && !!chatId,
         refetchOnMount: "always"
     });
 
@@ -67,7 +65,7 @@ export default function Chat() {
                 !serverMessages.some(serverMessage =>
                     serverMessage.transactionId === currentPendingMsg.transactionId)
             );
-            //if nothing changed
+            // Avoid notifying subscribers when reconciliation changes nothing.
             if (newPendingMsgs.length === currentPendingMsgs.length) {
                 return currentPendingMsgs;
             }
