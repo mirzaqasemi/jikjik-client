@@ -191,9 +191,10 @@ export default function Chat() {
                         return (
                             <Message
                                 key={serverMsg.eventId}
+                                currentUser={user}
                                 chat={chat}
                                 message={message}
-                                status={"success"}
+                                status="success"
                             />
                         );
                     })}
@@ -207,21 +208,23 @@ export default function Chat() {
                         };
                         if (pendingMsg.failed) {
                             return (
-                                < Message
+                                <Message
                                     key={pendingMsg.transactionId}
+                                    currentUser={user}
                                     chat={chat}
                                     message={message}
-                                    status={"error"}
+                                    status="error"
                                     retryMessage={() => retryMessage(pendingMsg)}
                                 />
                             );
                         }
                         return (
-                            < Message
+                            <Message
                                 key={pendingMsg.transactionId}
+                                currentUser={user}
                                 chat={chat}
                                 message={message}
-                                status={"pending"}
+                                status="pending"
                             />
                         );
                     })}

@@ -10,30 +10,27 @@ type MessageData = {
     date: Date;
 };
 
-type Params =
-    //union: either the first object shape, or the second one
-    | {
-        chat: backend.Chat;
-        message: MessageData;
-        status: "success" | "pending";
-        //"?: never" -> this property must be absent in this branch of the union
-        retryMessage?: never;
-    }
-    | {
-        chat: backend.Chat;
-        message: MessageData;
-        status: "error";
-        retryMessage: () => void;
-    };
+type Params = {
+    currentUser: backend.User;
+    chat: backend.Chat;
+    message: MessageData;
+} & (
+        //union: either the first object shape, or the second one
+        | {
+            status: "success" | "pending";
+            //"?: never" -> this property must be absent in this branch of the union
+            retryMessage?: never;
+        }
+        | {
+            status: "error";
+            retryMessage: () => void;
+        }
+    );
 
 export default function Message(params: Params) {
-    const rawUser = session.getUser();
-    if (rawUser === null) {
-        throw new Error("User not authenticated");
-    }
-    const currentUser = rawUser;
+
     const isCurrentUser = params.message.sender === undefined ||
-        params.message.sender.userId === currentUser.userId;
+        params.message.sender.userId === params.currentUser.userId;
     const messageSide = isCurrentUser ? "sent" : "received";
     const showUserTitle = (params.chat.users.length > 2) && (!isCurrentUser);
 
