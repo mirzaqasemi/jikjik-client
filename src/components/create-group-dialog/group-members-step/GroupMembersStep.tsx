@@ -40,7 +40,7 @@ export default function GroupMembersStep(params: Params) {
             const contacts = await backend.searchContacts(debouncedSearchQuery);
             return contacts
         },
-        enabled: user != null, // Do not run queryFn until user exists.
+        enabled: user !== null, // Do not run queryFn until user exists.
         retry: 2,
         refetchOnMount: "always"
     });

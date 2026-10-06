@@ -1,13 +1,13 @@
 import { createBrowserRouter } from 'react-router-dom';
+import ChatInvitation from './components/chat/chat-invitation/ChatInvitation';
 import ChatPlaceHolder from './components/chat/chat-place-holder/ChatPlaceHolder';
-import Chat from './components/chat/Chat';
-import Chats from './pages/chats/Chats';
+import Draft from './components/chat/draft/Draft';
 import RootLayout from './components/root-layout/RootLayout';
 import * as loaders from './loaders/loaders';
+import { ChatPage } from './pages/chat-page/ChatPage';
+import Chats from './pages/chats/Chats';
 import ErrorPage from './pages/error/ErrorPage';
 import Login from './pages/login/Login';
-import Draft from './components/chat/draft/Draft';
-import ChatInvitation from './components/chat/chat-invitation/ChatInvitation';
 
 export const LOGIN_ROUTE = "/";
 export const CHATS_ROUTE = "/chats";
@@ -53,7 +53,7 @@ export const router = createBrowserRouter([
           {
             path: RELATIVE_CHAT_ROUTE,
             loader: loaders.chatLoader,
-            element: <Chat />,
+            element: <ChatPage />,
             errorElement: <ErrorPage name={"chats"} url={CHATS_ROUTE}/>,
           },
         ],

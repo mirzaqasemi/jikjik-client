@@ -21,7 +21,7 @@ export default function ErrorPage(params: Params) {
   }
 
   return (
-    <div className='flex flex-col m-auto justify-center self-center bg-card w-[360px] sm:w-[500px] p-8 sm:p-15 h-fit rounded-4xl shadow-2xl gap-5'>
+    <div className='flex flex-col m-auto justify-center self-center bg-card w-90 sm:w-125 p-8 sm:p-15 h-fit rounded-4xl shadow-2xl gap-5'>
       <img src={errorImg} alt="" className='min-w-2xs mb-7' />
       <div className='flex flex-col'>
         <p className='text-2xl font-medium mb-6'>Oops! Something went wrong</p>
@@ -32,7 +32,7 @@ export default function ErrorPage(params: Params) {
         <Button variant={'default'} onClick={() => navigate(params.url)}>
           <ArrowLeft />
           Go Back</Button>
-        <Button variant={'ghost'} className='' onClick={() => window.location.reload()}>Try Again</Button>
+        <Button variant={'ghost'} onClick={() => window.location.reload()}>Try Again</Button>
       </div>
     </div>
   );

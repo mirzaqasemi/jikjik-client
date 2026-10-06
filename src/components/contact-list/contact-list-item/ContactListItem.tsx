@@ -1,6 +1,5 @@
 import * as backend from "@/services/backend.ts";
 
-
 type Params = {
     contact: backend.User,
     onSelect: () => void,
@@ -8,7 +7,6 @@ type Params = {
 }
 
 export default function ContactListItem({ contact, onSelect, selected }: Params) {
-    
     return (
         <>
             <button onClick={() => {

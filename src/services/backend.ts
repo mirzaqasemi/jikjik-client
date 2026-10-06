@@ -195,7 +195,7 @@ function getClient(): MatrixClient {
         throw new Error("User not logged in");
     }
 
-    if (matrixClient != null && matrixClient.getUserId() !== matrixSession.userId) {
+    if (matrixClient !== null && matrixClient.getUserId() !== matrixSession.userId) {
         resetClient();
     }
 
@@ -683,26 +683,33 @@ export async function joinPublicRoom(roomId: string): Promise<void> {
     await getClient().joinRoom(roomId);
 }
 
-export async function waitForJoinRoom(roomId: string): Promise<void> {
-    let resolved = false;
-    return new Promise(async (resolve) => {
+export function waitForJoinRoom(roomId: string): Promise<void> {
+    let settled = false;
+    return new Promise((resolve, reject) => {
         const cleanup = subscribeChatChanged(roomId, (e) => {
-            if (e.type == "roomChanged" && e.roomChange.type == "membership" && e.roomChange.membership == "join") {
+            if (e.type === "roomChanged" && e.roomChange.type === "membership" && e.roomChange.membership === "join") {
                 cleanup();
-                if (!resolved) {
-                    resolved = true;
+                if (!settled) {
+                    settled = true;
                     resolve();
                 }
             }
         });
-        const room = await getSdkRoomOrInitialSync(roomId);
-        if (room.membership == "join") {
-            cleanup();
-            if (!resolved) {
-                resolved = true;
-                resolve();
-            }
-        }
+        getSdkRoomOrInitialSync(roomId)
+            .then((room) => {
+                if (room.membership === "join") {
+                    cleanup();
+                    if (!settled) {
+                        settled = true;
+                        resolve();
+                    }
+                }
+            })
+            .catch((error) => {
+                settled = true;
+                cleanup();
+                reject(error);
+            });
     });
 }
 
@@ -800,20 +807,16 @@ export async function getMessages(chatId: string): Promise<Message[]> {
 export async function sendMessage(req: {
     chat: Chat;
     content: string;
-    /**
-     * @deprecated Use transactionId instead. This is the client-side Matrix transaction id and will be removed later.
-     */
-    uid?: string;
     transactionId?: string;
 }): Promise<void> {
-    const transactionId = req.transactionId || req.uid || crypto.randomUUID();
+    const transactionId = req.transactionId || crypto.randomUUID();
     await getClient().sendTextMessage(req.chat.id, req.content, transactionId);
 }
 
 export async function searchContacts(query: string, limit: number = 20): Promise<User[]> {
     const currentUserId = session.getMatrixSession()?.userId;
     const users =
-        query == "" ? getClient().getUsers() :
+        query === "" ? getClient().getUsers() :
             (await getClient().searchUserDirectory({ term: query, limit })).results.map(u => {
                 return {
                     userId: u.user_id,

@@ -18,8 +18,8 @@ const colors = [
 ];
 
 export function formatDate(date?: Date | null): string {
-    if (date == null) return "";
-    let hourNum = date.getHours();
+    if (date === null || date === undefined) return "";
+    const hourNum = date.getHours();
     const minute = date.getMinutes().toString().padStart(2, '0');
     const ampm = hourNum >= 12 ? "PM" : "AM";
     const hour = (hourNum % 12).toString().padStart(2, '0');
@@ -32,7 +32,7 @@ export function getTitle(chat: backend.Chat): string {
     const currentUserId = user?.userId;
     const users = chat.users;
     const names: string[] = [];
-    if (chat.title != null && chat.title != "") {
+    if (chat.title !== undefined && chat.title !== "") {
         return chat.title;
     }
     for (let index = 0; index < users.length; index++) {

@@ -36,9 +36,6 @@ export default function CreateGroupDialog(params: Params) {
 
     const createGroupMutation = useMutation({
         mutationFn: async (params: { invitees: string[] }) => {
-            if (groupDetails === undefined) {
-                throw new Error("Group information should not be undefined");
-            }
             return await backend.createRoom({ title: groupDetails.title, invitees: params.invitees, preset: groupDetails.preset })
         },
         onSuccess: (data) => {

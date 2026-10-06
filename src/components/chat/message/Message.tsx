@@ -1,24 +1,51 @@
 import { CheckCheck, CircleAlert, Clock4, RotateCw } from 'lucide-react';
 import * as backend from '../../../services/backend';
+import * as utils from '../../../utilities/utilities';
 import './Message.css';
 
-interface Params {
-    user: backend.User,
-    chat: backend.Chat,
-    message: backend.Message,
-    status: "success" | "pending" | "error",
-    retryMessage: (message: backend.Message) => void
-}
+type MessageContent = {
+    content: string;
+    date: Date;
+};
+
+type Params = {
+    currentUser: backend.User;
+    chat: backend.Chat;
+} & (
+        | {
+            status: "success";
+            message: MessageContent & {
+                sender: backend.User;
+            };
+            // Retry is only valid for failed messages.
+            retryMessage?: never;
+        } | {
+            status: "pending";
+            message: MessageContent;
+            retryMessage?: never;
+        } | {
+            status: "error";
+            message: MessageContent;
+            retryMessage: () => void;
+        }
+    );
 
 export default function Message(params: Params) {
-    let messageSide = params.message.sender.username === params.user.username ? "sent" : "received";
-    const showUserTitle = (params.chat.users.length > 2) && (params.message.sender.username != params.user.username);
+    let isCurrentUser = true;
+    if (params.status === "success") {
+        isCurrentUser = params.message.sender.userId === params.currentUser.userId;
+    }
+    const messageSide = isCurrentUser ? "sent" : "received";
+    const showUserTitle =
+        params.status === "success" &&
+        params.chat.users.length > 2 &&
+        !isCurrentUser;
 
     return (
         <div className={`flex items-center ${messageSide}`}>
             {
-                params.status == "error" &&
-                <RotateCw className='size-5 mr-2 cursor-pointer' onClick={() => params.retryMessage(params.message)} />
+                params.status === "error" &&
+                <RotateCw className='size-5 mr-2 cursor-pointer' onClick={params.retryMessage} />
             }
             <div className="flex flex-col message-wrapper">
                 <div className="flex flex-col message-bubble">
@@ -28,18 +55,17 @@ export default function Message(params: Params) {
                     }
                     <div className='pb-1'>{params.message.content}</div>
                     <div className="flex gap-2 items-end message-meta">
-                        <div className='text-[13px] font-normal leading-none'>5:06</div>
+                        <div className='text-[13px] font-normal leading-none'>{utils.formatDate(params.message.date)}</div>
                         {
-                            messageSide == "sent" &&
+                            messageSide === "sent" &&
                             <div className='sending-status flex'>
                                 {
-                                    params.status == "pending" ? <Clock4 className='size-4 translate-y-0.5' />
-                                        : (params.status == "error" ? <CircleAlert className='size-4 translate-y-0.5 rounded-full text-destructive' />
+                                    params.status === "pending" ? <Clock4 className='size-4 translate-y-0.5' />
+                                        : (params.status === "error" ? <CircleAlert className='size-4 translate-y-0.5 rounded-full text-destructive' />
                                             : <CheckCheck className='size-4 translate-y-0.5' />)
                                 }
                             </div>
                         }
-                        {/* {utils.formatDate(params.message.date)} */}
                     </div>
                 </div>
             </div>

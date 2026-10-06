@@ -15,7 +15,7 @@ export default function ContactChip(params: Params) {
     const [isHovered, setIsHovered] = useState(false);
 
     function remove() {
-        if (isHovered === true)
+        if (isHovered)
             params.onRemove();
     }
 

@@ -1,10 +1,12 @@
 import { Spinner } from "@/components/ui/spinner.tsx";
+import type { PendingMessage } from "@/models/pending-message";
 import { CHATS_ROUTE } from "@/router.tsx";
 import { subscribeChatChanged } from "@/services/backend-event.ts";
 import { DraftStorage } from "@/services/draft-storage.ts";
+import { PendingMessageStorage } from "@/services/pending-message-storage.ts";
 import { normalizeError } from "@/utilities/normalized-error.ts";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { useLoaderData, useNavigate, useParams } from 'react-router-dom';
 import * as backend from "../../services/backend.ts";
 import * as session from '../../services/session.ts';
@@ -14,29 +16,25 @@ import Header from "./header/Header.tsx";
 import MessageInput from "./message-input/MessageInput.tsx";
 import Message from "./message/Message.tsx";
 
-
-export type MessageWithStatus = backend.Message & { status: "pending" | "error" };
-
 export default function Chat() {
     const params = useParams<{ chatId: string }>();
     const navigate = useNavigate();
     const chat = useLoaderData<backend.Chat>();
     const rawUser = session.getUser();
     const bottomRef = useRef<HTMLDivElement>(null);
-    const [pendingMsgs, setPendingMsgs] = useState<MessageWithStatus[]>([]);
-    if (rawUser == null) {
+    if (rawUser === null) {
         throw new Error("User not authenticated");
     }
     const user = rawUser;
 
-    if (params?.chatId == null) {
+    if (params.chatId === undefined) {
         throw new Error("Missing chatId");
     }
     const chatId = params.chatId;
+    const pendingMessages = PendingMessageStorage.usePendingMsgs(chatId);
 
-    // Fetching data from backend
     const {
-        data: serverMessages = [], // Rename "data" to "messages" 
+        data: serverMessages = [], // Rename "data" to "serverMessages" 
         isLoading,
         isError,
         error,
@@ -44,43 +42,39 @@ export default function Chat() {
     } = useQuery<backend.Message[]>({
         queryKey: ["messagesId", chatId],
         queryFn: () => backend.getMessages(chatId),
-        enabled: !!user && !!chatId,
         refetchOnMount: "always"
     });
 
     useEffect(() => {
         const cleanup = subscribeChatChanged(chatId, (e) => {
-            if (e.type == "roomChanged" && e.roomChange.type == "deleted") {
+            if (e.type === "roomChanged" && e.roomChange.type === "deleted") {
                 navigate(CHATS_ROUTE);
-            } else if (e.type == "messagesChanged") {
+            } else if (e.type === "messagesChanged") {
                 refetch();
             }
         });
         return cleanup;
-    }, [refetch, chatId]);
+    }, [refetch, chatId, navigate]);
 
+    // Once a pending message appears in serverMessages, it shouldn't be considered pending anymore.
     useEffect(() => {
-        const draftMsg = DraftStorage.getDraftMsg(chatId);
-        // If there is any drafted message and its action is 'send', then send it to backend throughout sendMessageMutation
-        if (draftMsg?.action == "send") {
-            sendMessage(draftMsg.content);
-            DraftStorage.removeDraftMsg(chatId);
+        if (serverMessages.length === 0) return;
+
+        PendingMessageStorage.updatePendingMsgs(chatId, (currentPendingMsgs) => {
+            const newPendingMsgs = currentPendingMsgs.filter((currentPendingMsg) =>
+                !serverMessages.some(serverMessage =>
+                    serverMessage.transactionId === currentPendingMsg.transactionId)
+            );
+            // Avoid notifying subscribers when reconciliation changes nothing.
+            if (newPendingMsgs.length === currentPendingMsgs.length) {
+                return currentPendingMsgs;
+            }
+            return newPendingMsgs;
         }
-    }, []);
-
-    useEffect(() => {
-        if (serverMessages.length == 0) return;
-        setPendingMsgs((oldPending) =>
-            oldPending.filter(
-                (pending) =>
-                    !serverMessages.some(
-                        (serverMsg) => serverMsg.uid === pending.uid
-                    ),
-            ),
         );
-    }, [serverMessages]);
+    }, [serverMessages, chatId]);
 
-    //At first: Chat component Render -> DOM updated -> useLayoutEffect runs -> scroll -> PAINT 🎨 (The browser actually draws pixels on the screen so the user can see something.)
+    // Scroll before paint so the chat opens at the correct position without a visible jump.
     useLayoutEffect(() => {
         bottomRef.current?.scrollIntoView({
             behavior: "auto"
@@ -88,38 +82,63 @@ export default function Chat() {
     }, [serverMessages.length, chatId]);
 
     const sendMessageMutation = useMutation({
-        mutationFn: (params: { username: string, chat: backend.Chat, content: string, uid: string }) => {
+        mutationFn: (params: { chat: backend.Chat, content: string, transactionId: string }) => {
             return backend.sendMessage(params);
         },
         //onMutate() runs immediately before mutationFn executes
-        onMutate: ({ content, uid }) => {
-            if (!pendingMsgs.some((pendingMsg) => pendingMsg.uid == uid)) {
-                const msgObj: MessageWithStatus = {
-                    sender: user,
-                    content,
-                    date: new Date(),
-                    uid,
-                    transactionId: uid,
-                    status: "pending"
-                }
-                setPendingMsgs((oldPendingMsgs) => [...oldPendingMsgs, msgObj]);
+        onMutate: ({ content, transactionId }) => {
+            const msgObj: PendingMessage = {
+                content,
+                date: new Date(),
+                transactionId,
+                failed: false
             }
+            PendingMessageStorage.updatePendingMsgs(chatId, (currentPendingMsgs) => {
+                if (currentPendingMsgs.some((currentPendingMsg) => currentPendingMsg.transactionId === transactionId)) {
+                    return currentPendingMsgs;
+                }
+                return [...currentPendingMsgs, msgObj]
+            });
         },
         onError: (err, params) => {
-            setPendingMsgs((oldPendingMsgs) => {
-                return oldPendingMsgs.map((pendingMsg) => {
-                    if (pendingMsg.uid === params.uid) {
-                        return {
-                            ...pendingMsg,
-                            status: "error"
-                        } as MessageWithStatus;
-                    }
-                    return pendingMsg;
-                })
+            PendingMessageStorage.updatePendingMsgs(chatId, (currentPendingMsgs) => {
+                const message: PendingMessage | undefined = currentPendingMsgs.find((currentPendingMsg) =>
+                    currentPendingMsg.transactionId === params.transactionId
+                );
+                // newValue === current optimization in the storage won't catch the case where 
+                // the message doesn't exist or is already "error"
+                if (!message || message.failed) {
+                    return currentPendingMsgs;
+                }
+                return currentPendingMsgs.map((currentPendingMsg) =>
+                    currentPendingMsg.transactionId === params.transactionId
+                        ? { ...currentPendingMsg, failed: true }
+                        : currentPendingMsg
+                );
             });
             console.error("failed to send message", params, err);
         },
     });
+
+    const mutateSendMsg = sendMessageMutation.mutate;
+    // Memoize sendMessage to prevent dependent effects from rerunning on every render.
+    const sendMessage = useCallback((inputStr: string) => {
+        if (!inputStr.trim()) return;
+        mutateSendMsg({
+            chat: chat,
+            content: inputStr,
+            transactionId: crypto.randomUUID()
+        });
+    }, [mutateSendMsg, chat]);
+
+    useEffect(() => {
+        const draftMsg = DraftStorage.getDraftMsg(chatId);
+        // If there is any drafted message and its action is 'send', then send it to backend throughout sendMessageMutation
+        if (draftMsg?.action === "send") {
+            sendMessage(draftMsg.content);
+            DraftStorage.removeDraftMsg(chatId);
+        }
+    }, [chatId, sendMessage]);
 
     if (isError) {
         return (
@@ -129,35 +148,25 @@ export default function Chat() {
         );
     }
 
-    function sendMessage(inputStr: string) {
-        if (!inputStr.trim()) return;
-        sendMessageMutation.mutate({
-            username: user.username,
+    function retryMessage(failedMsg: PendingMessage) {
+        // 1. change icon from error → pending
+        PendingMessageStorage.updatePendingMsgs(chatId, (currentPendingMsgs) => {
+            return currentPendingMsgs.map((currentPendingMsg) => {
+                if (currentPendingMsg.transactionId === failedMsg.transactionId) {
+                    return { ...currentPendingMsg, failed: false }
+                }
+                return currentPendingMsg;
+            });
+        });
+
+        // 2. resend same message to backend
+        mutateSendMsg({
             chat: chat,
-            content: inputStr,
-            uid: crypto.randomUUID()
+            content: failedMsg.content,
+            transactionId: failedMsg.transactionId,
         });
     }
 
-    function retryMessage(failedMsg: backend.Message) {
-        // 1. change icon from error → pending
-        setPendingMsgs((oldPendingMsgs) =>
-            oldPendingMsgs.map((msg) => {
-                if (msg.uid == failedMsg.uid) {
-                    return { ...msg, status: "pending" }
-                }
-                return msg;
-            })
-        );
-
-        // 2. resend same message to backend
-        sendMessageMutation.mutate({
-            username: user.userId,
-            chat: chat,
-            content: failedMsg.content,
-            uid: failedMsg.transactionId!,
-        })
-    }
     return (
         <div className="flex flex-col chat-page">
             {/* <!-- Top: Header Section --> */}
@@ -169,15 +178,52 @@ export default function Chat() {
                 :
                 <div className="flex flex-col messages-area">
                     <div className="flex justify-center items-center date-separator bg-black/25 font-medium">Today</div>
-                    {serverMessages.map((message) =>
-                        <Message user={user} chat={chat} message={message} key={message.eventId} status="success" retryMessage={retryMessage} />)
-                    }
-                    {pendingMsgs.filter((pendingMsg) =>
-                        !serverMessages.some((serverMsg) => serverMsg.uid === pendingMsg.uid)
-                    ).map((pendingMsg) =>
-                        < Message user={user} chat={chat} message={pendingMsg} key={pendingMsg.uid} status={pendingMsg.status}
-                            retryMessage={retryMessage} />)
-                    }
+                    {serverMessages.map((serverMsg) => {
+                        const message = {
+                            sender: serverMsg.sender,
+                            content: serverMsg.content,
+                            date: serverMsg.date,
+                        };
+                        return (
+                            <Message
+                                key={serverMsg.eventId}
+                                currentUser={user}
+                                chat={chat}
+                                message={message}
+                                status="success"
+                            />
+                        );
+                    })}
+
+                    {pendingMessages.filter((pendingMsg) =>
+                        !serverMessages.some((serverMsg) => serverMsg.transactionId === pendingMsg.transactionId)
+                    ).map((pendingMsg) => {
+                        const message = {
+                            content: pendingMsg.content,
+                            date: pendingMsg.date,
+                        };
+                        if (pendingMsg.failed) {
+                            return (
+                                <Message
+                                    key={pendingMsg.transactionId}
+                                    currentUser={user}
+                                    chat={chat}
+                                    message={message}
+                                    status="error"
+                                    retryMessage={() => retryMessage(pendingMsg)}
+                                />
+                            );
+                        }
+                        return (
+                            <Message
+                                key={pendingMsg.transactionId}
+                                currentUser={user}
+                                chat={chat}
+                                message={message}
+                                status="pending"
+                            />
+                        );
+                    })}
                     <div ref={bottomRef}></div>
                 </div>
             }

@@ -18,11 +18,11 @@ export default function Draft() {
     const navigate = useNavigate();
     const rawUser = session.getUser();
     const rawContact = DraftStorage.getDraftDm();
-    if (rawUser == null) {
+    if (rawUser === null) {
         throw new Error("User not found");
     }
     const user = rawUser;
-    if (rawContact == null) {
+    if (rawContact === null) {
         throw new Error("Contact not found");
     }
     const contact = rawContact;
@@ -48,7 +48,7 @@ export default function Draft() {
             navigate(`/chats/${e.roomId}`);
         });
         return cleanup;
-    }, []);
+    }, [navigate]);
 
     // When the user sends a msg, this hook runs first
     const createDmMutation = useMutation({
@@ -63,7 +63,6 @@ export default function Draft() {
             setDisabled(false);
             toast.error(normalizeError(error).message);
         },
-
     });
 
     async function sendMessage(inputStr: string) {
@@ -78,21 +77,18 @@ export default function Draft() {
         <div className="flex flex-col w-full h-full">
             <Header chat={chat} />
             <div className="flex flex-col h-full items-center justify-center rounded-xl">
-                {
-                    createDmMutation.isIdle &&
+                {createDmMutation.isIdle &&
                     <div className="flex flex-col justify-center items-center gap-1 w-62.5 lg:w-75 py-7 px-3 rounded-4xl text-xl bg-black/40 text-white">
                         <div className="text-[14px] font-medium tracking-wider">No messages here yet...</div>
                         <span className="text-[14px] font-light tracking-wider">Send a message</span>
                         <img src={emptyGif} alt="No messages" />
                     </div>
                 }
-                {
-                    createDmMutation.isPending &&
+                {createDmMutation.isPending &&
                     <Spinner className="flex-1 m-auto size-9 opacity-30" />
                 }
             </div>
             <MessageInput sendMessage={sendMessage} disabled={disabled} keepInputOnSend={true} />
-
         </div>
     );
 }

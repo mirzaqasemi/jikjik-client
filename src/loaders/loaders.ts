@@ -7,7 +7,7 @@ import * as session from "../services/session";
 
 // Loader for protected routes
 export function protectedLoader() {
-  if (session.getUser() == null) {
+  if (session.getUser() === null) {
     // If the user is not logged in, redirect them to the login page
     return redirect(LOGIN_ROUTE);
   }
@@ -15,7 +15,7 @@ export function protectedLoader() {
 
 // Loader for the login page
 export function loginLoader() {
-  if (session.getUser() != null) {
+  if (session.getUser() !== null) {
     // If the user is already logged in, redirect them to the chats page
     return redirect(CHATS_ROUTE);
   }
@@ -23,18 +23,18 @@ export function loginLoader() {
 
 export async function chatLoader({ params }: LoaderFunctionArgs) {
   const protectedLoaderResult = protectedLoader();
-  if (protectedLoaderResult == null) {
+  if (protectedLoaderResult === undefined) {
     const chatId = params.chatId;
     if (!chatId) {
       throw new Error("Missing chatId");
     }
     const chat = await backend.getChat(chatId);
-    if (chat.membership == "invite") {
+    if (chat.membership === "invite") {
       return redirect(`/chats/${chatId}/invite`);
-    } 
-    else if (chat.membership == "leave" || chat.membership === undefined) {
+    }
+    else if (chat.membership === "leave" || chat.membership === undefined) {
       const normalizeError = new NormalizedError("forbidden");
-      normalizeError.message = "You are not a member!"
+      normalizeError.message = "You are not a member!";
       throw normalizeError;
     }
     return chat;
@@ -45,12 +45,12 @@ export async function chatLoader({ params }: LoaderFunctionArgs) {
 export async function inviteChatLoader({ params }: LoaderFunctionArgs) {
   const protectedLoaderResult = protectedLoader();
   const chatId = params.chatId;
-  if (protectedLoaderResult == null) {
+  if (protectedLoaderResult === undefined) {
     if (!chatId) {
       throw new Error("Missing chatId");
     }
     const chat = await backend.getChat(chatId);
-    if (chat.membership == 'join') {
+    if (chat.membership === "join") {
       return redirect(`/chats/${chatId}`);
     }
     return chat;

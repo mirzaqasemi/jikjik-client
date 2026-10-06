@@ -39,13 +39,13 @@ export default function Chats() {
         queryKey: ["allChatsAndContacts", user?.userId, debouncedSearchQuery], // "allChats" is the name/address of the cached data
         queryFn: async () => {
             const chats = await backend.getChats(debouncedSearchQuery);
-            if (debouncedSearchQuery != "") {
+            if (debouncedSearchQuery !== "") {
                 const contacts = await backend.searchContacts(debouncedSearchQuery);
                 return { chats, contacts }
             }
             return { chats, contacts: [] };
         },
-        enabled: user != null, // Do not run queryFn until user exists.
+        enabled: user !== null, // Do not run queryFn until user exists.
         retry: 2,
         // If the component is unmounted, the listener is removed and might miss the chatsChanged enevt, 
         // so we tell the useQuery to refetch data on mount and don't use from cached data:
@@ -72,7 +72,7 @@ export default function Chats() {
         return cleanup;
     }, [refetch]); //TODO: Is it needed to add refetch to dependency array?
 
-    if (user == null) {
+    if (user === null) {
         // replace: The new webpage (login page) replaces the page you are currently viewing (chats page) in the history list. 
         // Clicking the browser's "Back" button will skip the old page and take you to the page you visited before it.
         // It avoids a weird back-button loop. [Login, Chats] -> Chats redirects you to login so: [Login] -> Notice Chats disappeared (Login replace).
@@ -103,7 +103,7 @@ export default function Chats() {
     }
 
     function joinPublicChat() {
-        if (publicChat != null) {
+        if (publicChat !== null) {
             joinPublicChatMutation.mutate({
                 publicChatId: publicChat.id
             });
@@ -139,7 +139,7 @@ export default function Chats() {
                 </div>
         }
         // If chats.length == 0 and contacts.length == 0 and debouncedSearchQuery == "" it means the user has no chats and doesn't search anything
-        else if (debouncedSearchQuery == "") {
+        else if (debouncedSearchQuery === "") {
             content = <div className="grid grid-rows-3 h-full px-4">
                 <div className=" self-end">
                     <h3 className="font-semibold mb-3">No chats yet</h3>
@@ -169,7 +169,7 @@ export default function Chats() {
             {/* <!-- Middle: Chat List --> */}
             {content}
             <ConfirmationDialog confirmAction="Join chat" rejectAction="Cancel" title="Join this public chat?" description="This chat is open to everyone. Join now to participate in the conversation."
-                open={publicChat != null} loading={joinPublicChatMutation.isPending} onConfirm={joinPublicChat} onClose={() => setPublicChat(null)} icon={<UsersRound className="sidebar-icon" />}
+                open={publicChat !== null} loading={joinPublicChatMutation.isPending} onConfirm={joinPublicChat} onClose={() => setPublicChat(null)} icon={<UsersRound className="sidebar-icon" />}
             />
         </div>
     );
