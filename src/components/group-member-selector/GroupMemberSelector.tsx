@@ -10,12 +10,12 @@ import { useSession } from "@/services/session";
 import { normalizeError } from "@/utilities/normalized-error.ts";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import * as hooks from '../../../hooks/useDebounce.ts';
-import * as backend from '../../../services/backend.ts';
-import ContactList from "../../contact-list/ContactList.tsx";
-import SearchBar from "../../search-bar/SearchBar.tsx";
-import { Button } from "../../ui/button.tsx";
-import './GroupMembersStep.css';
+import * as hooks from '../../hooks/useDebounce.ts';
+import * as backend from '../../services/backend.ts';
+import ContactList from "../contact-list/ContactList.tsx";
+import SearchBar from "../search-bar/SearchBar.tsx";
+import { Button } from "../ui/button.tsx";
+import './GroupMemberSelector.css';
 
 type Params = {
     onNext: (members: Map<string, backend.User>) => void,

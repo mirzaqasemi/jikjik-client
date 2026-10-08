@@ -9,10 +9,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Spinner } from "../ui/spinner";
 import GroupDetailsStep from "./group-details-step/GroupDetailsStep";
-import GroupMembersStep from "./group-members-step/GroupMembersStep";
 import { normalizeError } from "@/utilities/normalized-error";
 import { toast } from "sonner";
 import { CHATS_ROUTE } from "@/router";
+import GroupMembersStep from "../group-member-selector/GroupMemberSelector";
 
 export type Step = "title" | "members";
 export type GroupDetails = {
