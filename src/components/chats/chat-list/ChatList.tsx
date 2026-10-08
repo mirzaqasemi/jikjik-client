@@ -43,21 +43,20 @@ export default function ChatList(params: Params) {
         }
     }
 
-
     return (
 
-        <div className="overflow-auto mt-8 px-4 chat-list">
+        <div className="flex flex-col gap-5 px-4 chat-list">
             {
                 params.chats.map(chat => (
                     <ContextMenu key={chat.id}>
                         {/* ContextMenuTrigger: detects right-click or long-press */}
                         <ContextMenuTrigger asChild>
-                            <button onClick={() => params.onSelect(chat)} key={chat.id} className="flex m-auto h-18 items-center w-full chat-item select-none">
+                            <button onClick={() => params.onSelect(chat)} key={chat.id} className="flex m-auto h-fit items-center w-full chat-item select-none">
                                 <div className="relative h-10 w-10 shrink-0">
                                     <img src="https://i.pravatar.cc/150?img=11" alt="David" className="h-full w-full rounded-full object-cover" />
                                     <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-chart-2  border-2 border-white" aria-label="Online" />
                                 </div>
-                                <div className="flex-1 pb-2.5 pt-2.5 ml-3 truncate chat-info">
+                                <div className="flex-1 ml-3 truncate chat-info">
                                     <div className="flex label-row">
                                         <div className="chat-name">{chat.title}</div>
                                         <span className="text-muted-foreground chat-meta unread-time">{utils.formatDate(chat.lastMsg?.date)}</span>

@@ -127,7 +127,6 @@ export default function Chats() {
     } else {
         if ((chats.length > 0 || contacts.length > 0)) {
             content =
-                <div>
                     <ChatList chats={chats} onSelect={selectChat} />
                     {
                         contacts.length > 0 &&
@@ -136,7 +135,6 @@ export default function Chats() {
                             <ContactList contacts={contacts} onSelect={selectContact} />
                         </>
                     }
-                </div>
         }
         // If chats.length == 0 and contacts.length == 0 and debouncedSearchQuery == "" it means the user has no chats and doesn't search anything
         else if (debouncedSearchQuery === "") {
@@ -155,10 +153,10 @@ export default function Chats() {
     }
 
     return (
-        <div className="flex flex-col w-full h-full pt-5 pb-3">
+        <div className="flex h-full w-full flex-col overflow-hidden pt-5">
 
             {/* <!-- Top: Header Section --> */}
-            <div className="flex w-full px-4 items-center gap-4">
+            <div className="flex w-full px-4 items-center gap-4 pb-4">
                 {/* <!-- Hamburger Menu --> */}
                 <Menu logout={logout} user={user} />
 
@@ -167,7 +165,7 @@ export default function Chats() {
             </div>
 
             {/* <!-- Middle: Chat List --> */}
-            {content}
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">{content}</div>
             <ConfirmationDialog confirmAction="Join chat" rejectAction="Cancel" title="Join this public chat?" description="This chat is open to everyone. Join now to participate in the conversation."
                 open={publicChat !== null} loading={joinPublicChatMutation.isPending} onConfirm={joinPublicChat} onClose={() => setPublicChat(null)} icon={<UsersRound className="sidebar-icon" />}
             />
