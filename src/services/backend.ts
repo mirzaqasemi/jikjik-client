@@ -784,6 +784,12 @@ export async function createRoom(req: CreateRoomRequest): Promise<Chat> {
     return getSdkRoomOrInitialSync(response.room_id);
 }
 
+/** Invite users to an existing room. Invitees join only after accepting. */
+export async function inviteUsers(chatId: string, userIds: string[]): Promise<void> {
+    const client = getClient();
+    await Promise.all(userIds.map(userId => client.invite(chatId, normalizeUserId(userId))));
+}
+
 //TODO handle not found error
 export async function getMessages(chatId: string): Promise<Message[]> {
     const client = getClient();
