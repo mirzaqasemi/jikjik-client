@@ -1,7 +1,6 @@
 import ContactChips from "@/components/contact-chips/ContactChips.tsx";
 import {
     DialogDescription,
-    DialogFooter,
     DialogHeader,
     DialogTitle
 } from "@/components/ui/dialog";
@@ -14,19 +13,19 @@ import * as hooks from '../../hooks/useDebounce.ts';
 import * as backend from '../../services/backend.ts';
 import ContactList from "../contact-list/ContactList.tsx";
 import SearchBar from "../search-bar/SearchBar.tsx";
-import { Button } from "../ui/button.tsx";
 import './GroupMemberSelector.css';
 
 type Params = {
-    onNext: (members: Map<string, backend.User>) => void,
-    onBack: () => void,
+    // onNext: (members: Map<string, backend.User>) => void,
+    // onBack: () => void,
+    onSelectionChange: (members: Map<string, backend.User>) => void;
+    selectedMembers: Map<string, backend.User>
 }
 
-export default function GroupMembersStep(params: Params) {
+export default function GroupMemberSelector(params: Params) {
     const [searchQuery, setSearchQuery] = useState("");
     const debouncedSearchQuery = hooks.useDebounce(searchQuery, 300);
     const user = useSession();
-    const [selectedMembers, setSelectedMembers] = useState<Map<string, backend.User>>(new Map());
 
     const {
         data: contacts,
@@ -46,19 +45,19 @@ export default function GroupMembersStep(params: Params) {
     });
 
     function handleSelect(contact: backend.User) {
-        const newSelectedMembers = new Map(selectedMembers);
+        const newSelectedMembers = new Map(params.selectedMembers);
         if (newSelectedMembers.delete(contact.userId)) {
-            setSelectedMembers(newSelectedMembers);
+            params.onSelectionChange(newSelectedMembers);
         } else {
-            setSelectedMembers(newSelectedMembers.set(contact.userId, contact));
+            params.onSelectionChange(newSelectedMembers.set(contact.userId, contact));
         }
         setSearchQuery("");
     }
 
     function unselectMember(contact: backend.User) {
-        const newSelectedMembers = new Map(selectedMembers);
+        const newSelectedMembers = new Map(params.selectedMembers);
         newSelectedMembers.delete(contact.userId);
-        setSelectedMembers(newSelectedMembers);
+        params.onSelectionChange(newSelectedMembers);
     }
 
     const renderSkeleton = () => (
@@ -94,7 +93,7 @@ export default function GroupMembersStep(params: Params) {
         } else {
             content = <>
                 {debouncedSearchQuery === "" && <div className="flex h-7 px-5 text-[13.5px] muted-text font-light muted-background text-start items-center">Recent</div>}
-                <ContactList key="list" contacts={contacts} onSelect={(contact) => handleSelect(contact)} selectedMembers={selectedMembers} />
+                <ContactList key="list" contacts={contacts} onSelect={(contact) => handleSelect(contact)} selectedMembers={params.selectedMembers} />
             </>
         }
     }
@@ -106,7 +105,7 @@ export default function GroupMembersStep(params: Params) {
                 <DialogDescription />
             </DialogHeader>
             <div className="flex max-w-full gap-y-1 mb-3 max-h-27 overflow-y-auto no-scrollbar">
-                <ContactChips contacts={[...selectedMembers.values()]} onRemove={unselectMember} />
+                <ContactChips contacts={[...params.selectedMembers.values()]} onRemove={unselectMember} />
             </div>
             {/* Header */}
             <div className="grow-0">
@@ -117,12 +116,6 @@ export default function GroupMembersStep(params: Params) {
             <div className="grow flex flex-col w-full no-scrollbar overflow-y-auto h-[50vh] mt-5 mb-3">
                 {content}
             </div>
-
-            {/* Footer */}
-            <DialogFooter className="grow-0 grid grid-cols-4">
-                <Button className="col-start-3" variant="outline" onClick={() => params.onBack()}>Back</Button>
-                <Button type="submit" className="col-start-4" onClick={() => params.onNext(selectedMembers)}>Create</Button>
-            </DialogFooter>
         </div>
     );
 }

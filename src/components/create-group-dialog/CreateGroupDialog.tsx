@@ -1,18 +1,20 @@
 import {
     Dialog,
-    DialogContent
+    DialogContent,
+    DialogFooter
 } from "@/components/ui/dialog";
+import { CHATS_ROUTE } from "@/router";
 import * as backend from '@/services/backend';
+import { normalizeError } from "@/utilities/normalized-error";
 import { useMutation } from "@tanstack/react-query";
 import { Preset } from "matrix-js-sdk";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import GroupMemberSelector from "../group-member-selector/GroupMemberSelector";
+import { Button } from "../ui/button";
 import { Spinner } from "../ui/spinner";
 import GroupDetailsStep from "./group-details-step/GroupDetailsStep";
-import { normalizeError } from "@/utilities/normalized-error";
-import { toast } from "sonner";
-import { CHATS_ROUTE } from "@/router";
-import GroupMembersStep from "../group-member-selector/GroupMemberSelector";
 
 export type Step = "title" | "members";
 export type GroupDetails = {
@@ -28,8 +30,8 @@ type Params = {
     open: boolean
 }
 
-
 export default function CreateGroupDialog(params: Params) {
+    const [selectedMembers, setSelectedMembers] = useState<Map<string, backend.User>>(new Map());
     const [step, setStep] = useState<Step>("title");
     const [groupDetails, setGroupDetails] = useState<GroupDetails>({ title: "", avatar: "", preset: Preset.PrivateChat });
     const navigate = useNavigate();
@@ -51,6 +53,12 @@ export default function CreateGroupDialog(params: Params) {
     function createGroup(members: Map<string, backend.User>) {
         const userIds: string[] = [...members.values()].map((user) => user.userId);
         createGroupMutation.mutate({ invitees: userIds });
+    }
+
+    function handleBack() {
+        setStep("title");
+        const emptySelectedMembers = new Map();
+        setSelectedMembers(emptySelectedMembers);
     }
 
     return (
@@ -77,9 +85,17 @@ export default function CreateGroupDialog(params: Params) {
                             }} />
                     }
                     {step === "members" &&
-                        <GroupMembersStep key="members"
-                            onBack={() => setStep("title")}
-                            onNext={createGroup} />
+                        <>
+                            <GroupMemberSelector key="members"
+                                selectedMembers={selectedMembers}
+                                onSelectionChange={setSelectedMembers}
+                            />
+                            {/* Footer */}
+                            <DialogFooter className="grow-0 grid grid-cols-4">
+                                <Button className="col-start-3" variant="outline" onClick={handleBack}>Back</Button>
+                                <Button type="submit" className="col-start-4" onClick={() => createGroup(selectedMembers)}>Create</Button>
+                            </DialogFooter>
+                        </>
                     }
                 </DialogContent>
             </Dialog>
