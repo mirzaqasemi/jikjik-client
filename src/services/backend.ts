@@ -729,6 +729,11 @@ export async function deleteRoom(roomId: string): Promise<void> {
     await unmarkDirectRoom(roomId).catch(() => undefined);
 }
 
+/** Leave a group without forgetting its room history. */
+export async function leaveGroup(chatId: string): Promise<void> {
+    await getClient().leave(chatId);
+}
+
 export async function blockUser(username: string): Promise<void> {
     const userId = normalizeUserId(username);
     const client = getClient();
@@ -788,6 +793,11 @@ export async function createRoom(req: CreateRoomRequest): Promise<Chat> {
 export async function inviteUsers(chatId: string, userIds: string[]): Promise<void> {
     const client = getClient();
     await Promise.all(userIds.map(userId => client.invite(chatId, normalizeUserId(userId))));
+}
+
+/** Update a group's room name. Requires sufficient Matrix room permissions. */
+export async function updateGroupName(chatId: string, name: string): Promise<void> {
+    await getClient().setRoomName(chatId, name);
 }
 
 //TODO handle not found error
