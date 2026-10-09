@@ -16,10 +16,9 @@ import SearchBar from "../search-bar/SearchBar.tsx";
 import './GroupMemberSelector.css';
 
 type Params = {
-    // onNext: (members: Map<string, backend.User>) => void,
-    // onBack: () => void,
     onSelectionChange: (members: Map<string, backend.User>) => void;
-    selectedMembers: Map<string, backend.User>
+    selectedMembers: Map<string, backend.User>,
+    currentMembers: backend.User[]
 }
 
 export default function GroupMemberSelector(params: Params) {
@@ -92,8 +91,15 @@ export default function GroupMemberSelector(params: Params) {
                 </span>
         } else {
             content = <>
-                {debouncedSearchQuery === "" && <div className="flex h-7 px-5 text-[13.5px] muted-text font-light muted-background text-start items-center">Recent</div>}
-                <ContactList key="list" contacts={contacts} onSelect={(contact) => handleSelect(contact)} selectedMembers={params.selectedMembers} />
+                {debouncedSearchQuery === "" &&
+                    <div className="flex h-7 px-5 text-[13.5px] muted-text font-light muted-background text-start items-center">Recent</div>
+                }
+                <ContactList
+                    key="list"
+                    contacts={contacts}
+                    onSelect={(contact) => handleSelect(contact)}
+                    selectedMembers={params.selectedMembers}
+                    currentMembers={params.currentMembers} />
             </>
         }
     }

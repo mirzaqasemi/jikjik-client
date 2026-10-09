@@ -67,7 +67,6 @@ export default function Menu(params: Params) {
                                 Logout
                             </Button>
                         </li>
-
                     </ul>
                 </SheetContent>
             </Sheet>
