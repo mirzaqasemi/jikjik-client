@@ -5,6 +5,7 @@ import {
     DialogContent,
     DialogFooter
 } from "@/components/ui/dialog";
+import { Spinner } from "@/components/ui/spinner";
 import * as backend from "@/services/backend";
 import { normalizeError } from "@/utilities/normalized-error";
 import { useMutation } from "@tanstack/react-query";
@@ -28,13 +29,11 @@ export default function AddGroupMembersDialog(params: Params) {
 
     const addMembersMutation = useMutation({
         mutationFn: async (params: { invitees: string[] }) => {
-            // TODO
-            return await backend.waitForJoinRoom(chatId);
+            return await backend.inviteUsers(chatId, params.invitees);
         },
         onSuccess: () => {
-            //TODO: open confirmation dialog
-            // accept: add users
-            // cancel: back to dialog
+            toast("Invitations sent successfully");
+            params.setOpenDialog(false);
 
         },
         onError: (error) => {
@@ -61,7 +60,7 @@ export default function AddGroupMembersDialog(params: Params) {
                     handleCloseRequest();
                 }
             }}>
-                <DialogContent showCloseButton={false}>
+                <DialogContent showCloseButton={false} className="rounded-2xl">
                     <div className="-mx-4 no-scrollbar max-h-[50vh] overflow-y-auto px-4">
                         <GroupMemberSelector key="members"
                             selectedMembers={selectedMembers}
@@ -71,7 +70,14 @@ export default function AddGroupMembersDialog(params: Params) {
                     </div>
                     <DialogFooter className="grow-0 grid grid-cols-4">
                         <Button className="col-start-3" variant="outline" disabled={addMembersMutation.isPending} onClick={handleCloseRequest}>Cancel</Button>
-                        <Button type="submit" className="col-start-4" onClick={() => createGroup(selectedMembers)}>Create</Button>
+                        <Button
+                            type="submit"
+                            className="col-start-4"
+                            onClick={() => createGroup(selectedMembers)}>
+                            {addMembersMutation.isPending ?
+                                <Spinner data-icon="inline-start" />
+                                : "Create"}
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

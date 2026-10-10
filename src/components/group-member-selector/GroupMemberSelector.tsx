@@ -18,10 +18,13 @@ import './GroupMemberSelector.css';
 type Params = {
     onSelectionChange: (members: Map<string, backend.User>) => void;
     selectedMembers: Map<string, backend.User>,
-    currentMembers: backend.User[]
+    currentMembers?: backend.User[]
 }
 
-export default function GroupMemberSelector(params: Params) {
+export default function GroupMemberSelector({
+    currentMembers = [],
+    ...params
+}: Params) {
     const [searchQuery, setSearchQuery] = useState("");
     const debouncedSearchQuery = hooks.useDebounce(searchQuery, 300);
     const user = useSession();
@@ -99,7 +102,7 @@ export default function GroupMemberSelector(params: Params) {
                     contacts={contacts}
                     onSelect={(contact) => handleSelect(contact)}
                     selectedMembers={params.selectedMembers}
-                    currentMembers={params.currentMembers} />
+                    currentMembers={currentMembers} />
             </>
         }
     }

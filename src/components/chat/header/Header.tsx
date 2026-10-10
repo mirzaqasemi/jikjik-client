@@ -52,7 +52,7 @@ export default function Header(props: Props) {
                             </div>
                         </button>
                     </DialogTrigger>
-                    <DialogContent className="bg-border ">
+                    <DialogContent className="bg-border pb-0 rounded-2xl">
                         <ChatDetailsHeader
                             title={chatTitle}
                             avatarUrl={props.chat.avatarUrl || undefined}
