@@ -15,7 +15,7 @@ export default function GroupChatDetails(params: Params) {
     }
 
     return (
-        <div className="flex flex-col -mx-6 max-h-[60vh] overflow-y-auto rounded-2xl bg-amber-50">
+        <div className="flex flex-col -mx-6 max-h-[60vh] overflow-y-auto rounded-b-2xl bg-amber-50">
             <div className="flex flex-col px-5 py-4">
                 <div className="flex pt-3.5 pb-7">
                     <div className="w-12">

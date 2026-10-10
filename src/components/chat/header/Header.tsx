@@ -3,7 +3,7 @@ import {
     DialogContent,
     DialogTrigger
 } from "@/components/ui/dialog";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, EllipsisVertical } from "lucide-react";
 import { Link } from "react-router-dom";
 import * as backend from "../../../services/backend.ts";
 import * as session from "../../../services/session.ts";
@@ -12,6 +12,7 @@ import ChatDetailsHeader from "./chat-details-header/ChatDetailsHeader.tsx";
 import DmChatDetails from "./dm-chat-details/DmChatDetails.tsx";
 import GroupChatDetails from "./group-chat-details/GroupChatDetails.tsx";
 import "./Header.css";
+import GroupActions from "./group-chat-details/group-actions/GroupActions.tsx";
 
 type Props = {
     chat: backend.Chat;
@@ -56,22 +57,21 @@ export default function Header(props: Props) {
                         <ChatDetailsHeader
                             title={chatTitle}
                             avatarUrl={props.chat.avatarUrl || undefined}
-                            description={props.chat.isDm ? "last seen recently" : `${props.chat.users.length} members`} />
+                            description={props.chat.isDm ? "last seen recently" : `${props.chat.users.length} members`}
+                        />
                         {props.chat.isDm ?
-                            <DmChatDetails displayName={otherUser!.displayName} username={otherUser!.userId}/>
-                            : <GroupChatDetails users={props.chat.users} />
+                            <DmChatDetails displayName={otherUser!.displayName} username={otherUser!.userId} />
+                            : <>
+                                <GroupActions />
+                                <GroupChatDetails users={props.chat.users} />
+                            </>
                         }
                     </DialogContent>
                 </Dialog>
 
                 {/* <!-- Right Side: Three Dots (Kebab Menu) --> */}
                 <button className="flex icon-btn more-options-btn" aria-label="More options">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5"
-                        strokeLinejoin="round" strokeLinecap="round">
-                        <circle cx="12" cy="5" r="1"></circle>
-                        <circle cx="12" cy="12" r="1"></circle>
-                        <circle cx="12" cy="19" r="1"></circle>
-                    </svg>
+                    <EllipsisVertical className="w-5 h-5 stroke-muted-foreground" />
                 </button>
             </div>
         </>
