@@ -23,14 +23,14 @@ export type GroupDetails = {
     preset: Preset
 }
 
-type Params = {
+type Props = {
     // onCloseRequest is called to request closing the dialog,
     // which means, the open prop should be set to false
     onCloseRequest: () => void,
     open: boolean
 }
 
-export default function CreateGroupDialog(params: Params) {
+export default function CreateGroupDialog(props: Props) {
     const [selectedMembers, setSelectedMembers] = useState<Map<string, backend.User>>(new Map());
     const [step, setStep] = useState<Step>("title");
     const [groupDetails, setGroupDetails] = useState<GroupDetails>({ title: "", avatar: "", preset: Preset.PrivateChat });
@@ -41,7 +41,7 @@ export default function CreateGroupDialog(params: Params) {
             return await backend.createRoom({ title: groupDetails.title, invitees: params.invitees, preset: groupDetails.preset })
         },
         onSuccess: (data) => {
-            params.onCloseRequest();
+            props.onCloseRequest();
             navigate(`/chats/${data.id}`);
         },
         onError: (error) => {
@@ -64,13 +64,13 @@ export default function CreateGroupDialog(params: Params) {
     return (
         <>
             {/* onOpenChange is called when Radix itself requests an open-state change */}
-            <Dialog open={params.open} onOpenChange={(open) => {
+            <Dialog open={props.open} onOpenChange={(open) => {
                 if (!open && !createGroupMutation.isPending) {
                     //So change the open = {true} (open property in Dialog) to open = {false} 
-                    params.onCloseRequest();
+                    props.onCloseRequest();
                 }
             }}>
-                <DialogContent className="sm:max-w-md rounded-2xl gap-0" showCloseButton={false}>
+                <DialogContent className="sm:max-w-md gap-0" showCloseButton={false}>
                     {createGroupMutation.isPending &&
                         <div className="flex h-full w-full items-center justify-center bg-black/15 absolute z-20">
                             <Spinner className="size-8" />

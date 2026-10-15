@@ -10,8 +10,8 @@ import {
 } from "@/components/ui/dialog";
 
 type Props = {
-    title: string;
-    avatarUrl: string | undefined;
+    title: string | undefined;
+    avatarUrl: string | undefined | null;
     description: string;
 }
 

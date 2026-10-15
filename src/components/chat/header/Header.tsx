@@ -1,18 +1,13 @@
 import {
     Dialog,
-    DialogContent,
     DialogTrigger
 } from "@/components/ui/dialog";
+import * as utilities from "@/utilities/utilities.ts";
 import { ArrowLeft, EllipsisVertical } from "lucide-react";
 import { Link } from "react-router-dom";
 import * as backend from "../../../services/backend.ts";
-import * as session from "../../../services/session.ts";
-import * as utilities from "../../../utilities/utilities.ts";
-import ChatDetailsHeader from "./chat-details-header/ChatDetailsHeader.tsx";
-import DmChatDetails from "./dm-chat-details/DmChatDetails.tsx";
-import GroupChatDetails from "./group-chat-details/GroupChatDetails.tsx";
+import ChatDetailsDialog from "../chat-details-dialog/ChatDetailsDialog.tsx";
 import "./Header.css";
-import GroupActions from "./group-chat-details/group-actions/GroupActions.tsx";
 
 type Props = {
     chat: backend.Chat;
@@ -20,16 +15,6 @@ type Props = {
 
 export default function Header(props: Props) {
     const chatTitle = utilities.getTitle(props.chat);
-    const rawUser = session.getUser();
-    if (rawUser === null) {
-        throw new Error("User not authenticated");
-    }
-    const user = rawUser;
-    let otherUser;
-    if (props.chat.isDm) {
-        otherUser = props.chat.users.find((u) => u.userId !== user.userId);
-    }
-
     return (
         <>
             {/* <!-- Top: Header Section --> */}
@@ -37,6 +22,7 @@ export default function Header(props: Props) {
                 <Dialog>
                     <DialogTrigger asChild className="flex w-full">
                         <button type="button" >
+                            {/* Chat header content */}
                             <div className="flex gap-2.5">
                                 <Link to={"../"} className="lg:hidden flex justify-center items-center btn-back w-10 h-10 rounded-full">
                                     <ArrowLeft strokeWidth={"1.5"} />
@@ -53,20 +39,7 @@ export default function Header(props: Props) {
                             </div>
                         </button>
                     </DialogTrigger>
-                    <DialogContent className="bg-border pb-0 rounded-2xl">
-                        <ChatDetailsHeader
-                            title={chatTitle}
-                            avatarUrl={props.chat.avatarUrl || undefined}
-                            description={props.chat.isDm ? "last seen recently" : `${props.chat.users.length} members`}
-                        />
-                        {props.chat.isDm ?
-                            <DmChatDetails displayName={otherUser!.displayName} username={otherUser!.userId} />
-                            : <>
-                                <GroupActions />
-                                <GroupChatDetails users={props.chat.users} />
-                            </>
-                        }
-                    </DialogContent>
+                    <ChatDetailsDialog chat={props.chat} />
                 </Dialog>
 
                 {/* <!-- Right Side: Three Dots (Kebab Menu) --> */}

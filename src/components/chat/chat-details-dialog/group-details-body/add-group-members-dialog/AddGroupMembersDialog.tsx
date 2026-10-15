@@ -60,7 +60,7 @@ export default function AddGroupMembersDialog(params: Params) {
                     handleCloseRequest();
                 }
             }}>
-                <DialogContent showCloseButton={false} className="rounded-2xl">
+                <DialogContent showCloseButton={false} className="max-w-full md:max-w-94!">
                     <div className="-mx-4 no-scrollbar max-h-[50vh] overflow-y-auto px-4">
                         <GroupMemberSelector key="members"
                             selectedMembers={selectedMembers}
