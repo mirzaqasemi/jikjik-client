@@ -32,7 +32,7 @@ export default function ChatDetailsDialog(props: Props) {
             {props.chat.isDm ?
                 <DmDetailsBody displayName={otherUser!.displayName} username={otherUser!.userId} />
                 : <>
-                    <GroupDetailsBody users={props.chat.users} />
+                    <GroupDetailsBody users={props.chat.users} chatTitle={chatTitle} chatAvatar={props.chat.avatarUrl} chatId={props.chat.id}/>
                 </>
             }
         </DialogContent>

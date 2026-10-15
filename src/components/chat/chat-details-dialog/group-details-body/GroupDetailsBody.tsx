@@ -8,6 +8,9 @@ import GroupMembersList from "./group-members-list/GroupMembersList";
 
 type Props = {
     users: backend.User[];
+    chatTitle: string;
+    chatAvatar?: string | null;
+    chatId: string
 }
 
 export default function GroupDetailsBody(props: Props) {
@@ -18,7 +21,7 @@ export default function GroupDetailsBody(props: Props) {
     return (
         <>
             {/* Actions */}
-            <GroupActions />
+            <GroupActions chatTitle={props.chatTitle} chatAvatar={props.chatAvatar} chatId={props.chatId}/>
 
             {/* Members List */}
             <div className="flex flex-col -mx-6 overflow-y-auto md:rounded-b-lg bg-amber-50">

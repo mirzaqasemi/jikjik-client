@@ -127,14 +127,14 @@ export default function Chats() {
     } else {
         if ((chats.length > 0 || contacts.length > 0)) {
             content =
-                    <ChatList chats={chats} onSelect={selectChat} />
-                    {
-                        contacts.length > 0 &&
-                        <>
-                            <div className="flex h-7 px-5 mt-3 text-[13.5px] muted-text font-light muted-background text-start items-center">Contacts</div>
-                            <ContactList contacts={contacts} onSelect={selectContact} />
-                        </>
-                    }
+                <ChatList chats={chats} onSelect={selectChat} />
+            {
+                contacts.length > 0 &&
+                    <>
+                        <div className="flex h-7 px-5 mt-3 text-[13.5px] muted-text font-light muted-background text-start items-center">Contacts</div>
+                        <ContactList contacts={contacts} onSelect={selectContact} />
+                    </>
+            }
         }
         // If chats.length == 0 and contacts.length == 0 and debouncedSearchQuery == "" it means the user has no chats and doesn't search anything
         else if (debouncedSearchQuery === "") {
@@ -166,8 +166,16 @@ export default function Chats() {
 
             {/* <!-- Middle: Chat List --> */}
             <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">{content}</div>
-            <ConfirmationDialog confirmAction="Join chat" rejectAction="Cancel" title="Join this public chat?" description="This chat is open to everyone. Join now to participate in the conversation."
-                open={publicChat !== null} loading={joinPublicChatMutation.isPending} onConfirm={joinPublicChat} onClose={() => setPublicChat(null)} icon={<UsersRound className="sidebar-icon" />}
+            <ConfirmationDialog
+                confirmAction="Join chat"
+                rejectAction="Cancel"
+                title="Join this public chat?"
+                description="This chat is open to everyone. Join now to participate in the conversation."
+                open={publicChat !== null}
+                loading={joinPublicChatMutation.isPending}
+                onConfirm={joinPublicChat}
+                onClose={() => setPublicChat(null)}
+                icon={<UsersRound className="sidebar-icon" />}
             />
         </div>
     );
