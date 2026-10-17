@@ -76,7 +76,7 @@ export default function AddGroupMembersDialog(params: Params) {
                             onClick={() => createGroup(selectedMembers)}>
                             {addMembersMutation.isPending ?
                                 <Spinner data-icon="inline-start" />
-                                : "Create"}
+                                : "Add"}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

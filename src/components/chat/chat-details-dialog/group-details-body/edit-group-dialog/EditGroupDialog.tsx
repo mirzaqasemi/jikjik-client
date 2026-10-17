@@ -4,7 +4,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import * as backend from "@/services/backend";
 import { normalizeError } from "@/utilities/normalized-error";
 import { useMutation } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
+import { useParams, useRevalidator } from "react-router-dom";
 import { toast } from "sonner";
 
 export type RoomFormLabel = {
@@ -24,6 +24,8 @@ type Props = {
 }
 
 export default function EditGroupDialog(props: Props) {
+        const revalidator = useRevalidator();
+    
     const params = useParams<{ chatId: string }>();
     if (params.chatId === undefined) {
         throw new Error("Missing chatId");
@@ -50,6 +52,7 @@ export default function EditGroupDialog(props: Props) {
             return backend.updateGroupName(chatId, params.title);
         },
         onSuccess: () => {
+               revalidator.revalidate();
             props.onCloseRequest();
         },
         onError: (err) => {

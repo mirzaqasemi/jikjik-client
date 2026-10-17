@@ -7,7 +7,7 @@ import { PendingMessageStorage } from "@/services/pending-message-storage.ts";
 import { normalizeError } from "@/utilities/normalized-error.ts";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
-import { useLoaderData, useNavigate, useParams } from 'react-router-dom';
+import { useLoaderData, useNavigate, useParams, useRevalidator } from 'react-router-dom';
 import * as backend from "../../services/backend.ts";
 import * as session from '../../services/session.ts';
 import { AlertDestructive } from "../alert-destructive/AlertDestructive.tsx";
@@ -17,6 +17,7 @@ import MessageInput from "./message-input/MessageInput.tsx";
 import Message from "./message/Message.tsx";
 
 export default function Chat() {
+    const revalidator = useRevalidator();
     const params = useParams<{ chatId: string }>();
     const navigate = useNavigate();
     const chat = useLoaderData<backend.Chat>();
@@ -51,10 +52,13 @@ export default function Chat() {
                 navigate(CHATS_ROUTE);
             } else if (e.type === "messagesChanged") {
                 refetch();
+            } else if ((e.type === "roomChanged" && e.roomChange.type === "name") || e.type === "usersChanged") {
+                // manually re-run the active route loaders
+                revalidator.revalidate();
             }
         });
         return cleanup;
-    }, [refetch, chatId, navigate]);
+    }, [refetch, chatId, navigate, revalidator]);
 
     // Once a pending message appears in serverMessages, it shouldn't be considered pending anymore.
     useEffect(() => {
