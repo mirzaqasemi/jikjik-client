@@ -745,6 +745,12 @@ export async function blockUser(username: string): Promise<void> {
     await client.setIgnoredUsers([...ignoredUsers, userId]);
 }
 
+/** Check whether a user is in the locally synchronized Matrix ignored-users list. */
+export function isUserBlocked(username: string): boolean {
+    const userId = normalizeUserId(username);
+    return getClient().getIgnoredUsers().includes(userId);
+}
+
 export async function unblockUser(username: string): Promise<void> {
     const userId = normalizeUserId(username);
     const client = getClient();
