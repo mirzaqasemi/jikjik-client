@@ -2,7 +2,13 @@ import { SendHorizontal } from "lucide-react";
 import { useState } from "react";
 import "./MessageInput.css"
 
-export default function MessageInput({ sendMessage, disabled, keepInputOnSend }: { sendMessage: (inputStr: string) => void, disabled: boolean, keepInputOnSend?: boolean }) {
+type Props = {
+    sendMessage: (inputStr: string) => void;
+    disabled: boolean;
+    keepInputOnSend?: boolean
+}
+
+export default function MessageInput(props: Props) {
     const [inputStr, setInputStr] = useState("");
 
     return (
@@ -12,16 +18,16 @@ export default function MessageInput({ sendMessage, disabled, keepInputOnSend }:
                 onChange={(e) => setInputStr(e.target.value)}
                 onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                        sendMessage(inputStr);
-                        if (!keepInputOnSend) {
+                        props.sendMessage(inputStr);
+                        if (!props.keepInputOnSend) {
                             setInputStr("");
                         }
                     }
                 }}
-                disabled={disabled}
+                disabled={props.disabled}
             />
-            <button className="flex justify-center rounded-full btn-send" onClick={() => sendMessage(inputStr)} disabled={disabled}>
-                <SendHorizontal className="" fill="var(--primary)" strokeWidth={"1.5"} stroke="" />
+            <button className="flex justify-center rounded-full btn-send" onClick={() => props.sendMessage(inputStr)} disabled={props.disabled}>
+                <SendHorizontal className="" fill="var(--primary)" strokeWidth={"1.5"} stroke=""/>
             </button>
         </div >
     );

@@ -125,16 +125,18 @@ export default function Chats() {
                 </div>
             </div>
     } else {
+
         if ((chats.length > 0 || contacts.length > 0)) {
-            content =
+            content = <>
                 <ChatList chats={chats} onSelect={selectChat} />
-            {
-                contacts.length > 0 &&
+                {
+                    contacts.length > 0 &&
                     <>
                         <div className="flex h-7 px-5 mt-3 text-[13.5px] muted-text font-light muted-background text-start items-center">Contacts</div>
                         <ContactList contacts={contacts} onSelect={selectContact} />
                     </>
-            }
+                }
+            </>
         }
         // If chats.length == 0 and contacts.length == 0 and debouncedSearchQuery == "" it means the user has no chats and doesn't search anything
         else if (debouncedSearchQuery === "") {
@@ -161,7 +163,7 @@ export default function Chats() {
                 <Menu logout={logout} user={user} />
 
                 {/* <!-- Search Bar --> */}
-                <SearchBar onChange={setSearchQuery} value={searchQuery} />
+                <SearchBar onChange={setSearchQuery} value={searchQuery} placeholder="Search chats, people, groups..."/>
             </div>
 
             {/* <!-- Middle: Chat List --> */}

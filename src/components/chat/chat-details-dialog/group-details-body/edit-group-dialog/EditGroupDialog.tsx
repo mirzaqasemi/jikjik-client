@@ -1,6 +1,6 @@
 import RoomDetailsFields from "@/components/room-details-fields/RoomDetailsFields";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader } from "@/components/ui/dialog";
 import * as backend from "@/services/backend";
 import { normalizeError } from "@/utilities/normalized-error";
 import { useMutation } from "@tanstack/react-query";
@@ -24,8 +24,8 @@ type Props = {
 }
 
 export default function EditGroupDialog(props: Props) {
-        const revalidator = useRevalidator();
-    
+    const revalidator = useRevalidator();
+
     const params = useParams<{ chatId: string }>();
     if (params.chatId === undefined) {
         throw new Error("Missing chatId");
@@ -52,7 +52,7 @@ export default function EditGroupDialog(props: Props) {
             return backend.updateGroupName(chatId, params.title);
         },
         onSuccess: () => {
-               revalidator.revalidate();
+            revalidator.revalidate();
             props.onCloseRequest();
         },
         onError: (err) => {
@@ -67,11 +67,8 @@ export default function EditGroupDialog(props: Props) {
                 props.onCloseRequest();
             }
         }}>
-            <DialogHeader>
-                <DialogTitle ></DialogTitle>
-                <DialogDescription />
-            </DialogHeader>
-            <DialogContent showCloseButton={false} className="max-w-full md:max-w-94!">
+            <DialogHeader/>
+            <DialogContent slot="edit-group-dialog" showCloseButton={false} className="max-w-full md:max-w-94!">
                 <form className="w-full items-center" onSubmit={handleSubmit}>
 
                     <RoomDetailsFields formTitle="Edit group" formLabel={roomFormLabel} />

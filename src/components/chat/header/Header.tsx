@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import * as backend from "../../../services/backend.ts";
 import ChatDetailsDialog from "../chat-details-dialog/ChatDetailsDialog.tsx";
 import "./Header.css";
+import { useState } from "react";
 
 type Props = {
     chat: backend.Chat;
@@ -15,13 +16,18 @@ type Props = {
 
 export default function Header(props: Props) {
     const chatTitle = utilities.getTitle(props.chat);
+    const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
     return (
         <>
             {/* <!-- Top: Header Section --> */}
             <div className="flex w-full sticky top-0 z-50 items-center conversation-header">
-                <Dialog>
+                <Dialog open={isDetailsDialogOpen} onOpenChange={(open) => {
+                    if (!open) {
+                        setIsDetailsDialogOpen(false);
+                    }
+                }}>
                     <DialogTrigger asChild className="flex w-full">
-                        <button type="button" >
+                        <button type="button" onClick={() => setIsDetailsDialogOpen(true)}>
                             {/* Chat header content */}
                             <div className="flex gap-2.5">
                                 <Link to={"../"} className="lg:hidden flex justify-center items-center btn-back w-10 h-10 rounded-full">
@@ -39,7 +45,11 @@ export default function Header(props: Props) {
                             </div>
                         </button>
                     </DialogTrigger>
-                    <ChatDetailsDialog chat={props.chat} />
+                    <ChatDetailsDialog
+                        chat={props.chat}
+                        openDialog={isDetailsDialogOpen}
+                        onCloseRequest={() => setIsDetailsDialogOpen(false)}
+                    />
                 </Dialog>
 
                 {/* <!-- Right Side: Three Dots (Kebab Menu) --> */}

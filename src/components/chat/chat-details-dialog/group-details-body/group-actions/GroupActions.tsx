@@ -33,7 +33,7 @@ export default function GroupActions(props: Props) {
     });
 
     return (
-        <>
+        <div id="GroupActions" className="flex flex-col pb-4">
             <div className="flex gap-4 h-18">
                 <ChatActionButton title="Manage" icon={Settings2} onClick={() => setIsEditOpen(true)} />
                 <ChatActionButton title="Leave" icon={LogOut} onClick={() => setIsLeaveOpen(true)} />
@@ -50,6 +50,6 @@ export default function GroupActions(props: Props) {
                 rejectAction="Cancel"
                 description="Are you sure you want to leave this group?"
             />
-        </>
+        </div>
     );
 }

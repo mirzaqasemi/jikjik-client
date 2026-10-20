@@ -7,6 +7,7 @@ import {
     MsgType,
     type Room,
     type RoomMember,
+    User as SdkUser,
     SyncState,
 } from "matrix-js-sdk";
 import { Preset, Visibility } from "matrix-js-sdk/lib/@types/partials";
@@ -751,6 +752,11 @@ export function isUserBlocked(username: string): boolean {
     return getClient().getIgnoredUsers().includes(userId);
 }
 
+export function getBlockedUsers(): Promise<User[]> {
+    return withPresenceForUsers(getClient().getIgnoredUsers().map(userId => mapUser(getClient().getUser(userId)!)));
+
+}
+
 export async function unblockUser(username: string): Promise<void> {
     const userId = normalizeUserId(username);
     const client = getClient();
@@ -854,11 +860,15 @@ export async function searchContacts(query: string, limit: number = 20): Promise
             continue;
         }
 
-        contacts.push(userFromUserId(user.userId, {
-            displayName: user.displayName || displayNameFromUserId(user.userId),
-            avatarUrl: user.avatarUrl,
-        }));
+        contacts.push(mapUser(user));
     }
-
     return await withPresenceForUsers(contacts);
 }
+
+function mapUser(user: SdkUser | { userId: string; displayName: string | undefined; avatarUrl: string | undefined; }): User {
+    return userFromUserId(user.userId, {
+        displayName: user.displayName || displayNameFromUserId(user.userId),
+        avatarUrl: user.avatarUrl,
+    });
+}
+

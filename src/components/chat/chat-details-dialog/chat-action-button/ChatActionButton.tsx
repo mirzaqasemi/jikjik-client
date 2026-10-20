@@ -20,11 +20,11 @@ export default function ChatActionButton({
 
     return (
         <>
-            <div className="bg-white border border-muted-foreground/30 rounded-md flex-1 min-w-0">
+            <div className="flex flex-1 bg-muted rounded-[10px] min-w-0">
                 <Button size="sm" variant="ghost" className="rounded-md p-0 w-full h-full" onClick={onClick}>
                     <Item variant="outline" className="flex flex-col gap-1 py-1.5 px-5 border-0">
                         <ItemMedia variant="icon">
-                            <Icon className="size-6" />
+                            <Icon className="size-6 stroke-2" strokeLinecap="round"/>
                         </ItemMedia>
                         <ItemContent>
                             <ItemTitle className="font-normal text-[12px] text-black">{title}</ItemTitle>

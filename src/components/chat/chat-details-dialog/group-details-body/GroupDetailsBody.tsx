@@ -24,9 +24,9 @@ export default function GroupDetailsBody(props: Props) {
             <GroupActions chatTitle={props.chatTitle} chatAvatar={props.chatAvatar} chatId={props.chatId}/>
 
             {/* Members List */}
-            <div className="flex flex-col -mx-6 overflow-y-auto md:rounded-b-lg bg-amber-50">
+            <div className="flex flex-col -mx-6 overflow-y-auto">
                 <div className="flex flex-col px-5 lg:py-4">
-                    <div className="flex lg:pt-3.5 lg:pb-7">
+                    <div className="flex lg:pt-3.5 lg:pb-3.5">
                         <div className="w-12">
                             <UsersRound className='size-5 ml-2 text-muted-foreground' />
                         </div>

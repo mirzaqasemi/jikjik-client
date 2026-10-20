@@ -17,7 +17,7 @@ type Props = {
 
 export default function ChatDetailsHeader(props: Props) {
     return (
-        <DialogHeader className="flex justify-center items-center">
+        <DialogHeader className="flex justify-center items-center pb-4">
             <Avatar className="size-20">
                 <AvatarImage
                     src={"https://github.com/shadcn.png"}
