@@ -1,6 +1,7 @@
 import ConfirmationDialog from "@/components/confirmation-dialog/ConfirmationDialog";
 import * as backend from "@/services/backend";
-import { useMutation } from "@tanstack/react-query";
+import * as session from "@/services/session";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { MessageCircle, UserRoundCheck, UserRoundX } from "lucide-react";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
@@ -16,6 +17,9 @@ type Props = {
 export default function DmActions(props: Props) {
     const [isBlocked, setIsBlocked] = useState(backend.isUserBlocked(props.username));
     const [isBlockDialogOpen, setIsBlockDialogOpen] = useState(false);
+    const queryClient = useQueryClient();
+    const user: backend.User | null = session.useSession();
+
     const params = useParams<{ chatId: string }>();
     if (params.chatId === undefined) {
         throw new Error("Missing chatId");
@@ -29,6 +33,9 @@ export default function DmActions(props: Props) {
         onSuccess: () => {
             setIsBlocked(true);
             setIsBlockDialogOpen(false);
+            queryClient.invalidateQueries({
+                queryKey: ["blockedUsers", user?.userId]
+            });
             toast(`${props.displayName} is now blocked`);
         },
         onError: (err) => {
@@ -41,6 +48,7 @@ export default function DmActions(props: Props) {
             return backend.unblockUser(props.username);
         },
         onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["blockedUsers", user?.userId] })
             setIsBlocked(false);
         },
         onError: (err) => {

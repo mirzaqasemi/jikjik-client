@@ -753,7 +753,11 @@ export function isUserBlocked(username: string): boolean {
 }
 
 export function getBlockedUsers(): Promise<User[]> {
-    return withPresenceForUsers(getClient().getIgnoredUsers().map(userId => mapUser(getClient().getUser(userId)!)));
+    return withPresenceForUsers(getClient().getIgnoredUsers().map(userId => mapUser(getClient().getUser(userId) ?? {
+        userId: userId,
+        displayName: displayNameFromUserId(userId),
+        avatarUrl: "",
+    })));
 
 }
 
