@@ -16,7 +16,7 @@ export default function DmDetailsBody(props: Props) {
     return (
         <>
             {/* Actions */}
-            <DmActions username={props.otherUser.userId} displayName={props.otherUser.displayName} onCloseRequest={props.onCloseRequest}/>
+            <DmActions otherUserId={props.otherUser.userId} displayName={props.otherUser.displayName} onCloseRequest={props.onCloseRequest}/>
 
             {/* User Information */}
             <div className="flex flex-col flex-1 -mx-6 no-scrollbar overflow-y-auto rounded-[10px]">

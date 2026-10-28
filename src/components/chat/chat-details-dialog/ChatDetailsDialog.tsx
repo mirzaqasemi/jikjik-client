@@ -23,6 +23,8 @@ export default function ChatDetailsDialog(props: Props) {
     if (props.chat.isDm) {
         otherUser = props.chat.users.find((u) => u.userId !== user.userId);
     }
+    console.log(props.openDialog);
+    
 
     return (
         <DialogContent

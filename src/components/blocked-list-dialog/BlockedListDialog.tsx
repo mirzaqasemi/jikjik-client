@@ -13,6 +13,7 @@ import { LoaderCircle, UserRoundCheck } from "lucide-react";
 import { Button } from "../ui/button";
 import { ScrollArea } from "../ui/scroll-area";
 import UserInfo from "../user-info/UserInfo.tsx";
+import { useUnblockUser } from "@/hooks/useUnblockUser.ts";
 type Props = {
     // onCloseRequest is called to request closing the dialog,
     // which means, the open prop should be set to false
@@ -21,7 +22,6 @@ type Props = {
 }
 
 export default function BlockedListDialog(props: Props) {
-    const queryClient = useQueryClient();
     const rawUser = session.getUser();
     if (rawUser === null) {
         throw new Error("User not authenticated");
@@ -37,11 +37,7 @@ export default function BlockedListDialog(props: Props) {
         queryFn: () => backend.getBlockedUsers(),
         enabled: props.open,
     });
-
-    const unblockMutation = useMutation({
-        mutationFn: (userId: string) => backend.unblockUser(userId),
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["blockedUsers", user?.userId] })
-    });
+    const unblockUser = useUnblockUser();
 
     return (
         <Dialog
@@ -81,21 +77,21 @@ export default function BlockedListDialog(props: Props) {
                     ) : (
                         <ScrollArea className="max-h-72">
                             <div className="flex flex-col">
-                                {blockedUsers.map((user) => (
+                                {blockedUsers.map((blockedUser) => (
                                     <div
-                                        key={user.userId}
+                                        key={blockedUser.userId}
                                         dir="ltr"
                                         className="flex items-center gap-3 border-b border-border py-3 last:border-b-0"
                                     >
-                                        <UserInfo user={user} title={user.displayName} description={user.userId} />
+                                        <UserInfo user={blockedUser} title={blockedUser.displayName} description={blockedUser.userId} />
 
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            disabled={unblockMutation.isPending}
-                                            onClick={() => unblockMutation.mutate(user.userId)}
+                                            disabled={unblockUser.isPending}
+                                            onClick={() => unblockUser.mutate(blockedUser.userId)}
                                         >
-                                            {unblockMutation.isPending ? (
+                                            {unblockUser.isPending && unblockUser.variables === blockedUser.userId ? (
                                                 <LoaderCircle className="size-4 animate-spin" />
                                             ) : (
                                                 <UserRoundCheck className="size-4" />

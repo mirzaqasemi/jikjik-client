@@ -1,20 +1,25 @@
 import { Spinner } from "@/components/ui/spinner.tsx";
+import { useIsUserBlocked } from "@/hooks/useIsUserBlocked.ts";
 import type { PendingMessage } from "@/models/pending-message";
 import { CHATS_ROUTE } from "@/router.tsx";
 import { subscribeChatChanged } from "@/services/backend-event.ts";
+import * as backend from "@/services/backend.ts";
 import { DraftStorage } from "@/services/draft-storage.ts";
 import { PendingMessageStorage } from "@/services/pending-message-storage.ts";
+import * as session from '@/services/session.ts';
 import { normalizeError } from "@/utilities/normalized-error.ts";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { useLoaderData, useNavigate, useParams, useRevalidator } from 'react-router-dom';
-import * as backend from "../../services/backend.ts";
-import * as session from '../../services/session.ts';
 import { AlertDestructive } from "../alert-destructive/AlertDestructive.tsx";
-import './Chat.css';
 import Header from "./header/Header.tsx";
 import MessageInput from "./message-input/MessageInput.tsx";
 import Message from "./message/Message.tsx";
+import { LoaderCircle, UserRoundCheck } from "lucide-react";
+import ChatActionButton from "./chat-details-dialog/chat-action-button/ChatActionButton.tsx";
+import { useUnblockUser } from "@/hooks/useUnblockUser.ts";
+import './Chat.css';
+import { Button } from "../ui/button.tsx";
 
 export default function Chat() {
     const revalidator = useRevalidator();
@@ -26,14 +31,21 @@ export default function Chat() {
     if (rawUser === null) {
         throw new Error("User not authenticated");
     }
-    const user = rawUser;
+    const currentUser = rawUser;
 
     if (params.chatId === undefined) {
         throw new Error("Missing chatId");
     }
     const chatId = params.chatId;
     const pendingMessages = PendingMessageStorage.usePendingMsgs(chatId);
-
+    const otherUserId = chat.isDm
+        ? chat.users.find((user) => user.userId != currentUser.userId)?.userId
+        : undefined;
+    const {
+        data: isBlocked,
+        isPending
+    } = useIsUserBlocked(otherUserId);
+    const unblockUser = useUnblockUser();
     const {
         data: serverMessages = [], // Rename "data" to "serverMessages" 
         isLoading,
@@ -191,7 +203,7 @@ export default function Chat() {
                         return (
                             <Message
                                 key={serverMsg.eventId}
-                                currentUser={user}
+                                currentUser={currentUser}
                                 chat={chat}
                                 message={message}
                                 status="success"
@@ -210,7 +222,7 @@ export default function Chat() {
                             return (
                                 <Message
                                     key={pendingMsg.transactionId}
-                                    currentUser={user}
+                                    currentUser={currentUser}
                                     chat={chat}
                                     message={message}
                                     status="error"
@@ -221,7 +233,7 @@ export default function Chat() {
                         return (
                             <Message
                                 key={pendingMsg.transactionId}
-                                currentUser={user}
+                                currentUser={currentUser}
                                 chat={chat}
                                 message={message}
                                 status="pending"
@@ -233,7 +245,24 @@ export default function Chat() {
             }
 
             {/* <!-- Bottom: Input Section --> */}
-            <MessageInput sendMessage={sendMessage} disabled={false} />
+            {/* wait until determine if otherUser is blocked or not */}
+            {chat.isDm && isPending ? (
+                <LoaderCircle className="size-5 animate-spin" />
+            ) : chat.isDm && isBlocked ? (
+                <div className="flex justify-center bg-background border-t h-12!">
+                    <Button
+                        variant="ghost"
+                        disabled={unblockUser.isPending}
+                        onClick={() => unblockUser.mutate(otherUserId!)}
+                        className="w-full h-full rounded-none text-destructive border-0! hover:text-destructive"
+                    >
+                        UNBLOCK
+                    </Button>
+                </div>
+
+            ) : (
+                <MessageInput sendMessage={sendMessage} disabled={false} />
+            )}
         </div>
     );
 }

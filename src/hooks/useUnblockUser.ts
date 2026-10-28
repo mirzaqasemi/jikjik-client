@@ -1,12 +1,17 @@
-import { useMutation } from "@tanstack/react-query";
 import * as backend from "@/services/backend";
+import * as session from '@/services/session.ts';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-export function useUnblockUser() {
+export function useUnblockUser() {    
+    const queryClient = useQueryClient();
     return useMutation({
         mutationFn: (userId: string) => backend.unblockUser(userId),
-        
-        onError: (err) => {
-            console.error("failed to unblock this user", err.message);
+        onSuccess: (_data, userId) => {
+            //setQueryData causes cache updates without fetching
+            queryClient.setQueryData(["isUserBlocked", userId], false);
+            queryClient.invalidateQueries({
+                queryKey: ["blockedUsers", session.getUser()?.userId]
+            })
         }
     });
 }
