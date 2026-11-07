@@ -1,24 +1,31 @@
+import type { RoomFormLabel } from "@/models/room-form";
 import { Camera } from "lucide-react";
-import type { RoomFormLabel } from "../chat/chat-details-dialog/group-details-body/edit-group-dialog/EditGroupDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Field, FieldGroup, FieldLabel, FieldSet } from "../ui/field";
+import { Field, FieldDescription, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "../ui/field";
 import { Input } from "../ui/input";
 
 type Props = {
     formTitle?: string;
     formLabel?: RoomFormLabel,
+    initialValues?: {
+        title?: string,
+        description?: string,
+        avatar?: string | null
+    },
 }
 
 export default function RoomDetailsFields(props: Props) {
     return (
 
         <FieldSet>
+            <FieldLegend>{props.formTitle}</FieldLegend>
+              <FieldDescription></FieldDescription>
             <FieldGroup className="flex flex-row">
                 {/* Group/Channel avatar */}
                 <Field className="w-auto shrink-0">
                     <label htmlFor="group-avatar" className="cursor-pointer">
                         <Avatar className="size-18">
-                            <AvatarImage />
+                            <AvatarImage src={props.initialValues?.avatar ?? undefined} />
                             <AvatarFallback className="bg-chart-3">
                                 <Camera className="stroke-white" />
                             </AvatarFallback>
@@ -27,6 +34,7 @@ export default function RoomDetailsFields(props: Props) {
                     <Input
                         id="group-avatar"
                         type="file"
+                        name="avatar"
                         accept="image/*"
                         className="hidden"
                     />
@@ -34,8 +42,14 @@ export default function RoomDetailsFields(props: Props) {
 
                 {/* Group/Channel name */}
                 <Field className="min-w-0 flex-1">
-                    <FieldLabel htmlFor="title">{props.formLabel?.title}</FieldLabel>
-                    <Input id="title" name="title" type="text" placeholder="" required />
+                    <FieldLabel htmlFor="title" className="text-muted-foreground">{props.formLabel?.title}</FieldLabel>
+                    <Input
+                        id="title"
+                        name="title"
+                        type="text"
+                        placeholder="" required
+                        defaultValue={props.initialValues?.title ?? ""}
+                    />
                 </Field>
             </FieldGroup>
 
@@ -47,7 +61,8 @@ export default function RoomDetailsFields(props: Props) {
                         name="description"
                         type="text"
                         placeholder={props.formLabel?.description}
-                        className="placeholder:text-ring placeholder:font-light border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
+                        defaultValue={props.initialValues?.description ?? ""}
+                        className="placeholder:text-muted-foreground placeholder:font-light"
                     />
                 </Field>
 

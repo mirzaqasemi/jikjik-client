@@ -1,5 +1,6 @@
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { useIsUserBlocked } from "@/hooks/useIsUserBlocked.ts";
+import { useUnblockUser } from "@/hooks/useUnblockUser.ts";
 import type { PendingMessage } from "@/models/pending-message";
 import { CHATS_ROUTE } from "@/router.tsx";
 import { subscribeChatChanged } from "@/services/backend-event.ts";
@@ -9,17 +10,15 @@ import { PendingMessageStorage } from "@/services/pending-message-storage.ts";
 import * as session from '@/services/session.ts';
 import { normalizeError } from "@/utilities/normalized-error.ts";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { LoaderCircle } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { useLoaderData, useNavigate, useParams, useRevalidator } from 'react-router-dom';
 import { AlertDestructive } from "../alert-destructive/AlertDestructive.tsx";
+import { Button } from "../ui/button.tsx";
+import './Chat.css';
 import Header from "./header/Header.tsx";
 import MessageInput from "./message-input/MessageInput.tsx";
 import Message from "./message/Message.tsx";
-import { LoaderCircle, UserRoundCheck } from "lucide-react";
-import ChatActionButton from "./chat-details-dialog/chat-action-button/ChatActionButton.tsx";
-import { useUnblockUser } from "@/hooks/useUnblockUser.ts";
-import './Chat.css';
-import { Button } from "../ui/button.tsx";
 
 export default function Chat() {
     const revalidator = useRevalidator();

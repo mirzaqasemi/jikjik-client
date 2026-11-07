@@ -17,6 +17,7 @@ type Props = {
 export default function Header(props: Props) {
     const chatTitle = utilities.getTitle(props.chat);
     const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+    
     return (
         <>
             {/* <!-- Top: Header Section --> */}

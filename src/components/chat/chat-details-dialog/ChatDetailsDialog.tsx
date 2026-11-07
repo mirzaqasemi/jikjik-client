@@ -23,8 +23,6 @@ export default function ChatDetailsDialog(props: Props) {
     if (props.chat.isDm) {
         otherUser = props.chat.users.find((u) => u.userId !== user.userId);
     }
-    console.log(props.openDialog);
-    
 
     return (
         <DialogContent
@@ -36,9 +34,9 @@ export default function ChatDetailsDialog(props: Props) {
                 description={props.chat.isDm ? "last seen recently" : `${props.chat.users.length} members`}
             />
             {props.chat.isDm ?
-                <DmDetailsBody otherUser={otherUser!} onCloseRequest={props.onCloseRequest}/>
+                <DmDetailsBody otherUser={otherUser!} onCloseRequest={props.onCloseRequest} />
                 : <>
-                    <GroupDetailsBody users={props.chat.users} chatTitle={chatTitle} chatAvatar={props.chat.avatarUrl} chatId={props.chat.id} />
+                    <GroupDetailsBody users={props.chat.users} chat={props.chat} />
                 </>
             }
         </DialogContent>

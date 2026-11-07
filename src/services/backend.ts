@@ -363,6 +363,20 @@ function userFromProfile(userId: string, profile: { avatar_url?: string; display
     });
 }
 
+/** Upload an image to the Matrix media server and return its MXC URI. */
+export async function uploadAvatar(file: File): Promise<string> {
+    return (await getClient().uploadContent(file)).content_uri;
+}
+
+/** Set the current user's profile avatar on Matrix. */
+export async function setUserAvatar(avatarUrl: string): Promise<void> {
+    await getClient().setAvatarUrl(avatarUrl);
+}
+
+export async function setGroupAvatar(chatId: string, avatarUrl: string): Promise<void> {
+    await getClient().sendStateEvent(chatId, EventType.RoomAvatar, { url: avatarUrl })
+}
+
 function messageFromEvent(event: MatrixEvent, roomUsers: User[]): Message | null {
     const content = event.getContent();
     if (event.getType() !== TEXT_MESSAGE_EVENT_TYPE || content.msgtype !== MsgType.Text || !content.body) {
@@ -814,6 +828,11 @@ export async function inviteUsers(chatId: string, userIds: string[]): Promise<vo
 /** Update a group's room name. Requires sufficient Matrix room permissions. */
 export async function updateGroupName(chatId: string, name: string): Promise<void> {
     await getClient().setRoomName(chatId, name);
+}
+
+/** Update a group's room description. Requires sufficient Matrix room permissions. */
+export async function updateGroupDescription(chatId: string, description: string): Promise<void> {
+    await getClient().setRoomTopic(chatId, description);
 }
 
 //TODO handle not found error
