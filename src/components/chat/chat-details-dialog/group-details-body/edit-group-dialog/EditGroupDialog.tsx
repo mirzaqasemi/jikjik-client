@@ -5,6 +5,7 @@ import type { RoomFormDetails, RoomFormLabel } from "@/models/room-form";
 import * as backend from "@/services/backend";
 import { normalizeError } from "@/utilities/normalized-error";
 import { useMutation } from "@tanstack/react-query";
+import { useRef } from "react";
 import { useParams, useRevalidator } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -15,6 +16,7 @@ type Props = {
 }
 
 export default function EditGroupDialog(props: Props) {
+    const shouldRevalidateOnClose = useRef(false);
     const revalidator = useRevalidator();
     const params = useParams<{ chatId: string }>();
     if (params.chatId === undefined) {
@@ -27,8 +29,6 @@ export default function EditGroupDialog(props: Props) {
     }
 
     function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
-        console.log(event);
-
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
         const title = String(formData.get("title")).trim();
@@ -54,8 +54,8 @@ export default function EditGroupDialog(props: Props) {
             }
         },
         onSuccess: () => {
+            shouldRevalidateOnClose.current = true;
             props.onCloseRequest();
-            revalidator.revalidate();
         },
         onError: (err) => {
             toast(normalizeError(err).message);
@@ -63,13 +63,21 @@ export default function EditGroupDialog(props: Props) {
     });
 
     return (
-        <Dialog open={props.open} onOpenChange={() => {
-            if (!open && !editGroupMutation.isPending) {
+        <Dialog open={props.open} onOpenChange={(nextOpen) => {
+            if (!nextOpen && !editGroupMutation.isPending) {
                 props.onCloseRequest();
             }
         }}>
             <DialogHeader />
-            <DialogContent slot="edit-group-dialog" showCloseButton={false} className="max-w-full md:max-w-94!">
+            <DialogContent
+                slot="edit-group-dialog"
+                onCloseAutoFocus={() => {
+                    if (!shouldRevalidateOnClose.current) return;
+                    shouldRevalidateOnClose.current = false;
+                    revalidator.revalidate();
+                }}
+                showCloseButton={false}
+                className="max-w-full md:max-w-94!">
                 <DialogTitle />
                 <form className="w-full items-center" onSubmit={handleSubmit}>
 
@@ -83,8 +91,18 @@ export default function EditGroupDialog(props: Props) {
                         }} />
 
                     <DialogFooter className="grid grid-cols-4 mt-5">
-                        <Button className="col-start-3" variant="outline" onClick={() => props.onCloseRequest()}>Cancel</Button>
-                        <Button type="submit" className="col-start-4">Save</Button>
+                        <Button
+                            type="button"
+                            disabled={editGroupMutation.isPending}
+                            className="col-start-3"
+                            variant="outline"
+                            onClick={() => props.onCloseRequest()}>Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            disabled={editGroupMutation.isPending}
+                            className="col-start-4">Save
+                        </Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
