@@ -40,7 +40,11 @@ export default function GroupActions(props: Props) {
                         setIsEditOpen(true)
                     }}
                 />
-                <ChatActionButton title="Leave" icon={LogOut} onClick={() => setIsLeaveOpen(true)} />
+                <ChatActionButton
+                    title="Leave"
+                    icon={LogOut}
+                    onClick={() => setIsLeaveOpen(true)}
+                />
             </div>
             <EditGroupDialog open={isEditOpen} onCloseRequest={() => setIsEditOpen(false)} chat={props.chat} />
             <ConfirmationDialog

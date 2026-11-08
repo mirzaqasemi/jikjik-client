@@ -52,11 +52,6 @@ export default function Header(props: Props) {
                         onCloseRequest={() => setIsDetailsDialogOpen(false)}
                     />
                 </Dialog>
-
-                {/* <!-- Right Side: Three Dots (Kebab Menu) --> */}
-                <button className="flex icon-btn more-options-btn" aria-label="More options">
-                    <EllipsisVertical className="w-5 h-5 stroke-muted-foreground" />
-                </button>
             </div>
         </>
     );

@@ -77,7 +77,7 @@ export default function EditGroupDialog(props: Props) {
                     revalidator.revalidate();
                 }}
                 showCloseButton={false}
-                className="max-w-full md:max-w-94!">
+                className=" max-w-sm md:max-w-100!">
                 <DialogTitle />
                 <form className="w-full items-center" onSubmit={handleSubmit}>
 

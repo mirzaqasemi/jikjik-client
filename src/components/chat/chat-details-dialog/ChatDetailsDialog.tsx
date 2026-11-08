@@ -27,7 +27,7 @@ export default function ChatDetailsDialog(props: Props) {
     return (
         <DialogContent
             slot="chat-details-dialog"
-            className="flex flex-col pb-0 gap-0! h-130! max-h-150! max-w-full md:max-w-100!">
+            className="flex flex-col pb-0 gap-0! h-130! max-h-150! max-w-sm md:max-w-100!">
             <ChatDetailsHeader
                 title={chatTitle}
                 avatarUrl={props.chat.avatarUrl || undefined}
