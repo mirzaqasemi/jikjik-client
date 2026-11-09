@@ -35,7 +35,7 @@ export default function GroupDetailsBody(props: Props) {
                 </Item>
             }
             {/* Members List */}
-            <div className="flex flex-col -mx-6 my-4 overflow-y-auto">
+            <div className="flex flex-col -mx-6 my-2">
                 <div className="flex flex-col px-5 lg:py-4 gap-2.5">
                     <div className="flex items-center">
                         <div className="w-12">

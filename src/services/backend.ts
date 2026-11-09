@@ -368,6 +368,23 @@ export async function uploadAvatar(file: File): Promise<string> {
     return (await getClient().uploadContent(file)).content_uri;
 }
 
+export async function resolveMediaUrl(mediaUri: string | null): Promise<string | null> {
+    if (!mediaUri) return null;
+    if (!mediaUri.startsWith("mxc://")) return mediaUri;
+    const token = session.getMatrixSession()?.accessToken;
+    const url = getClient().mxcUrlToHttp(mediaUri);
+
+    if (!token || !url) return null;
+
+    const response = await fetch(url, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    if (!response.ok) return null;
+    return URL.createObjectURL(await response.blob())
+}
+
 /** Set the current user's profile avatar on Matrix. */
 export async function setUserAvatar(avatarUrl: string): Promise<void> {
     await getClient().setAvatarUrl(avatarUrl);

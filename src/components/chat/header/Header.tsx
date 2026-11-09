@@ -3,12 +3,12 @@ import {
     DialogTrigger
 } from "@/components/ui/dialog";
 import * as utilities from "@/utilities/utilities.ts";
-import { ArrowLeft, EllipsisVertical } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import * as backend from "../../../services/backend.ts";
 import ChatDetailsDialog from "../chat-details-dialog/ChatDetailsDialog.tsx";
 import "./Header.css";
-import { useState } from "react";
 
 type Props = {
     chat: backend.Chat;

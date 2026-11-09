@@ -27,7 +27,7 @@ export default function ChatDetailsDialog(props: Props) {
     return (
         <DialogContent
             slot="chat-details-dialog"
-            className="flex flex-col pb-0 gap-0! h-130! max-h-150! max-w-sm md:max-w-100!">
+            className="flex max-h-[calc(100dvh-4rem)] overflow-y-auto flex-col pb-0 gap-0! max-w-xs md:max-w-100!">
             <ChatDetailsHeader
                 title={chatTitle}
                 avatarUrl={props.chat.avatarUrl || undefined}
@@ -35,9 +35,8 @@ export default function ChatDetailsDialog(props: Props) {
             />
             {props.chat.isDm ?
                 <DmDetailsBody otherUser={otherUser!} onCloseRequest={props.onCloseRequest} />
-                : <>
-                    <GroupDetailsBody users={props.chat.users} chat={props.chat} />
-                </>
+                : <GroupDetailsBody users={props.chat.users} chat={props.chat} />
+
             }
         </DialogContent>
     );

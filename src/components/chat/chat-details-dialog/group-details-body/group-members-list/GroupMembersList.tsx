@@ -7,16 +7,20 @@ type Props = {
 
 export default function GroupMembersList(props: Props) {
     return (
-        <div className='flex flex-col gap-2'>
-            {props.users.map((user, index) => (
-                <>
-                    <div className="flex" key={index}>
+        <ul className='flex flex-col gap-2'>
+            {props.users.map((user) => (
+                <li className="flex flex-col last:[&>.separator]:hidden" key={user.userId}>
+                    <div className="flex gap-4">
                         <div className="relative h-12 w-12 shrink-0">
-                            <img src="https://i.pravatar.cc/150?img=11" alt="David" className="h-full w-full rounded-full object-cover" />
+                            <img
+                                src="https://i.pravatar.cc/150?img=11"
+                                alt=""
+                                className="h-full w-full rounded-full object-cover" />
                         </div>
-                        <div className="flex flex-col gap-0.4 ml-4 truncate">
-                            <div className="font-medium">{user.displayName}</div>
-                            <span className="text-muted-foreground">
+
+                        <div className="min-w-0 flex-1">
+                            <p className="truncate font-medium">{user.displayName}</p>
+                            <p className="truncate text-sm text-muted-foreground">
                                 {
                                     user.membership === "invite" ?
                                         "Invited . Waiting to join"
@@ -24,14 +28,15 @@ export default function GroupMembersList(props: Props) {
                                             ? "last seen recently"
                                             : ""
                                 }
-                            </span>
+                            </p>
                         </div>
                     </div>
-                    <div className="ms-16 last:hidden">
+
+                    <div className="separator ms-16 mt-2">
                         <Separator />
                     </div>
-                </>
+                </li>
             ))}
-        </div>
+        </ul>
     );
 }

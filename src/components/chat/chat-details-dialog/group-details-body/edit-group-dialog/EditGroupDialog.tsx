@@ -49,8 +49,8 @@ export default function EditGroupDialog(props: Props) {
                 await backend.updateGroupDescription(chatId, params.description);
             }
             if (params.avatar !== undefined) {
-                const avatarUrl = await backend.uploadAvatar(params.avatar);
-                await backend.setGroupAvatar(chatId, avatarUrl);
+                const mxcUri = await backend.uploadAvatar(params.avatar);
+                await backend.setGroupAvatar(chatId, mxcUri);
             }
         },
         onSuccess: () => {
@@ -71,13 +71,14 @@ export default function EditGroupDialog(props: Props) {
             <DialogHeader />
             <DialogContent
                 slot="edit-group-dialog"
+                showCloseButton={false}
+                className=" max-w-sm md:max-w-100!"
                 onCloseAutoFocus={() => {
                     if (!shouldRevalidateOnClose.current) return;
                     shouldRevalidateOnClose.current = false;
                     revalidator.revalidate();
                 }}
-                showCloseButton={false}
-                className=" max-w-sm md:max-w-100!">
+            >
                 <DialogTitle />
                 <form className="w-full items-center" onSubmit={handleSubmit}>
 

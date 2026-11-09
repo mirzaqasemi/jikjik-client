@@ -23,12 +23,12 @@ export default function ChatActionButton({
     return (
         <>
             <Button disabled={disabled} size="sm" variant="ghost" className="flex flex-1 p-0 w-full h-full" onClick={onClick}>
-                <Item variant="muted" className="flex flex-col gap-1 px-5 border-0">
+                <Item variant="muted" className="flex flex-col py-2 gap-1 px-5 border-0">
                     <ItemMedia variant="icon">
-                        <Icon className="size-6 stroke-2" strokeLinecap="round" />
+                        <Icon className="size-5 stroke-2" strokeLinecap="round" />
                     </ItemMedia>
                     <ItemContent>
-                        <ItemTitle className="font-normal text-[12px]">{title}</ItemTitle>
+                        <ItemTitle className="font-normal text-[11px]">{title}</ItemTitle>
                     </ItemContent>
                 </Item>
             </Button>

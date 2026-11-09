@@ -3,6 +3,8 @@ import { Camera } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Field, FieldDescription, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "../ui/field";
 import { Input } from "../ui/input";
+import * as backend from "@/services/backend";
+import { useState } from "react";
 
 type Props = {
     formTitle?: string;
@@ -10,22 +12,22 @@ type Props = {
     initialValues?: {
         title?: string,
         description?: string,
-        avatar?: string | null
+        avatar?: string | null // string: avatar URL // null: explicitly set to no avatar // undefined: no avatar value was provided
     },
 }
 
 export default function RoomDetailsFields(props: Props) {
+    const [previewUrl, setPreviewUrl] = useState("");
     return (
-
         <FieldSet>
             <FieldLegend>{props.formTitle}</FieldLegend>
-              <FieldDescription></FieldDescription>
+            <FieldDescription></FieldDescription>
             <FieldGroup className="flex flex-row">
                 {/* Group/Channel avatar */}
                 <Field className="w-auto shrink-0">
                     <label htmlFor="group-avatar" className="cursor-pointer">
                         <Avatar className="size-18">
-                            <AvatarImage src={props.initialValues?.avatar ?? undefined} />
+                            <AvatarImage src={previewUrl} />
                             <AvatarFallback className="bg-chart-3">
                                 <Camera className="stroke-white" />
                             </AvatarFallback>
@@ -37,6 +39,12 @@ export default function RoomDetailsFields(props: Props) {
                         name="avatar"
                         accept="image/*"
                         className="hidden"
+                        onChange={(e) => {
+                            const file = e.currentTarget.files?.[0];
+                            if (file) {
+                                setPreviewUrl(URL.createObjectURL(file));
+                            }
+                        }}
                     />
                 </Field>
 
