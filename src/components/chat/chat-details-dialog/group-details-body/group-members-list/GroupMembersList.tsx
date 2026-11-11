@@ -1,3 +1,4 @@
+import MediaAvatar from '@/components/media-avatar/MediaAvatar';
 import { Separator } from '@/components/ui/separator';
 import * as backend from '@/services/backend';
 
@@ -11,13 +12,7 @@ export default function GroupMembersList(props: Props) {
             {props.users.map((user) => (
                 <li className="flex flex-col last:[&>.separator]:hidden" key={user.userId}>
                     <div className="flex gap-4">
-                        <div className="relative h-12 w-12 shrink-0">
-                            <img
-                                src="https://i.pravatar.cc/150?img=11"
-                                alt=""
-                                className="h-full w-full rounded-full object-cover" />
-                        </div>
-
+                        <MediaAvatar avatarUrl={user.avatarUrl} size='size-10' name={user.displayName}/>
                         <div className="min-w-0 flex-1">
                             <p className="truncate font-medium">{user.displayName}</p>
                             <p className="truncate text-sm text-muted-foreground">

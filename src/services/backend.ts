@@ -372,10 +372,12 @@ export async function resolveMediaUrl(mediaUri: string | null): Promise<string |
     if (!mediaUri) return null;
     if (!mediaUri.startsWith("mxc://")) return mediaUri;
     const token = session.getMatrixSession()?.accessToken;
-    const url = getClient().mxcUrlToHttp(mediaUri);
+    // Convert the MXC URI to a Matrix download URL.
+    const url = getClient().mxcUrlToHttp(mediaUri, undefined, undefined, undefined, undefined, undefined, true);
 
     if (!token || !url) return null;
 
+    // Download the media using the current Matrix session's access token.
     const response = await fetch(url, {
         headers: {
             Authorization: `Bearer ${token}`,

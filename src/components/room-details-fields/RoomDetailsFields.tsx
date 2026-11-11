@@ -4,7 +4,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Field, FieldDescription, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "../ui/field";
 import { Input } from "../ui/input";
 import * as backend from "@/services/backend";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useMediaUrl } from "@/hooks/useMediaUrl";
 
 type Props = {
     formTitle?: string;
@@ -17,7 +18,9 @@ type Props = {
 }
 
 export default function RoomDetailsFields(props: Props) {
-    const [previewUrl, setPreviewUrl] = useState("");
+    const mediaUrl = useMediaUrl(props.initialValues?.avatar);
+    const [previewUrl, setPreviewUrl] = useState<string | undefined>(undefined);
+
     return (
         <FieldSet>
             <FieldLegend>{props.formTitle}</FieldLegend>
@@ -27,7 +30,7 @@ export default function RoomDetailsFields(props: Props) {
                 <Field className="w-auto shrink-0">
                     <label htmlFor="group-avatar" className="cursor-pointer">
                         <Avatar className="size-18">
-                            <AvatarImage src={previewUrl} />
+                            <AvatarImage src={previewUrl ?? mediaUrl} />
                             <AvatarFallback className="bg-chart-3">
                                 <Camera className="stroke-white" />
                             </AvatarFallback>

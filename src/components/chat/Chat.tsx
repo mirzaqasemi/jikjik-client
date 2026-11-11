@@ -63,7 +63,7 @@ export default function Chat() {
                 navigate(CHATS_ROUTE);
             } else if (e.type === "messagesChanged") {
                 refetch();
-            } else if ((e.type === "roomChanged" && e.roomChange.type === "name") || e.type === "usersChanged") {
+            } else if (e.type === "roomChanged") {
                 // manually re-run the active route loaders
                 revalidator.revalidate();
             }

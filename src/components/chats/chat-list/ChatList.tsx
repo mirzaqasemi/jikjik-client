@@ -1,4 +1,5 @@
 import ConfirmationDialog from "@/components/confirmation-dialog/ConfirmationDialog";
+import MediaAvatar from "@/components/media-avatar/MediaAvatar";
 import {
     ContextMenu,
     ContextMenuContent,
@@ -25,7 +26,6 @@ type Params = {
 
 export default function ChatList(params: Params) {
     const [chatToDelete, setChatToDelete] = useState<backend.Chat | null>(null);
-
     const deleteChatMutation = useMutation({
         mutationFn: (params: { chatId: string }) => backend.deleteRoom(params.chatId),
         onSuccess: () => {
@@ -52,10 +52,9 @@ export default function ChatList(params: Params) {
                         {/* ContextMenuTrigger: detects right-click or long-press */}
                         <ContextMenuTrigger asChild>
                             <button onClick={() => params.onSelect(chat)} key={chat.id} className="flex m-auto h-fit items-center w-full chat-item select-none">
-                                <div className="relative h-10 w-10 shrink-0">
-                                    <img src="https://i.pravatar.cc/150?img=11" alt="David" className="h-full w-full rounded-full object-cover" />
+                                <MediaAvatar avatarUrl={chat.avatarUrl} size="size-10" name={chat.title}>
                                     <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-chart-2  border-2 border-white" aria-label="Online" />
-                                </div>
+                                </MediaAvatar>
                                 <div className="flex-1 ml-3 truncate chat-info">
                                     <div className="flex label-row">
                                         <div className="chat-name">{chat.title}</div>
@@ -91,7 +90,7 @@ export default function ChatList(params: Params) {
             {/* Shared confirmation dialog */}
 
             <ConfirmationDialog title={"Delete chat?"} confirmAction="Delete" rejectAction="Cancel" description={`This will permanently delete this chat conversation. Are you sure you want to delete chat with ${chatToDelete?.title}?`}
-                open={chatToDelete != null} loading={deleteChatMutation.isPending} onConfirm={deleteChat} onClose={() => setChatToDelete(null)} icon={ <Trash2Icon />}/>
+                open={chatToDelete != null} loading={deleteChatMutation.isPending} onConfirm={deleteChat} onClose={() => setChatToDelete(null)} icon={<Trash2Icon />} />
 
         </div>
     );

@@ -9,6 +9,7 @@ import { Link } from "react-router-dom";
 import * as backend from "../../../services/backend.ts";
 import ChatDetailsDialog from "../chat-details-dialog/ChatDetailsDialog.tsx";
 import "./Header.css";
+import MediaAvatar from "@/components/media-avatar/MediaAvatar.tsx";
 
 type Props = {
     chat: backend.Chat;
@@ -17,7 +18,7 @@ type Props = {
 export default function Header(props: Props) {
     const chatTitle = utilities.getTitle(props.chat);
     const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
-    
+
     return (
         <>
             {/* <!-- Top: Header Section --> */}
@@ -30,16 +31,15 @@ export default function Header(props: Props) {
                     <DialogTrigger asChild className="flex w-full">
                         <button type="button" onClick={() => setIsDetailsDialogOpen(true)}>
                             {/* Chat header content */}
-                            <div className="flex gap-2.5">
+                            <div className="flex items-center gap-2.5">
                                 <Link to={"../"} className="lg:hidden flex justify-center items-center btn-back w-10 h-10 rounded-full">
                                     <ArrowLeft strokeWidth={"1.5"} />
                                 </Link>
                                 <div className="flex gap-3 items-center">
-                                    <div className="avatar-container">
-                                        <img src="https://i.pravatar.cc/150?img=32" alt="" className="size-11 rounded-full lg:hidden" />
-                                    </div>
-                                    <div className="flex flex-col items-start user-details">
-                                        <span className="user-name">{chatTitle}</span>
+                                    <MediaAvatar avatarUrl={props.chat.avatarUrl} size="size-13" name={props.chat.title}>
+                                    </MediaAvatar>
+                                    <div className="flex flex-col min-w-0 flex-1 items-start user-details">
+                                        <span className="font-medium truncate">{chatTitle}</span>
                                         {props.chat.isDm && <span className="font-normal text-[12px] text-muted-foreground">Online</span>}
                                     </div>
                                 </div>

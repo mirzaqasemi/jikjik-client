@@ -5,8 +5,7 @@ import type { RoomFormDetails, RoomFormLabel } from "@/models/room-form";
 import * as backend from "@/services/backend";
 import { normalizeError } from "@/utilities/normalized-error";
 import { useMutation } from "@tanstack/react-query";
-import { useRef } from "react";
-import { useParams, useRevalidator } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { toast } from "sonner";
 
 type Props = {
@@ -16,8 +15,6 @@ type Props = {
 }
 
 export default function EditGroupDialog(props: Props) {
-    const shouldRevalidateOnClose = useRef(false);
-    const revalidator = useRevalidator();
     const params = useParams<{ chatId: string }>();
     if (params.chatId === undefined) {
         throw new Error("Missing chatId");
@@ -54,7 +51,6 @@ export default function EditGroupDialog(props: Props) {
             }
         },
         onSuccess: () => {
-            shouldRevalidateOnClose.current = true;
             props.onCloseRequest();
         },
         onError: (err) => {
@@ -73,11 +69,6 @@ export default function EditGroupDialog(props: Props) {
                 slot="edit-group-dialog"
                 showCloseButton={false}
                 className=" max-w-sm md:max-w-100!"
-                onCloseAutoFocus={() => {
-                    if (!shouldRevalidateOnClose.current) return;
-                    shouldRevalidateOnClose.current = false;
-                    revalidator.revalidate();
-                }}
             >
                 <DialogTitle />
                 <form className="w-full items-center" onSubmit={handleSubmit}>

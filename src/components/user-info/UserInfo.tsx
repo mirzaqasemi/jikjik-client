@@ -1,29 +1,25 @@
+import MediaAvatar from "../media-avatar/MediaAvatar";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import * as backend from "@/services/backend";
 
-type Params = {
+type Props = {
     user: backend.User;
     title: string;
     description: string
 }
 
-export default function UserInfo(params: Params) {
+export default function UserInfo(props: Props) {
 
     return (
         <>
-            <Avatar className="size-10 shrink-0">
-                <AvatarFallback>
-                    {params.user.displayName?.charAt(0).toUpperCase() ||
-                        params.user.userId.charAt(0).toUpperCase()}
-                </AvatarFallback>
-            </Avatar>
+            <MediaAvatar avatarUrl={props.user.avatarUrl} size="size-10" name={props.user.displayName}/>
 
             <div className="min-w-0 flex-1 text-left">
                 <p className="truncate text-sm font-medium">
-                    {params.title}
+                    {props.title}
                 </p>
                 <p className="truncate text-xs text-muted-foreground">
-                    {params.description}
+                    {props.description}
                 </p>
             </div>
         </>
