@@ -1,11 +1,10 @@
+import { useMediaUrl } from "@/hooks/useMediaUrl";
 import type { RoomFormLabel } from "@/models/room-form";
 import { Camera } from "lucide-react";
+import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Field, FieldDescription, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "../ui/field";
 import { Input } from "../ui/input";
-import * as backend from "@/services/backend";
-import { useEffect, useState } from "react";
-import { useMediaUrl } from "@/hooks/useMediaUrl";
 
 type Props = {
     formTitle?: string;

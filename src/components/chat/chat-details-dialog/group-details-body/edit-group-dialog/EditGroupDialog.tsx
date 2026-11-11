@@ -29,10 +29,14 @@ export default function EditGroupDialog(props: Props) {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
         const title = String(formData.get("title")).trim();
-        const avatar = formData.get("avatar");
-        const avatarFile = (avatar instanceof File) ? avatar : undefined;
         const description = String(formData.get("description"));
-        editGroupMutation.mutate({ title, avatar: avatarFile, description })
+        
+        const avatar = formData.get("avatar");
+        const avatarFile = (avatar instanceof File) && avatar.name !== ''
+            ? avatar
+            : undefined;
+        
+            editGroupMutation.mutate({ title, avatar: avatarFile, description })
     }
 
     const editGroupMutation = useMutation({
