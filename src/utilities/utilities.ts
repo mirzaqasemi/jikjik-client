@@ -28,7 +28,7 @@ export function formatDate(date?: Date | null): string {
 }
 
 export function getTitle(chat: backend.Chat): string {
-    const user: backend.User | null = session.getUser();
+    const user: backend.User | null = session.getUserId();
     const currentUserId = user?.userId;
     const users = chat.users;
     const names: string[] = [];

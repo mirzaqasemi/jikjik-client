@@ -40,7 +40,7 @@ export default function RoomDetailsFields(props: Props) {
                         type="file"
                         name="avatar"
                         accept="image/*"
-                        className="hidden"
+                        className="sr-only"
                         onChange={(e) => {
                             const file = e.currentTarget.files?.[0];
                             if (file) {

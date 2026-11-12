@@ -22,7 +22,7 @@ type Props = {
 }
 
 export default function BlockedListDialog(props: Props) {
-    const rawUser = session.getUser();
+    const rawUser = session.getUserId();
     if (rawUser === null) {
         throw new Error("User not authenticated");
     }

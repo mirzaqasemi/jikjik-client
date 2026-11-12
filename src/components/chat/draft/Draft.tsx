@@ -16,7 +16,7 @@ import MessageInput from "../message-input/MessageInput";
 export default function Draft() {
     const [disabled, setDisabled] = useState(false)
     const navigate = useNavigate();
-    const rawUser = session.getUser();
+    const rawUser = session.getUserId();
     const rawContact = DraftStorage.getDraftDm();
     if (rawUser === null) {
         throw new Error("User not found");
@@ -33,7 +33,7 @@ export default function Draft() {
         title: contact?.displayName,
         users: [contact, user],
         lastMsg: null,
-        avatarUrl: contact?.avatarUrl,
+        avatarUrl: contact?.avatarUri,
         canonicalAlias: "",
         creator: "",
         encrypted: false,

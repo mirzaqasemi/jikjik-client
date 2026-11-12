@@ -12,7 +12,7 @@ export default function GroupMembersList(props: Props) {
             {props.users.map((user) => (
                 <li className="flex flex-col last:[&>.separator]:hidden" key={user.userId}>
                     <div className="flex gap-4">
-                        <MediaAvatar avatarUrl={user.avatarUrl} size='size-10' name={user.displayName}/>
+                        <MediaAvatar avatarUri={user.avatarUri} size='size-10' name={user.displayName}/>
                         <div className="min-w-0 flex-1">
                             <p className="truncate font-medium">{user.displayName}</p>
                             <p className="truncate text-sm text-muted-foreground">

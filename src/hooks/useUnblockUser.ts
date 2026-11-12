@@ -10,7 +10,7 @@ export function useUnblockUser() {
             //setQueryData causes cache updates without fetching
             queryClient.setQueryData(["isUserBlocked", userId], false);
             queryClient.invalidateQueries({
-                queryKey: ["blockedUsers", session.getUser()?.userId]
+                queryKey: ["blockedUsers", session.getUserId()?.userId]
             })
         }
     });

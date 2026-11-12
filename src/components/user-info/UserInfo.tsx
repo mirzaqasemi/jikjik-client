@@ -12,7 +12,7 @@ export default function UserInfo(props: Props) {
 
     return (
         <>
-            <MediaAvatar avatarUrl={props.user.avatarUrl} size="size-10" name={props.user.displayName}/>
+            <MediaAvatar avatarUrl={props.user.avatarUri} size="size-10" name={props.user.displayName}/>
 
             <div className="min-w-0 flex-1 text-left">
                 <p className="truncate text-sm font-medium">

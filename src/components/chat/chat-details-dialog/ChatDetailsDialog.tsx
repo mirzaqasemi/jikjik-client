@@ -2,7 +2,7 @@ import { DialogContent } from "@/components/ui/dialog";
 import * as backend from '@/services/backend';
 import * as session from "@/services/session.ts";
 import * as utilities from "@/utilities/utilities.ts";
-import ChatDetailsHeader from "./chat-details-header/ChatDetailsHeader";
+import AvatarDialogHeader from "../../avatar-dialog-header/AvatarDialogHeader";
 import DmDetailsBody from "./dm-details-body/DmDetailsBody";
 import GroupDetailsBody from "./group-details-body/GroupDetailsBody";
 
@@ -14,7 +14,7 @@ type Props = {
 
 export default function ChatDetailsDialog(props: Props) {
     const chatTitle = utilities.getTitle(props.chat);
-    const rawUser = session.getUser();
+    const rawUser = session.getUserId();
     if (rawUser === null) {
         throw new Error("User not authenticated");
     }
@@ -28,15 +28,14 @@ export default function ChatDetailsDialog(props: Props) {
         <DialogContent
             slot="chat-details-dialog"
             className="flex max-h-[calc(100dvh-4rem)] overflow-y-auto flex-col pb-0 gap-0! max-w-xs md:max-w-100!">
-            <ChatDetailsHeader
+            <AvatarDialogHeader
                 title={chatTitle}
-                avatarUrl={props.chat.avatarUrl || undefined}
+                avatarUri={props.chat.avatarUrl || undefined}
                 description={props.chat.isDm ? "last seen recently" : `${props.chat.users.length} members`}
             />
             {props.chat.isDm ?
                 <DmDetailsBody otherUser={otherUser!} onCloseRequest={props.onCloseRequest} />
                 : <GroupDetailsBody users={props.chat.users} chat={props.chat} />
-
             }
         </DialogContent>
     );

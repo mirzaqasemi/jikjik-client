@@ -5,7 +5,7 @@ import {
     DialogTitle
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useSession } from "@/services/session";
+import { useCurrentUserId } from "@/services/session";
 import { normalizeError } from "@/utilities/normalized-error.ts";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -27,7 +27,7 @@ export default function GroupMemberSelector({
 }: Params) {
     const [searchQuery, setSearchQuery] = useState("");
     const debouncedSearchQuery = hooks.useDebounce(searchQuery, 300);
-    const user = useSession();
+    const userId = useCurrentUserId();
 
     const {
         data: contacts,
@@ -36,12 +36,12 @@ export default function GroupMemberSelector({
         isLoading,
         isSuccess,
     } = useQuery({
-        queryKey: ["allContacts", user?.userId, debouncedSearchQuery],
+        queryKey: ["allContacts", userId, debouncedSearchQuery],
         queryFn: async () => {
             const contacts = await backend.searchContacts(debouncedSearchQuery);
             return contacts
         },
-        enabled: user !== null, // Do not run queryFn until user exists.
+        enabled: userId !== null, // Do not run queryFn until user exists.
         retry: 2,
         refetchOnMount: "always"
     });

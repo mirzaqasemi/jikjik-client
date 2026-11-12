@@ -13,7 +13,12 @@ import {
 import { Preset, Visibility } from "matrix-js-sdk/lib/@types/partials";
 import type { ICreateRoomOpts } from "matrix-js-sdk/lib/@types/requests";
 import type { IContent } from "matrix-js-sdk/lib/models/event";
-import { attachBackendEventClient, detachBackendEventClient, subscribeChatChanged } from "./backend-event";
+import {
+    attachBackendEventClient,
+    detachBackendEventClient,
+    notifyCurrentUserProfileChange,
+    subscribeChatChanged,
+} from "./backend-event";
 import { type DirectRooms, findDirectRoomId, getDirectRoomInviter, isDirectRoom, isVisibleRoom, } from "./direct-room";
 import * as session from "./session";
 
@@ -34,7 +39,7 @@ export interface User {
     displayName: string;
 
     /** Matrix avatar MXC URI from profile, user directory, or room membership state. */
-    avatarUrl?: string | null;
+    avatarUri?: string | null;
 
     /** Last known Matrix activity timestamp, derived from presence last_active_ago when available. */
     lastSeen?: Date;
@@ -351,7 +356,7 @@ async function getDirectRooms(): Promise<DirectRooms> {
 function userFromMember(member: RoomMember): User {
     return userFromUserId(member.userId, {
         displayName: member.name || displayNameFromUserId(member.userId),
-        avatarUrl: member.events.member?.getContent().avatar_url,
+        avatarUri: member.events.member?.getContent().avatar_url,
         membership: member.membership,
     });
 }
@@ -359,7 +364,7 @@ function userFromMember(member: RoomMember): User {
 function userFromProfile(userId: string, profile: { avatar_url?: string; displayname?: string }): User {
     return userFromUserId(userId, {
         displayName: profile.displayname || displayNameFromUserId(userId),
-        avatarUrl: profile.avatar_url,
+        avatarUri: profile.avatar_url,
     });
 }
 
@@ -387,9 +392,39 @@ export async function resolveMediaUrl(mediaUri: string | null): Promise<string |
     return URL.createObjectURL(await response.blob())
 }
 
+export interface UserProfileUpdate {
+    displayName?: string;
+    /** Matrix MXC URI, or an empty string to clear the avatar. */
+    avatarUrl?: string;
+}
+
+/** Update the supplied fields on the signed-in user's Matrix profile. */
+export async function updateUserProfile({ displayName, avatarUrl }: UserProfileUpdate): Promise<void> {
+    if (displayName === undefined && avatarUrl === undefined) {
+        return;
+    }
+
+    const userId = session.mustGetUserId();
+    const client = getClient();
+
+    if (displayName !== undefined) {
+        await client.setDisplayName(displayName);
+        notifyCurrentUserProfileChange(client, userId);
+    }
+    if (avatarUrl !== undefined) {
+        await client.setAvatarUrl(avatarUrl);
+        notifyCurrentUserProfileChange(client, userId);
+    }
+}
+
+/** Set the current user's display name on Matrix. */
+export function setUserDisplayName(displayName: string): Promise<void> {
+    return updateUserProfile({ displayName });
+}
+
 /** Set the current user's profile avatar on Matrix. */
-export async function setUserAvatar(avatarUrl: string): Promise<void> {
-    await getClient().setAvatarUrl(avatarUrl);
+export function setUserAvatar(avatarUrl: string): Promise<void> {
+    return updateUserProfile({ avatarUrl });
 }
 
 export async function setGroupAvatar(chatId: string, avatarUrl: string): Promise<void> {
@@ -463,7 +498,7 @@ function chatFromSdkRoom(room: Room): UnclassifiedChat {
 function userFromMemberState(userId: string, content: IContent): User {
     return userFromUserId(userId, {
         displayName: content.displayname || displayNameFromUserId(userId),
-        avatarUrl: content.avatar_url,
+        avatarUri: content.avatar_url,
         membership: content.membership,
     });
 }
@@ -595,7 +630,7 @@ async function getRoomUsers(roomId: string): Promise<User[]> {
     const response = await getClient().getJoinedRoomMembers(roomId);
     return withPresenceForUsers(Object.entries(response.joined).map(([userId, profile]) => userFromUserId(userId, {
         displayName: profile.display_name || displayNameFromUserId(userId),
-        avatarUrl: profile.avatar_url,
+        avatarUri: profile.avatar_url,
         membership: "join",
     })));
 }
@@ -910,7 +945,7 @@ export async function searchContacts(query: string, limit: number = 20): Promise
 function mapUser(user: SdkUser | { userId: string; displayName: string | undefined; avatarUrl: string | undefined; }): User {
     return userFromUserId(user.userId, {
         displayName: user.displayName || displayNameFromUserId(user.userId),
-        avatarUrl: user.avatarUrl,
+        avatarUri: user.avatarUrl,
     });
 }
 

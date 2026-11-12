@@ -23,11 +23,11 @@ export default function DmActions(props: Props) {
     const unblockUser = useUnblockUser();
     const queryClient = useQueryClient();
     const [isBlockDialogOpen, setIsBlockDialogOpen] = useState(false);
-    const rawUser: backend.User | null = session.useSession();
-    if (rawUser === null) {
+    const rawUserId: string | null = session.useCurrentUserId();
+    if (rawUserId === null) {
         throw new Error("User not authenticated");
     }
-    const currentUser = rawUser;
+    const currentUserId = rawUserId;
 
     const blockUserMutation = useMutation({
         mutationFn: () => {
@@ -41,7 +41,7 @@ export default function DmActions(props: Props) {
             );
 
             queryClient.invalidateQueries({
-                queryKey: ["blockedUsers", currentUser.userId]
+                queryKey: ["blockedUsers", currentUserId]
             });
 
             toast(`${props.displayName} is now blocked`);

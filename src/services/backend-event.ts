@@ -10,6 +10,8 @@ import {
     type RoomMember,
     type RoomState,
     RoomStateEvent,
+    UserEvent,
+    type User as MatrixUser,
 } from "matrix-js-sdk";
 import type { User } from "./backend";
 import { findDirectRoomId } from "./direct-room";
@@ -60,6 +62,12 @@ export interface ChatsChangedEvent {
 
     /** High-level reason for refreshing the chat list. */
     reason: "room" | "membership" | "timeline" | "name" | "deleted";
+}
+
+/** Signals that the signed-in user's profile or presence may have changed. */
+export interface CurrentUserChangeEvent {
+    userId: string;
+    reason: "profile" | "presence";
 }
 
 /**
@@ -243,11 +251,13 @@ type ChatChangedEventPayload =
 
 type DraftDmResolvedListener = (payload: DraftDmResolvedEvent) => void;
 type ChatsChangedListener = (payload: ChatsChangedEvent) => void;
+type CurrentUserChangeListener = (payload: CurrentUserChangeEvent) => void;
 type InvitationChangedListener = (payload: InvitationChangedEvent) => void;
 type ChatChangedListener = (payload: ChatChangedEvent) => void;
 
 const draftDmResolvedListeners = new Set<DraftDmResolvedListener>();
 const chatsChangedListeners = new Set<ChatsChangedListener>();
+const currentUserChangeListeners = new Set<CurrentUserChangeListener>();
 const invitationChangedListeners = new Map<string, Set<InvitationChangedListener>>();
 const chatChangedListeners = new Map<string, Set<ChatChangedListener>>();
 
@@ -261,6 +271,7 @@ const CHAT_METADATA_EVENT_TYPES = new Set<string>([
 ]);
 
 let attachedClient: MatrixClient | null = null;
+let currentUserProfileChangeTimer: ReturnType<typeof setTimeout> | undefined;
 
 /**
  * Subscribe to draft DM resolution events.
@@ -293,6 +304,13 @@ export function subscribeChatsChanged(listener: ChatsChangedListener): () => voi
     chatsChangedListeners.add(listener);
 
     return () => chatsChangedListeners.delete(listener);
+}
+
+/** Subscribe to profile and presence invalidations for the signed-in user. */
+export function subscribeCurrentUserChange(listener: CurrentUserChangeListener): () => void {
+    currentUserChangeListeners.add(listener);
+
+    return () => currentUserChangeListeners.delete(listener);
 }
 
 /**
@@ -417,6 +435,9 @@ export function attachBackendEventClient(client: MatrixClient): void {
     client.on(RoomEvent.Timeline, handleRoomTimeline);
     client.on(RoomStateEvent.Events, handleRoomStateEvent);
     client.on(RoomStateEvent.Members, handleRoomStateMember);
+    client.on(UserEvent.DisplayName, handleCurrentUserProfileChange);
+    client.on(UserEvent.AvatarUrl, handleCurrentUserProfileChange);
+    client.on(UserEvent.LastPresenceTs, handleCurrentUserPresenceChange);
 }
 
 /**
@@ -439,7 +460,42 @@ export function detachBackendEventClient(): void {
     attachedClient.off(RoomEvent.Timeline, handleRoomTimeline);
     attachedClient.off(RoomStateEvent.Events, handleRoomStateEvent);
     attachedClient.off(RoomStateEvent.Members, handleRoomStateMember);
+    attachedClient.off(UserEvent.DisplayName, handleCurrentUserProfileChange);
+    attachedClient.off(UserEvent.AvatarUrl, handleCurrentUserProfileChange);
+    attachedClient.off(UserEvent.LastPresenceTs, handleCurrentUserPresenceChange);
+    clearTimeout(currentUserProfileChangeTimer);
+    currentUserProfileChangeTimer = undefined;
     attachedClient = null;
+}
+
+/** Also called after a successful local profile write if the SDK has no cached user. */
+export function notifyCurrentUserProfileChange(client: MatrixClient, userId: string): void {
+    if (client !== attachedClient || userId !== client.getUserId() || currentUserProfileChangeTimer !== undefined) {
+        return;
+    }
+
+    // A single sync can update the SDK user and several room memberships.
+    currentUserProfileChangeTimer = setTimeout(() => {
+        currentUserProfileChangeTimer = undefined;
+        emitCurrentUserChange({ userId, reason: "profile" });
+    }, 0);
+}
+
+function handleCurrentUserProfileChange(_event: MatrixEvent | undefined, user: MatrixUser): void {
+    if (attachedClient != null) {
+        notifyCurrentUserProfileChange(attachedClient, user.userId);
+    }
+}
+
+function handleCurrentUserPresenceChange(_event: MatrixEvent | undefined, user: MatrixUser): void {
+    // The SDK emits LastPresenceTs once per presence event, after updating the user.
+    if (user.userId === attachedClient?.getUserId()) {
+        emitCurrentUserChange({ userId: user.userId, reason: "presence" });
+    }
+}
+
+function emitCurrentUserChange(event: CurrentUserChangeEvent): void {
+    currentUserChangeListeners.forEach(listener => listener(event));
 }
 
 function handleRoom(room: Room): void {
@@ -557,6 +613,11 @@ function handleRoomStateMember(event: MatrixEvent, state: RoomState, member: Roo
     const content = event.getContent();
     const previousContent = event.getPrevContent();
     const previousMembership = membershipValue(previousContent.membership);
+
+    if (attachedClient != null && previousMembership === "join" && content.membership === "join"
+        && (content.displayname !== previousContent.displayname || content.avatar_url !== previousContent.avatar_url)) {
+        notifyCurrentUserProfileChange(attachedClient, member.userId);
+    }
 
     emitChatChanged(state.roomId, {
         type: "usersChanged",

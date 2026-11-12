@@ -52,7 +52,7 @@ export default function ChatList(params: Params) {
                         {/* ContextMenuTrigger: detects right-click or long-press */}
                         <ContextMenuTrigger asChild>
                             <button onClick={() => params.onSelect(chat)} key={chat.id} className="flex m-auto h-fit items-center w-full chat-item select-none">
-                                <MediaAvatar avatarUrl={chat.avatarUrl} size="size-10" name={chat.title}>
+                                <MediaAvatar avatarUri={chat.avatarUrl} size="size-10" name={chat.title}>
                                     <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-chart-2  border-2 border-white" aria-label="Online" />
                                 </MediaAvatar>
                                 <div className="flex-1 ml-3 truncate chat-info">

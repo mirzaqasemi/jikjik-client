@@ -1,5 +1,4 @@
 import MediaAvatar from "@/components/media-avatar/MediaAvatar";
-import { useMediaUrl } from "@/hooks/useMediaUrl";
 import * as backend from "@/services/backend.ts";
 import { Check } from "lucide-react";
 
@@ -19,7 +18,7 @@ export default function ContactListItem(props: Props) {
             } key={props.contact.userId} disabled={props.disabled}
                 className="flex m-auto h-18 items-center w-full disabled:cursor-default!">
                 <div className="relative h-10 w-10 shrink-0">
-                    <MediaAvatar avatarUrl={props.contact.avatarUrl} size="size-10" name={props.contact.displayName}/>
+                    <MediaAvatar avatarUri={props.contact.avatarUri} size="size-10" name={props.contact.displayName}/>
                     {props.disabled &&
                     <Check className="absolute -bottom-1 p-[1.5px] stroke-3 -right-1 h-5.5 w-5.5 rounded-full bg-ring text-white border-[2.5px] border-white" aria-label="Online"/>
                     }

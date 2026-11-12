@@ -25,12 +25,12 @@ export default function Chat() {
     const params = useParams<{ chatId: string }>();
     const navigate = useNavigate();
     const chat = useLoaderData<backend.Chat>();
-    const rawUser = session.getUser();
+    const rawUserId = session.getUserId();
     const bottomRef = useRef<HTMLDivElement>(null);
-    if (rawUser === null) {
+    if (rawUserId === null) {
         throw new Error("User not authenticated");
     }
-    const currentUser = rawUser;
+    const currentUserId = rawUserId;
 
     if (params.chatId === undefined) {
         throw new Error("Missing chatId");
@@ -38,7 +38,7 @@ export default function Chat() {
     const chatId = params.chatId;
     const pendingMessages = PendingMessageStorage.usePendingMsgs(chatId);
     const otherUserId = chat.isDm
-        ? chat.users.find((user) => user.userId != currentUser.userId)?.userId
+        ? chat.users.find((user) => user.userId != currentUserId)?.userId
         : undefined;
     const {
         data: isBlocked,
@@ -202,7 +202,7 @@ export default function Chat() {
                         return (
                             <Message
                                 key={serverMsg.eventId}
-                                currentUser={currentUser}
+                                currentUserId={currentUserId}
                                 chat={chat}
                                 message={message}
                                 status="success"
@@ -221,7 +221,7 @@ export default function Chat() {
                             return (
                                 <Message
                                     key={pendingMsg.transactionId}
-                                    currentUser={currentUser}
+                                    currentUserId={currentUserId}
                                     chat={chat}
                                     message={message}
                                     status="error"
@@ -232,7 +232,7 @@ export default function Chat() {
                         return (
                             <Message
                                 key={pendingMsg.transactionId}
-                                currentUser={currentUser}
+                                currentUserId={currentUserId}
                                 chat={chat}
                                 message={message}
                                 status="pending"

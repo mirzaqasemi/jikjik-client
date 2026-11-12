@@ -1,6 +1,7 @@
 import { toast } from "sonner";
 import DmActions from "./dm-actions/DmActions";
 import * as backend from "@/services/backend";
+import UserProfileInfo from "@/components/user-profile-body/UserProfileInfo";
 
 
 type Props = {
@@ -9,17 +10,15 @@ type Props = {
 }
 
 export default function DmDetailsBody(props: Props) {
-    async function copyUsername() {
-        await navigator.clipboard.writeText(props.otherUser.userId);
-        toast("Username copied to clipboard.");
-    }
+
     return (
         <>
             {/* Actions */}
-            <DmActions otherUserId={props.otherUser.userId} displayName={props.otherUser.displayName} onCloseRequest={props.onCloseRequest}/>
+            <DmActions otherUserId={props.otherUser.userId} displayName={props.otherUser.displayName} onCloseRequest={props.onCloseRequest} />
+            <UserProfileInfo user={props.otherUser} />
 
             {/* User Information */}
-            <div className="flex flex-col flex-1 -mx-6 no-scrollbar overflow-y-auto rounded-[10px]">
+            {/* <div className="flex flex-col flex-1 -mx-6 no-scrollbar overflow-y-auto rounded-[10px]">
                 <div className="flex flex-col px-6 py-4 gap-5">
                     <div className="flex flex-col">
                         <span className="font-normal text-[15px]">{props.otherUser.displayName}</span>
@@ -36,7 +35,7 @@ export default function DmDetailsBody(props: Props) {
                         <span className="font-normal text-[14px] text-muted-foreground">Username</span>
                     </div>
                 </div>
-            </div>
+            </div> */}
         </>
     );
 }

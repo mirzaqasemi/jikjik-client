@@ -20,7 +20,7 @@ import ChatList from "./chat-list/ChatList.tsx";
 export default function Chats() {
     const [searchQuery, setSearchQuery] = useState("");
     const debouncedSearchQuery = hooks.useDebounce(searchQuery, 300);
-    const user: backend.User | null = session.useSession();
+    const userId: string | null = session.useCurrentUserId();
     const navigate = useNavigate();
     const [publicChat, setPublicChat] = useState<backend.Chat | null>(null);
 
@@ -36,7 +36,7 @@ export default function Chats() {
         error,
         refetch
     } = useQuery<Data>({
-        queryKey: ["allChatsAndContacts", user?.userId, debouncedSearchQuery], // "allChats" is the name/address of the cached data
+        queryKey: ["allChatsAndContacts", userId, debouncedSearchQuery], // "allChats" is the name/address of the cached data
         queryFn: async () => {
             const chats = await backend.getChats(debouncedSearchQuery);
             if (debouncedSearchQuery !== "") {
@@ -45,7 +45,7 @@ export default function Chats() {
             }
             return { chats, contacts: [] };
         },
-        enabled: user !== null, // Do not run queryFn until user exists.
+        enabled: userId !== null, // Do not run queryFn until user exists.
         retry: 2,
         // If the component is unmounted, the listener is removed and might miss the chatsChanged enevt, 
         // so we tell the useQuery to refetch data on mount and don't use from cached data:
@@ -72,7 +72,7 @@ export default function Chats() {
         return cleanup;
     }, [refetch]); //TODO: Is it needed to add refetch to dependency array?
 
-    if (user === null) {
+    if (userId === null) {
         // replace: The new webpage (login page) replaces the page you are currently viewing (chats page) in the history list. 
         // Clicking the browser's "Back" button will skip the old page and take you to the page you visited before it.
         // It avoids a weird back-button loop. [Login, Chats] -> Chats redirects you to login so: [Login] -> Notice Chats disappeared (Login replace).
@@ -160,7 +160,7 @@ export default function Chats() {
             {/* <!-- Top: Header Section --> */}
             <div className="flex w-full px-4 items-center gap-4 pb-4">
                 {/* <!-- Hamburger Menu --> */}
-                <Menu logout={logout} user={user} />
+                <Menu logout={logout} userId={userId}/>
 
                 {/* <!-- Search Bar --> */}
                 <SearchBar onChange={setSearchQuery} value={searchQuery} placeholder="Search chats, people, groups..."/>
