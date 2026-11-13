@@ -1,13 +1,11 @@
 import type { User } from "@/services/backend";
+import { Copy, UserRound } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "../ui/button";
-import { Copy, Pencil, UserRound } from "lucide-react";
-import { Separator } from "../ui/separator";
 import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "../ui/item";
+import { Separator } from "../ui/separator";
 
 type Props = {
     user: User | null | undefined;
-    onEditDisplayName?: () => void;
 }
 
 export default function UserProfileInfo(props: Props) {
