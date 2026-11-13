@@ -14,14 +14,14 @@ type Props = {
 
 export default function ChatDetailsDialog(props: Props) {
     const chatTitle = utilities.getTitle(props.chat);
-    const rawUser = session.getUserId();
-    if (rawUser === null) {
+    const rawUserId = session.getUserId();
+    if (rawUserId === null) {
         throw new Error("User not authenticated");
     }
-    const user = rawUser;
+    const userId = rawUserId;
     let otherUser: backend.User | undefined;
     if (props.chat.isDm) {
-        otherUser = props.chat.users.find((u) => u.userId !== user.userId);
+        otherUser = props.chat.users.find((u) => u.userId !== userId);
     }
 
     return (

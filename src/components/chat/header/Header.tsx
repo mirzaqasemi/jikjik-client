@@ -22,7 +22,10 @@ export default function Header(props: Props) {
     return (
         <>
             {/* <!-- Top: Header Section --> */}
-            <div className="flex w-full sticky top-0 z-50 items-center conversation-header">
+            <div className="flex w-full sticky top-0 z-50 gap-3 items-center conversation-header">
+                <Link to={"../"} className="lg:hidden flex justify-center items-center btn-back size-10 rounded-full">
+                    <ArrowLeft strokeWidth={"1.5"} />
+                </Link>
                 <Dialog open={isDetailsDialogOpen} onOpenChange={(open) => {
                     if (!open) {
                         setIsDetailsDialogOpen(false);
@@ -32,9 +35,6 @@ export default function Header(props: Props) {
                         <button type="button" onClick={() => setIsDetailsDialogOpen(true)}>
                             {/* Chat header content */}
                             <div className="flex items-center gap-2.5">
-                                <Link to={"../"} className="lg:hidden flex justify-center items-center btn-back w-10 h-10 rounded-full">
-                                    <ArrowLeft strokeWidth={"1.5"} />
-                                </Link>
                                 <div className="flex gap-3 items-center">
                                     <MediaAvatar avatarUri={props.chat.avatarUrl} size="size-13" name={props.chat.title}>
                                     </MediaAvatar>
