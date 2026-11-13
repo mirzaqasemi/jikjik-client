@@ -36,7 +36,7 @@ export default function Header(props: Props) {
                                     <ArrowLeft strokeWidth={"1.5"} />
                                 </Link>
                                 <div className="flex gap-3 items-center">
-                                    <MediaAvatar avatarUrl={props.chat.avatarUrl} size="size-13" name={props.chat.title}>
+                                    <MediaAvatar avatarUri={props.chat.avatarUrl} size="size-13" name={props.chat.title}>
                                     </MediaAvatar>
                                     <div className="flex flex-col min-w-0 flex-1 items-start user-details">
                                         <span className="font-medium truncate">{chatTitle}</span>

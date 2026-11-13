@@ -11,6 +11,7 @@ import { Dialog, DialogClose, DialogContent } from "../ui/dialog";
 import { Input } from "../ui/input";
 import UserProfileInfo from "../user-profile-body/UserProfileInfo";
 import { useState } from "react";
+import EditUserProfile from "../user-profile-body/edit-user-profile/EditUserProfile";
 
 type Props = {
     // onCloseRequest is called to request closing the dialog,
@@ -42,27 +43,8 @@ export default function MyProfileDialog(props: Props) {
                 }}>
                 <DialogContent className="sm:max-w-sm" showCloseButton={false}>
                     <div className="flex absolute top-4 right-4 gap-3">
-                        <label htmlFor="my-profile-avatar"
-                            className={cn(
-                                buttonVariants({
-                                    variant: "ghost",
-                                    size: "icon",
-                                }),
-                                "rounded-full cursor-pointer"
-                            )}>
-                            <Pencil className="size-4" />
-                        </label>
-                        <Input
-                            id="my-profile-avatar"
-                            type="file"
-                            name="profile"
-                            accept="image/*"
-                            className="sr-only"
-                            onChange={(e) => {
-                                const file = e.currentTarget.files?.[0];
-                                setProfileMutation.mutate({ file });
-                            }}
-                        />
+                        <EditUserProfile user={props.user}/>
+                      
                         <DialogClose asChild>
                             <Button
                                 variant="ghost"
@@ -74,8 +56,8 @@ export default function MyProfileDialog(props: Props) {
                             </Button>
                         </DialogClose>
                     </div>
+
                     <AvatarDialogHeader title={props.user?.displayName} description="Last seen recently" avatarUri={props.user?.avatarUri} />
-                    
                     <UserProfileInfo
                         user={props.user}
                         onEditDisplayName={() => setIsEditingDisplayName(true)}

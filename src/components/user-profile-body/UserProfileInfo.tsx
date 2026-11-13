@@ -38,7 +38,8 @@ export default function UserProfileInfo(props: Props) {
                         <ItemMedia variant="icon" className="self-center! size-10 rounded-lg bg-muted border-0">
                             <span className="flex size-4 items-center justify-center text-sm leading-none text-foreground">
                                 @
-                            </span>                        </ItemMedia>
+                            </span>
+                        </ItemMedia>
                         <ItemContent>
                             <ItemTitle className="text-[15px]">
                                 <button

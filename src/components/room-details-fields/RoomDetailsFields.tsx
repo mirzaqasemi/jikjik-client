@@ -1,8 +1,6 @@
 import { useMediaUrl } from "@/hooks/useMediaUrl";
 import type { RoomFormLabel } from "@/models/room-form";
-import { Camera } from "lucide-react";
-import { useState } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import AvatarPicker from "../avatar-picker/AvatarPicker";
 import { Field, FieldDescription, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "../ui/field";
 import { Input } from "../ui/input";
 
@@ -18,7 +16,6 @@ type Props = {
 
 export default function RoomDetailsFields(props: Props) {
     const mediaUrl = useMediaUrl(props.initialValues?.avatar);
-    const [previewUrl, setPreviewUrl] = useState<string | undefined>(undefined);
 
     return (
         <FieldSet>
@@ -27,27 +24,7 @@ export default function RoomDetailsFields(props: Props) {
             <FieldGroup className="flex flex-row">
                 {/* Group/Channel avatar */}
                 <Field className="w-auto shrink-0">
-                    <label htmlFor="group-avatar" className="cursor-pointer">
-                        <Avatar className="size-18">
-                            <AvatarImage src={previewUrl ?? mediaUrl} />
-                            <AvatarFallback className="bg-chart-3">
-                                <Camera className="stroke-white" />
-                            </AvatarFallback>
-                        </Avatar>
-                    </label>
-                    <Input
-                        id="group-avatar"
-                        type="file"
-                        name="avatar"
-                        accept="image/*"
-                        className="sr-only"
-                        onChange={(e) => {
-                            const file = e.currentTarget.files?.[0];
-                            if (file) {
-                                setPreviewUrl(URL.createObjectURL(file));
-                            }
-                        }}
-                    />
+                    <AvatarPicker initialAvatar={mediaUrl} />
                 </Field>
 
                 {/* Group/Channel name */}
