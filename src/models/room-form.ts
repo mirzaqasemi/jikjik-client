@@ -1,7 +1,7 @@
 export type RoomFormDetails = {
     title: string;
     description?: string;
-    avatar?: File;
+    avatar?: File | undefined | null;
 };
 
 export type RoomFormLabel = {

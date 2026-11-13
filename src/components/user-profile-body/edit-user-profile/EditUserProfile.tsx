@@ -5,12 +5,12 @@ import { Field, FieldError, FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useMediaUrl } from "@/hooks/useMediaUrl";
 import type { User } from "@/services/backend";
-import { useMutation } from "@tanstack/react-query";
-import { Pencil } from "lucide-react";
 import * as backend from "@/services/backend";
 import { normalizeError } from "@/utilities/normalized-error";
-import { toast } from "sonner";
+import { useMutation } from "@tanstack/react-query";
+import { Pencil } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 
 export default function EditUserProfile(props: { user: User | null | undefined }) {
@@ -26,29 +26,37 @@ export default function EditUserProfile(props: { user: User | null | undefined }
         const formData = new FormData(event.currentTarget);
         const firstName = String(formData.get("firstName") ?? "").trim();
         const lastName = String(formData.get("lastName") ?? "").trim();
+        const removeAvatar = String(formData.get("removeAvatar"));
         if (!firstName && !lastName) {
             setNameError("Enter a first name or a last name.");
             return;
         }
         const avatar = formData.get("avatar");
-        const avatarFile = (avatar instanceof File) && avatar.name !== ''
-            ? avatar
-            : undefined;
+
+        const avatarFile: File | undefined | null = removeAvatar === "true" ? null :
+            (avatar instanceof File) && avatar.name !== ""
+                ? avatar
+                : undefined;
 
         setNameError("");
         editProfileMutation.mutate({ firstName, avatar: avatarFile, lastName });
     }
 
     const editProfileMutation = useMutation({
-        mutationFn: async (params: { firstName: string, avatar: File | undefined, lastName: string }) => {
+        mutationFn: async (params: { firstName: string, avatar: File | undefined | null, lastName: string }) => {
+            let displayName = undefined;
+            let mxcUri = undefined;
             if (params.firstName != firstName || params.lastName != lastName) {
-                const displayName = params.firstName.concat(" " + params.lastName)
-                await backend.setUserDisplayName(displayName);
+                displayName = params.firstName.concat(" " + params.lastName)
             }
             if (params.avatar !== undefined) {
-                const mxcUri = await backend.uploadAvatar(params.avatar);
-                await backend.setUserAvatar(mxcUri);
+                if (params.avatar != null) {
+                    mxcUri = await backend.uploadAvatar(params.avatar);
+                } else {
+                    mxcUri = "";
+                }
             }
+            await backend.updateUserProfile({ displayName: displayName, avatarUrl: mxcUri });
         },
         onSuccess: () => {
             setIsOpen(false);

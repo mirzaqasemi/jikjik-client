@@ -30,19 +30,23 @@ export default function EditGroupDialog(props: Props) {
         const formData = new FormData(event.currentTarget);
         const title = String(formData.get("title")).trim();
         const description = String(formData.get("description"));
-        
+        const removeAvatar = String(formData.get("removeAvatar"));
+
         const avatar = formData.get("avatar");
-        const avatarFile = (avatar instanceof File) && avatar.name !== ''
-            ? avatar
-            : undefined;
-        
-            editGroupMutation.mutate({ title, avatar: avatarFile, description })
+
+        const avatarFile: File | undefined | null = removeAvatar === "true" ? null :
+            (avatar instanceof File) && avatar.name !== ""
+                ? avatar
+                : undefined;
+
+        editGroupMutation.mutate({ title, avatar: avatarFile, description })
     }
 
     const editGroupMutation = useMutation({
         mutationFn: async (params: RoomFormDetails) => {
             const currentGroupName = props.chat.title;
             const currentGroupDescription = props.chat.topic ?? "";
+            let mxcUri = undefined;
             if (params.title != currentGroupName) {
                 await backend.updateGroupName(chatId, params.title);
             }
@@ -50,7 +54,11 @@ export default function EditGroupDialog(props: Props) {
                 await backend.updateGroupDescription(chatId, params.description);
             }
             if (params.avatar !== undefined) {
-                const mxcUri = await backend.uploadAvatar(params.avatar);
+                if (params.avatar != null) {
+                    mxcUri = await backend.uploadAvatar(params.avatar);
+                } else {
+                    mxcUri = "";
+                }
                 await backend.setGroupAvatar(chatId, mxcUri);
             }
         },
