@@ -4,25 +4,30 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 
+// previewUrl states:
+// undefined: No new file is selected. Show the initial avatar if it exists.
+// null: The user clicked "Remove photo". Hide the avatar and mark it for removal.
+// string: A new file is selected. Show its object URL as the preview.
+
 export default function AvatarPicker(props: { initialAvatar: string | undefined }) {
-    const [selectedFile, setSelectedFile] = useState<File | undefined | null>(undefined);
-    const [previewUrl, setPreviewUrl] = useState<string | undefined>(undefined);
-    const hasAvatar = props.initialAvatar ? true : false;
+    const [previewUrl, setPreviewUrl] = useState<string | undefined | null>(undefined);
+    const hasInitialAvatar = props.initialAvatar ? true : false;
     const inputRef = useRef<HTMLInputElement>(null);
     const inputId = useId();
-    const removeAvatar = selectedFile === null;
+    const removeAvatar = previewUrl === null;
+
+    function handleRemoveAvatar() {
+        setPreviewUrl(null);
+        inputRef.current!.value = "";
+    }
+
     useEffect(() => {
-        if (!selectedFile) {
-            setPreviewUrl(undefined);
-            return;
-        }
-        const url = URL.createObjectURL(selectedFile);
-        setPreviewUrl(url);
+        if (!previewUrl) return;
 
         return () => {
-            URL.revokeObjectURL(url);
+            URL.revokeObjectURL(previewUrl);
         }
-    }, [selectedFile]);
+    }, [previewUrl]);
 
     return (
         <div className="flex flex-col items-center gap-2 shrink-0">
@@ -31,7 +36,7 @@ export default function AvatarPicker(props: { initialAvatar: string | undefined 
                 className="group relative inline-block size-20 cursor-pointer"
             >
                 <Avatar className="size-full">
-                    <AvatarImage src={selectedFile === null ? undefined : previewUrl ?? props.initialAvatar} />
+                    <AvatarImage src={previewUrl === null ? undefined : previewUrl ?? props.initialAvatar} />
                     <input
                         type="hidden"
                         name="removeAvatar"
@@ -58,18 +63,15 @@ export default function AvatarPicker(props: { initialAvatar: string | undefined 
                 className="sr-only"
                 onChange={(e) => {
                     const file = e.currentTarget.files?.[0];
-                    setSelectedFile(file ?? undefined);
+                    setPreviewUrl(file ? URL.createObjectURL(file) : undefined);
                 }}
             />
             <Button
                 type="button"
                 variant="ghost"
-                disabled={!hasAvatar}
+                disabled={(previewUrl === null) || (previewUrl === undefined) && (!hasInitialAvatar)}
                 size="sm"
-                onClick={() => {
-                    setSelectedFile(null);
-                    inputRef.current!.value = "";
-                }}
+                onClick={handleRemoveAvatar}
                 className="text-xs hover:bg-transparent text-muted-foreground hover:text-destructive"
             >
                 <Trash2 className="size-3.5" />

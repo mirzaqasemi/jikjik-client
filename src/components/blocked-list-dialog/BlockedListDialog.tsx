@@ -6,14 +6,14 @@ import {
     DialogTitle
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { useUnblockUser } from "@/hooks/useUnblockUser.ts";
 import * as backend from "@/services/backend";
 import * as session from "@/services/session.ts";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { LoaderCircle, UserRoundCheck } from "lucide-react";
 import { Button } from "../ui/button";
 import { ScrollArea } from "../ui/scroll-area";
 import UserInfo from "../user-info/UserInfo.tsx";
-import { useUnblockUser } from "@/hooks/useUnblockUser.ts";
 type Props = {
     // onCloseRequest is called to request closing the dialog,
     // which means, the open prop should be set to false
@@ -22,18 +22,18 @@ type Props = {
 }
 
 export default function BlockedListDialog(props: Props) {
-    const rawUser = session.getUserId();
-    if (rawUser === null) {
+    const rawUserId = session.getUserId();
+    if (rawUserId === null) {
         throw new Error("User not authenticated");
     }
-    const user = rawUser;
+    const userId = rawUserId;
     const {
         data: blockedUsers = [],
         isLoading,
         isError,
         refetch,
     } = useQuery<backend.User[]>({
-        queryKey: ["blockedUsers", user.userId],
+        queryKey: ["blockedUsers", userId],
         queryFn: () => backend.getBlockedUsers(),
         enabled: props.open,
     });

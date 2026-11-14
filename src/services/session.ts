@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import type { MatrixSession } from "./matrix-models";
-import type { User } from "./backend";
 
 export type Listener = () => void;
 export type SessionItemKey = string | string[];
