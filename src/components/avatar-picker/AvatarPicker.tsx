@@ -17,7 +17,7 @@ export default function AvatarPicker(props: { initialAvatar: string | undefined 
     const removeAvatar = previewUrl === null;
 
     function handleRemoveAvatar() {
-        setPreviewUrl(null);
+        setPreviewUrl(typeof previewUrl === "string" ? undefined : null);
         inputRef.current!.value = "";
     }
 

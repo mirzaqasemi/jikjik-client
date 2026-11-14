@@ -12,6 +12,16 @@ type Props = {
 export default function MessageInput(props: Props) {
     const [inputStr, setInputStr] = useState("");
 
+    function handleSendMessage(inputStr: string) {
+        if (inputStr.trim() !== "") {
+            props.sendMessage(inputStr);
+        }
+        // Clear the input even for whitespace-only text, unless keepInputOnSend is true.
+        if (!props.keepInputOnSend) {
+            setInputStr("");
+        }
+    }
+
     return (
         //  <!-- Bottom: Input Section -->
         < div className="flex justify-center chat-input-area" >
@@ -19,10 +29,7 @@ export default function MessageInput(props: Props) {
                 onChange={(e) => setInputStr(e.target.value)}
                 onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                        props.sendMessage(inputStr);
-                        if (!props.keepInputOnSend) {
-                            setInputStr("");
-                        }
+                        handleSendMessage(inputStr);
                     }
                 }}
                 disabled={props.disabled}
@@ -30,9 +37,9 @@ export default function MessageInput(props: Props) {
             <Button
                 variant="ghost"
                 disabled={props.disabled}
-                onClick={() => props.sendMessage(inputStr)}
+                onClick={() => handleSendMessage(inputStr)}
                 className="flex justify-center rounded-full btn-send hover:bg-transparent"
-                >
+            >
                 <SendHorizontal className="size-6" fill="var(--primary)" strokeWidth={"1.5"} stroke="" />
             </Button>
         </div >
