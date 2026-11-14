@@ -276,7 +276,10 @@ function normalizeUserId(username: string): string {
     return `@${trimmedUsername}:${currentServerName()}`;
 }
 
-function userFromUserId(userId: string, user: Omit<User, "userId" | "username">): User {
+export function userFromUserId(
+    userId: string,
+    user: Omit<User, "userId" | "username"> = { displayName: displayNameFromUserId(userId) },
+): User {
     return {
         userId,
         username: userId,
@@ -674,9 +677,7 @@ export async function currentUser(): Promise<User | null> {
     try {
         return userFromProfile(userId, await getClient().getProfileInfo(userId));
     } catch {
-        return userFromUserId(userId, {
-            displayName: displayNameFromUserId(userId),
-        });
+        return userFromUserId(userId);
     }
 }
 

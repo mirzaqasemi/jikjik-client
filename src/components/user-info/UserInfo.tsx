@@ -1,6 +1,5 @@
-import MediaAvatar from "../media-avatar/MediaAvatar";
-import { Avatar, AvatarFallback } from "../ui/avatar";
 import * as backend from "@/services/backend";
+import MediaAvatar from "../media-avatar/MediaAvatar";
 
 type Props = {
     user: backend.User;
@@ -12,7 +11,7 @@ export default function UserInfo(props: Props) {
 
     return (
         <>
-            <MediaAvatar avatarUrl={props.user.avatarUri} size="size-10" name={props.user.displayName}/>
+            <MediaAvatar avatarUri={props.user.avatarUri} size="size-10" name={props.user.displayName}/>
 
             <div className="min-w-0 flex-1 text-left">
                 <p className="truncate text-sm font-medium">

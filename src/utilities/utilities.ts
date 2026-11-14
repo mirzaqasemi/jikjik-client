@@ -28,8 +28,8 @@ export function formatDate(date?: Date | null): string {
 }
 
 export function getTitle(chat: backend.Chat): string {
-    const user: backend.User | null = session.getUserId();
-    const currentUserId = user?.userId;
+    const userId: string | null = session.getUserId();
+    const currentUserId = userId;
     const users = chat.users;
     const names: string[] = [];
     if (chat.title !== undefined && chat.title !== "") {

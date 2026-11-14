@@ -1,6 +1,7 @@
 import { SendHorizontal } from "lucide-react";
 import { useState } from "react";
 import "./MessageInput.css"
+import { Button } from "@/components/ui/button";
 
 type Props = {
     sendMessage: (inputStr: string) => void;
@@ -26,9 +27,14 @@ export default function MessageInput(props: Props) {
                 }}
                 disabled={props.disabled}
             />
-            <button className="flex justify-center rounded-full btn-send" onClick={() => props.sendMessage(inputStr)} disabled={props.disabled}>
-                <SendHorizontal className="" fill="var(--primary)" strokeWidth={"1.5"} stroke=""/>
-            </button>
+            <Button
+                variant="ghost"
+                disabled={props.disabled}
+                onClick={() => props.sendMessage(inputStr)}
+                className="flex justify-center rounded-full btn-send hover:bg-transparent"
+                >
+                <SendHorizontal className="size-6" fill="var(--primary)" strokeWidth={"1.5"} stroke="" />
+            </Button>
         </div >
     );
 }
