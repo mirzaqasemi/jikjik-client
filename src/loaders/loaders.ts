@@ -7,7 +7,7 @@ import * as session from "../services/session";
 
 // Loader for protected routes
 export function protectedLoader() {
-  if (session.getUser() === null) {
+  if (session.getUserId() === null) {
     // If the user is not logged in, redirect them to the login page
     return redirect(LOGIN_ROUTE);
   }
@@ -15,7 +15,7 @@ export function protectedLoader() {
 
 // Loader for the login page
 export function loginLoader() {
-  if (session.getUser() !== null) {
+  if (session.getUserId() !== null) {
     // If the user is already logged in, redirect them to the chats page
     return redirect(CHATS_ROUTE);
   }

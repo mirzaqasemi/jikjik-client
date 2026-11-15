@@ -9,7 +9,7 @@ type MessageContent = {
 };
 
 type Params = {
-    currentUser: backend.User;
+    currentUserId: string;
     chat: backend.Chat;
 } & (
         | {
@@ -33,7 +33,7 @@ type Params = {
 export default function Message(params: Params) {
     let isCurrentUser = true;
     if (params.status === "success") {
-        isCurrentUser = params.message.sender.userId === params.currentUser.userId;
+        isCurrentUser = params.message.sender.userId === params.currentUserId;
     }
     const messageSide = isCurrentUser ? "sent" : "received";
     const showUserTitle =

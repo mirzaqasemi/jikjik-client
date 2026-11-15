@@ -20,7 +20,7 @@ import ChatList from "./chat-list/ChatList.tsx";
 export default function Chats() {
     const [searchQuery, setSearchQuery] = useState("");
     const debouncedSearchQuery = hooks.useDebounce(searchQuery, 300);
-    const user: backend.User | null = session.useSession();
+    const userId: string | null = session.useCurrentUserId();
     const navigate = useNavigate();
     const [publicChat, setPublicChat] = useState<backend.Chat | null>(null);
 
@@ -36,7 +36,7 @@ export default function Chats() {
         error,
         refetch
     } = useQuery<Data>({
-        queryKey: ["allChatsAndContacts", user?.userId, debouncedSearchQuery], // "allChats" is the name/address of the cached data
+        queryKey: ["allChatsAndContacts", userId, debouncedSearchQuery], // "allChats" is the name/address of the cached data
         queryFn: async () => {
             const chats = await backend.getChats(debouncedSearchQuery);
             if (debouncedSearchQuery !== "") {
@@ -45,7 +45,7 @@ export default function Chats() {
             }
             return { chats, contacts: [] };
         },
-        enabled: user !== null, // Do not run queryFn until user exists.
+        enabled: userId !== null, // Do not run queryFn until user exists.
         retry: 2,
         // If the component is unmounted, the listener is removed and might miss the chatsChanged enevt, 
         // so we tell the useQuery to refetch data on mount and don't use from cached data:
@@ -72,7 +72,7 @@ export default function Chats() {
         return cleanup;
     }, [refetch]); //TODO: Is it needed to add refetch to dependency array?
 
-    if (user === null) {
+    if (userId === null) {
         // replace: The new webpage (login page) replaces the page you are currently viewing (chats page) in the history list. 
         // Clicking the browser's "Back" button will skip the old page and take you to the page you visited before it.
         // It avoids a weird back-button loop. [Login, Chats] -> Chats redirects you to login so: [Login] -> Notice Chats disappeared (Login replace).
@@ -125,18 +125,18 @@ export default function Chats() {
                 </div>
             </div>
     } else {
+
         if ((chats.length > 0 || contacts.length > 0)) {
-            content =
-                <div>
-                    <ChatList chats={chats} onSelect={selectChat} />
-                    {
-                        contacts.length > 0 &&
-                        <>
-                            <div className="flex h-7 px-5 mt-3 text-[13.5px] muted-text font-light muted-background text-start items-center">Contacts</div>
-                            <ContactList contacts={contacts} onSelect={selectContact} />
-                        </>
-                    }
-                </div>
+            content = <>
+                <ChatList chats={chats} onSelect={selectChat} />
+                {
+                    contacts.length > 0 &&
+                    <>
+                        <div className="flex h-7 px-5 mt-3 text-[13.5px] muted-text font-light muted-background text-start items-center">Contacts</div>
+                        <ContactList contacts={contacts} onSelect={selectContact} />
+                    </>
+                }
+            </>
         }
         // If chats.length == 0 and contacts.length == 0 and debouncedSearchQuery == "" it means the user has no chats and doesn't search anything
         else if (debouncedSearchQuery === "") {
@@ -155,21 +155,29 @@ export default function Chats() {
     }
 
     return (
-        <div className="flex flex-col w-full h-full pt-5 pb-3">
+        <div className="flex h-full w-full flex-col overflow-hidden pt-5">
 
             {/* <!-- Top: Header Section --> */}
-            <div className="flex w-full px-4 items-center gap-4">
+            <div className="flex w-full px-4 items-center gap-4 pb-4">
                 {/* <!-- Hamburger Menu --> */}
-                <Menu logout={logout} user={user} />
+                <Menu logout={logout} userId={userId}/>
 
                 {/* <!-- Search Bar --> */}
-                <SearchBar onChange={setSearchQuery} value={searchQuery} />
+                <SearchBar onChange={setSearchQuery} value={searchQuery} placeholder="Search chats, people, groups..."/>
             </div>
 
             {/* <!-- Middle: Chat List --> */}
-            {content}
-            <ConfirmationDialog confirmAction="Join chat" rejectAction="Cancel" title="Join this public chat?" description="This chat is open to everyone. Join now to participate in the conversation."
-                open={publicChat !== null} loading={joinPublicChatMutation.isPending} onConfirm={joinPublicChat} onClose={() => setPublicChat(null)} icon={<UsersRound className="sidebar-icon" />}
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">{content}</div>
+            <ConfirmationDialog
+                confirmAction="Join chat"
+                rejectAction="Cancel"
+                title="Join this public chat?"
+                description="This chat is open to everyone. Join now to participate in the conversation."
+                open={publicChat !== null}
+                loading={joinPublicChatMutation.isPending}
+                onConfirm={joinPublicChat}
+                onClose={() => setPublicChat(null)}
+                icon={<UsersRound className="sidebar-icon" />}
             />
         </div>
     );

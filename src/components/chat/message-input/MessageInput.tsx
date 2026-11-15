@@ -1,9 +1,26 @@
 import { SendHorizontal } from "lucide-react";
 import { useState } from "react";
 import "./MessageInput.css"
+import { Button } from "@/components/ui/button";
 
-export default function MessageInput({ sendMessage, disabled, keepInputOnSend }: { sendMessage: (inputStr: string) => void, disabled: boolean, keepInputOnSend?: boolean }) {
+type Props = {
+    sendMessage: (inputStr: string) => void;
+    disabled: boolean;
+    keepInputOnSend?: boolean
+}
+
+export default function MessageInput(props: Props) {
     const [inputStr, setInputStr] = useState("");
+
+    function handleSendMessage(inputStr: string) {
+        if (inputStr.trim() !== "") {
+            props.sendMessage(inputStr);
+        }
+        // Clear the input even for whitespace-only text, unless keepInputOnSend is true.
+        if (!props.keepInputOnSend) {
+            setInputStr("");
+        }
+    }
 
     return (
         //  <!-- Bottom: Input Section -->
@@ -12,17 +29,19 @@ export default function MessageInput({ sendMessage, disabled, keepInputOnSend }:
                 onChange={(e) => setInputStr(e.target.value)}
                 onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                        sendMessage(inputStr);
-                        if (!keepInputOnSend) {
-                            setInputStr("");
-                        }
+                        handleSendMessage(inputStr);
                     }
                 }}
-                disabled={disabled}
+                disabled={props.disabled}
             />
-            <button className="flex justify-center rounded-full btn-send" onClick={() => sendMessage(inputStr)} disabled={disabled}>
-                <SendHorizontal className="" fill="var(--primary)" strokeWidth={"1.5"} stroke="" />
-            </button>
+            <Button
+                variant="ghost"
+                disabled={props.disabled}
+                onClick={() => handleSendMessage(inputStr)}
+                className="flex justify-center rounded-full btn-send hover:bg-transparent"
+            >
+                <SendHorizontal className="size-6" fill="var(--primary)" strokeWidth={"1.5"} stroke="" />
+            </Button>
         </div >
     );
 }

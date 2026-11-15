@@ -9,8 +9,7 @@ export default function Chats() {
     const draftMode = location.pathname.split("/").pop();
 
     return (
-        <div className="flex w-full h-full">
-
+        <div className="flex h-dvh w-full overflow-hidden">
             {/* Left Section */}
             <div className={`w-full h-full 
                 ${chatId || ((draftMode === "draft")) ? "hidden lg:block" : "block"}

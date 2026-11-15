@@ -7,12 +7,18 @@ import {
     MsgType,
     type Room,
     type RoomMember,
+    User as SdkUser,
     SyncState,
 } from "matrix-js-sdk";
 import { Preset, Visibility } from "matrix-js-sdk/lib/@types/partials";
 import type { ICreateRoomOpts } from "matrix-js-sdk/lib/@types/requests";
 import type { IContent } from "matrix-js-sdk/lib/models/event";
-import { attachBackendEventClient, detachBackendEventClient, subscribeChatChanged } from "./backend-event";
+import {
+    attachBackendEventClient,
+    detachBackendEventClient,
+    notifyCurrentUserProfileChange,
+    subscribeChatChanged,
+} from "./backend-event";
 import { type DirectRooms, findDirectRoomId, getDirectRoomInviter, isDirectRoom, isVisibleRoom, } from "./direct-room";
 import * as session from "./session";
 
@@ -33,7 +39,7 @@ export interface User {
     displayName: string;
 
     /** Matrix avatar MXC URI from profile, user directory, or room membership state. */
-    avatarUrl?: string | null;
+    avatarUri?: string | null;
 
     /** Last known Matrix activity timestamp, derived from presence last_active_ago when available. */
     lastSeen?: Date;
@@ -270,7 +276,10 @@ function normalizeUserId(username: string): string {
     return `@${trimmedUsername}:${currentServerName()}`;
 }
 
-function userFromUserId(userId: string, user: Omit<User, "userId" | "username">): User {
+export function userFromUserId(
+    userId: string,
+    user: Omit<User, "userId" | "username"> = { displayName: displayNameFromUserId(userId) },
+): User {
     return {
         userId,
         username: userId,
@@ -350,7 +359,7 @@ async function getDirectRooms(): Promise<DirectRooms> {
 function userFromMember(member: RoomMember): User {
     return userFromUserId(member.userId, {
         displayName: member.name || displayNameFromUserId(member.userId),
-        avatarUrl: member.events.member?.getContent().avatar_url,
+        avatarUri: member.events.member?.getContent().avatar_url,
         membership: member.membership,
     });
 }
@@ -358,8 +367,71 @@ function userFromMember(member: RoomMember): User {
 function userFromProfile(userId: string, profile: { avatar_url?: string; displayname?: string }): User {
     return userFromUserId(userId, {
         displayName: profile.displayname || displayNameFromUserId(userId),
-        avatarUrl: profile.avatar_url,
+        avatarUri: profile.avatar_url,
     });
+}
+
+/** Upload an image to the Matrix media server and return its MXC URI. */
+export async function uploadAvatar(file: File): Promise<string> {
+    return (await getClient().uploadContent(file)).content_uri;
+}
+
+export async function resolveMediaUrl(mediaUri: string | null): Promise<string | null> {
+    if (!mediaUri) return null;
+    if (!mediaUri.startsWith("mxc://")) return mediaUri;
+    const token = session.getMatrixSession()?.accessToken;
+    // Convert the MXC URI to a Matrix download URL.
+    const url = getClient().mxcUrlToHttp(mediaUri, undefined, undefined, undefined, undefined, undefined, true);
+
+    if (!token || !url) return null;
+
+    // Download the media using the current Matrix session's access token.
+    const response = await fetch(url, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    if (!response.ok) return null;
+    return URL.createObjectURL(await response.blob())
+}
+
+export interface UserProfileUpdate {
+    displayName?: string;
+    /** Matrix MXC URI, or an empty string to clear the avatar. */
+    avatarUrl?: string;
+}
+
+/** Update the supplied fields on the signed-in user's Matrix profile. */
+export async function updateUserProfile({ displayName, avatarUrl }: UserProfileUpdate): Promise<void> {
+    if (displayName === undefined && avatarUrl === undefined) {
+        return;
+    }
+
+    const userId = session.mustGetUserId();
+    const client = getClient();
+
+    if (displayName !== undefined) {
+        await client.setDisplayName(displayName);
+        notifyCurrentUserProfileChange(client, userId);
+    }
+    if (avatarUrl !== undefined) {
+        await client.setAvatarUrl(avatarUrl);
+        notifyCurrentUserProfileChange(client, userId);
+    }
+}
+
+/** Set the current user's display name on Matrix. */
+export function setUserDisplayName(displayName: string): Promise<void> {
+    return updateUserProfile({ displayName });
+}
+
+/** Set the current user's profile avatar on Matrix. */
+export function setUserAvatar(avatarUrl: string): Promise<void> {
+    return updateUserProfile({ avatarUrl });
+}
+
+export async function setGroupAvatar(chatId: string, avatarUrl: string): Promise<void> {
+    await getClient().sendStateEvent(chatId, EventType.RoomAvatar, { url: avatarUrl })
 }
 
 function messageFromEvent(event: MatrixEvent, roomUsers: User[]): Message | null {
@@ -429,7 +501,7 @@ function chatFromSdkRoom(room: Room): UnclassifiedChat {
 function userFromMemberState(userId: string, content: IContent): User {
     return userFromUserId(userId, {
         displayName: content.displayname || displayNameFromUserId(userId),
-        avatarUrl: content.avatar_url,
+        avatarUri: content.avatar_url,
         membership: content.membership,
     });
 }
@@ -561,7 +633,7 @@ async function getRoomUsers(roomId: string): Promise<User[]> {
     const response = await getClient().getJoinedRoomMembers(roomId);
     return withPresenceForUsers(Object.entries(response.joined).map(([userId, profile]) => userFromUserId(userId, {
         displayName: profile.display_name || displayNameFromUserId(userId),
-        avatarUrl: profile.avatar_url,
+        avatarUri: profile.avatar_url,
         membership: "join",
     })));
 }
@@ -605,9 +677,7 @@ export async function currentUser(): Promise<User | null> {
     try {
         return userFromProfile(userId, await getClient().getProfileInfo(userId));
     } catch {
-        return userFromUserId(userId, {
-            displayName: displayNameFromUserId(userId),
-        });
+        return userFromUserId(userId);
     }
 }
 
@@ -729,6 +799,11 @@ export async function deleteRoom(roomId: string): Promise<void> {
     await unmarkDirectRoom(roomId).catch(() => undefined);
 }
 
+/** Leave a group without forgetting its room history. */
+export async function leaveGroup(chatId: string): Promise<void> {
+    await getClient().leave(chatId);
+}
+
 export async function blockUser(username: string): Promise<void> {
     const userId = normalizeUserId(username);
     const client = getClient();
@@ -738,6 +813,21 @@ export async function blockUser(username: string): Promise<void> {
     }
 
     await client.setIgnoredUsers([...ignoredUsers, userId]);
+}
+
+/** Check whether a user is in the locally synchronized Matrix ignored-users list. */
+export function isUserBlocked(username: string): boolean {
+    const userId = normalizeUserId(username);
+    return getClient().getIgnoredUsers().includes(userId);
+}
+
+export function getBlockedUsers(): Promise<User[]> {
+    return withPresenceForUsers(getClient().getIgnoredUsers().map(userId => mapUser(getClient().getUser(userId) ?? {
+        userId: userId,
+        displayName: displayNameFromUserId(userId),
+        avatarUrl: "",
+    })));
+
 }
 
 export async function unblockUser(username: string): Promise<void> {
@@ -782,6 +872,22 @@ export async function createRoom(req: CreateRoomRequest): Promise<Chat> {
     });
 
     return getSdkRoomOrInitialSync(response.room_id);
+}
+
+/** Invite users to an existing room. Invitees join only after accepting. */
+export async function inviteUsers(chatId: string, userIds: string[]): Promise<void> {
+    const client = getClient();
+    await Promise.all(userIds.map(userId => client.invite(chatId, normalizeUserId(userId))));
+}
+
+/** Update a group's room name. Requires sufficient Matrix room permissions. */
+export async function updateGroupName(chatId: string, name: string): Promise<void> {
+    await getClient().setRoomName(chatId, name);
+}
+
+/** Update a group's room description. Requires sufficient Matrix room permissions. */
+export async function updateGroupDescription(chatId: string, description: string): Promise<void> {
+    await getClient().setRoomTopic(chatId, description);
 }
 
 //TODO handle not found error
@@ -832,11 +938,15 @@ export async function searchContacts(query: string, limit: number = 20): Promise
             continue;
         }
 
-        contacts.push(userFromUserId(user.userId, {
-            displayName: user.displayName || displayNameFromUserId(user.userId),
-            avatarUrl: user.avatarUrl,
-        }));
+        contacts.push(mapUser(user));
     }
-
     return await withPresenceForUsers(contacts);
 }
+
+function mapUser(user: SdkUser | { userId: string; displayName: string | undefined; avatarUrl: string | undefined; }): User {
+    return userFromUserId(user.userId, {
+        displayName: user.displayName || displayNameFromUserId(user.userId),
+        avatarUri: user.avatarUrl,
+    });
+}
+

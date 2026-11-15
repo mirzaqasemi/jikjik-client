@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import type { MatrixSession } from "./matrix-models";
-import type { User } from "./backend";
 
 export type Listener = () => void;
 export type SessionItemKey = string | string[];
@@ -11,30 +10,26 @@ const matrixDeviceIdKey = "matrixDeviceId";
 const matrixUserIdKey = "matrixUserId";
 const appSessionItemPrefix = "app:";
 
-let currentUser: User | null = null;
+let currentUserId: string | null = null;
 const listeners = new Set<Listener>();
 
-export function getUser(): User | null{
-    if (currentUser == null) {
+export function getUserId(): string | null {
+    if (currentUserId == null) {
         const matrixSession = getMatrixSession();
         if (matrixSession != null) {
-            currentUser = {
-                userId: matrixSession.userId,
-                username: matrixSession.userId,
-                displayName: matrixSession.userId
-            }
+            currentUserId = matrixSession.userId;
         }
     }
-    return currentUser;
+    return currentUserId;
 }
 
 // throws error if user is null
-export function mustGetUser(): User {
-    const user = getUser();
-    if (user == null){
+export function mustGetUserId(): string {
+    const userId = getUserId();
+    if (userId == null) {
         throw Error("User not logged in");
     }
-    return user;
+    return userId;
 }
 
 export function getMatrixSession(): MatrixSession | null {
@@ -67,11 +62,7 @@ export function setMatrixSession(matrixSession: MatrixSession): void {
         localStorage.removeItem(matrixDeviceIdKey);
     }
 
-    currentUser = {
-        userId: matrixSession.userId,
-        username: matrixSession.userId,
-        displayName: matrixSession.userId,
-    };
+    currentUserId = matrixSession.userId;
     callListeners();
 }
 
@@ -80,7 +71,7 @@ export function clearSession(): void {
     localStorage.removeItem(matrixDeviceIdKey);
     localStorage.removeItem(matrixUserIdKey);
     clearSessionItems();
-    currentUser = null;
+    currentUserId = null;
     callListeners();
 }
 
@@ -146,14 +137,12 @@ function callListeners() {
     listeners.forEach((listener) => listener());
 }
 
-
-
-export function useSession(): User | null{
-    const [userInfo, setUserInfo] = useState<User | null>(getUser());
+export function useCurrentUserId(): string | null {
+    const [userId, setUserId] = useState<string | null>(getUserId());
     useEffect(() => {
         return addListener(() => {
-            setUserInfo(getUser());
+            setUserId(getUserId());
         });
     }, []);
-    return userInfo;
+    return userId;
 }
