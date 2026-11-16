@@ -23,12 +23,6 @@ export default function SidebarMenuActions(props: SidebarMenuProps) {
                     New Group
                 </Button>
             </li>
-            {/* <li>
-                <Button variant="ghost" className="w-full justify-start rounded-none">
-                    <UserRoundPlus />
-                    New Contact
-                </Button>
-            </li> */}
             <li>
                 <Button variant="ghost" className="w-full justify-start rounded-none" onClick={props.onOpenBlockedUsers}>
                     <UserRoundX />

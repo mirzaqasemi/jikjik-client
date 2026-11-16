@@ -1,6 +1,6 @@
 import AvatarPicker from "@/components/avatar-picker/AvatarPicker";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Field, FieldError, FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useMediaUrl } from "@/hooks/useMediaUrl";
@@ -8,13 +8,15 @@ import type { User } from "@/services/backend";
 import * as backend from "@/services/backend";
 import { normalizeError } from "@/utilities/normalized-error";
 import { useMutation } from "@tanstack/react-query";
-import { Pencil } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+type Props = {
+    user: User | null | undefined;
+    onCloseRequest: () => void
+}
 
-export default function EditUserProfile(props: { user: User | null | undefined }) {
-    const [isOpen, setIsOpen] = useState(false);
+export default function EditUserProfile(props: Props) {
     const [nameError, setNameError] = useState("");
     const mediaUrl = useMediaUrl(props.user?.avatarUri);
     const fullName = props.user?.displayName.split(" ") ?? "";
@@ -59,7 +61,7 @@ export default function EditUserProfile(props: { user: User | null | undefined }
             await backend.updateUserProfile({ displayName: displayName, avatarUrl: mxcUri });
         },
         onSuccess: () => {
-            setIsOpen(false);
+            props.onCloseRequest();
         },
         onError: (err) => {
             toast(normalizeError(err).message);
@@ -67,52 +69,43 @@ export default function EditUserProfile(props: { user: User | null | undefined }
     });
 
     return (
-        <Dialog open={isOpen} onOpenChange={(shouldOpen) => {
-            setIsOpen(shouldOpen);
-        }}>
-            <DialogTrigger asChild>
-                <Button variant="ghost" size="icon"><Pencil className="size-4" /></Button>
-            </DialogTrigger>
+        <>
+            <DialogHeader className="mt-6">
+                <DialogTitle>Edit profile</DialogTitle>
+                <DialogDescription>
+                    Make changes to your profile here. Click save when you&apos;re
+                    done.
+                </DialogDescription>
+            </DialogHeader>
 
-            <DialogContent className="sm:max-w-sm">
-                <DialogHeader>
-                    <DialogTitle>Edit profile</DialogTitle>
-                    <DialogDescription>
-                        Make changes to your profile here. Click save when you&apos;re
-                        done.
-                    </DialogDescription>
-                </DialogHeader>
+            <form onSubmit={handleSubmit}>
+                <FieldGroup>
+                    <Field className="items-center *:w-auto!">
+                        <AvatarPicker initialAvatar={mediaUrl} />
+                    </Field>
+                    <Field data-invalid={!!nameError}>
+                        <label htmlFor="firstName">First Name</label>
+                        <Input
+                            id="firstName"
+                            name="firstName"
+                            defaultValue={firstName}
+                            aria-invalid={!!nameError}
+                            aria-describedby={nameError ? "name-error" : undefined}
+                        />
+                        {nameError && <FieldError id="name-error">{nameError}</FieldError>}
+                    </Field>
+                    <Field>
+                        <label htmlFor="lastName">Last Name</label>
+                        <Input id="lastName" name="lastName" defaultValue={lastName} />
+                    </Field>
+                </FieldGroup>
 
-                <form onSubmit={handleSubmit}>
-                    <FieldGroup>
-                        <Field className="items-center *:w-auto!">
-                            <AvatarPicker initialAvatar={mediaUrl} />
-                        </Field>
-                        <Field data-invalid={!!nameError}>
-                            <label htmlFor="firstName">First Name</label>
-                            <Input
-                                id="firstName"
-                                name="firstName"
-                                defaultValue={firstName}
-                                aria-invalid={!!nameError}
-                                aria-describedby={nameError ? "name-error" : undefined}
-                            />
-                            {nameError && <FieldError id="name-error">{nameError}</FieldError>}
-                        </Field>
-                        <Field>
-                            <label htmlFor="lastName">Last Name</label>
-                            <Input id="lastName" name="lastName" defaultValue={lastName} />
-                        </Field>
-                    </FieldGroup>
-
-                    <DialogFooter className="mt-5">
-                        <DialogClose asChild>
-                            <Button type="button" variant="outline" disabled={editProfileMutation.isPending}>Cancel</Button>
-                        </DialogClose>
-                        <Button type="submit" disabled={editProfileMutation.isPending}>Save</Button>
-                    </DialogFooter>
-                </form>
-            </DialogContent>
-        </Dialog>
+                <DialogFooter className="mt-5">
+                    <Button type="button" variant="outline" onClick={props.onCloseRequest} disabled={editProfileMutation.isPending}>Cancel</Button>
+                    <Button type="submit" disabled={editProfileMutation.isPending}>Save</Button>
+                </DialogFooter>
+            </form>
+        </>
     );
+
 }

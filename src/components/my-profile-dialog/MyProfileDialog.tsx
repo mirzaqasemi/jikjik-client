@@ -1,5 +1,6 @@
 import * as backend from '@/services/backend.ts';
-import { X } from "lucide-react";
+import { Pencil, X } from "lucide-react";
+import { useState } from 'react';
 import AvatarDialogHeader from "../avatar-dialog-header/AvatarDialogHeader";
 import { Button } from "../ui/button";
 import { Dialog, DialogClose, DialogContent } from "../ui/dialog";
@@ -15,34 +16,51 @@ type Props = {
 }
 
 export default function MyProfileDialog(props: Props) {
+    const [isEditing, setIsEditing] = useState(false);
 
     return (
         <>
             <Dialog
                 open={props.open}
                 onOpenChange={(isOpen) => {
-                    if (!isOpen) props.onCloseRequest();
+                    if (!isOpen) {
+                        props.onCloseRequest();
+                        setIsEditing(false);
+                    }
                 }}>
-                <DialogContent className="sm:max-w-sm" showCloseButton={false}>
-                    <div className="flex absolute top-4 right-4 gap-3">
+                <DialogContent className="sm:max-w-sm gap-6" showCloseButton={false}>
+                    <div className="flex absolute top-4 right-4 gap-3 mb-4">
+                        {!isEditing &&
+                            <>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setIsEditing(true)}>
+                                    <Pencil className="size-4" />
+                                </Button>
+                                <DialogClose asChild>
+                                    <Button
+                                        type='button'
+                                        variant="ghost"
+                                        size="icon"
+                                        className="rounded-full"
+                                        aria-label="Close dialog"
+                                    >
+                                        <X className="size-4" />
+                                    </Button>
+                                </DialogClose>
+                            </>
+                        }
 
-                        <EditUserProfile user={props.user} />
-
-                        <DialogClose asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="rounded-full"
-                                aria-label="Close dialog"
-                            >
-                                <X className="size-4" />
-                            </Button>
-                        </DialogClose>
                     </div>
-
-                    <AvatarDialogHeader title={props.user?.displayName} description="Last seen recently" avatarUri={props.user?.avatarUri} />
-                    <UserProfileInfo user={props.user} />
-
+                    {isEditing ?
+                        <EditUserProfile user={props.user} onCloseRequest={() => setIsEditing(false)} />
+                        :
+                        <>
+                            <AvatarDialogHeader title={props.user?.displayName} description="Last seen recently" avatarUri={props.user?.avatarUri} />
+                            <UserProfileInfo user={props.user} />
+                        </>
+                    }
                 </DialogContent>
             </Dialog>
         </>
