@@ -1,6 +1,6 @@
 import AvatarPicker from "@/components/avatar-picker/AvatarPicker";
 import { Button } from "@/components/ui/button";
-import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DialogFooter } from "@/components/ui/dialog";
 import { Field, FieldError, FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useMediaUrl } from "@/hooks/useMediaUrl";
@@ -16,7 +16,7 @@ type Props = {
     onCloseRequest: () => void
 }
 
-export default function EditUserProfile(props: Props) {
+export default function EditUserProfileForm(props: Props) {
     const [nameError, setNameError] = useState("");
     const mediaUrl = useMediaUrl(props.user?.avatarUri);
     const fullName = props.user?.displayName.split(" ") ?? "";
@@ -70,14 +70,6 @@ export default function EditUserProfile(props: Props) {
 
     return (
         <>
-            <DialogHeader className="mt-6">
-                <DialogTitle>Edit profile</DialogTitle>
-                <DialogDescription>
-                    Make changes to your profile here. Click save when you&apos;re
-                    done.
-                </DialogDescription>
-            </DialogHeader>
-
             <form onSubmit={handleSubmit}>
                 <FieldGroup>
                     <Field className="items-center *:w-auto!">

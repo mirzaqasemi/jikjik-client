@@ -4,18 +4,28 @@ import {
     DialogHeader,
     DialogTitle
 } from "@/components/ui/dialog";
+import type { Ref } from "react";
+
 type Props = {
     title: string | undefined;
+    ref?: Ref<HTMLHeadingElement>;
+    titleTabIndex?: number;
     avatarUri: string | undefined | null;
     description: string;
 }
 
-export default function AvatarDialogHeader(props: Props) {
+export default function AvatarDialogHeader({ ref, titleTabIndex, ...props }: Props) {
     return (
         <DialogHeader className="flex justify-center items-center pb-2">
             <MediaAvatar avatarUri={props.avatarUri} size="size-20">
             </MediaAvatar>
-            <DialogTitle>{props.title}</DialogTitle>
+            <DialogTitle
+                ref={ref}
+                tabIndex={titleTabIndex}
+                className={titleTabIndex === -1 ? "outline-none" : undefined}
+            >
+                {props.title}
+            </DialogTitle>
             <DialogDescription>
                 {props.description}
             </DialogDescription>

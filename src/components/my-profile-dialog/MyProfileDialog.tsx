@@ -1,10 +1,10 @@
 import * as backend from '@/services/backend.ts';
 import { Pencil, X } from "lucide-react";
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import AvatarDialogHeader from "../avatar-dialog-header/AvatarDialogHeader";
 import { Button } from "../ui/button";
-import { Dialog, DialogClose, DialogContent } from "../ui/dialog";
-import EditUserProfile from "../user-profile-body/edit-user-profile/EditUserProfile";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
+import EditUserProfileForm from "../user-profile-body/edit-user-profile-form/EditUserProfileForm";
 import UserProfileInfo from "../user-profile-body/UserProfileInfo";
 
 type Props = {
@@ -17,6 +17,7 @@ type Props = {
 
 export default function MyProfileDialog(props: Props) {
     const [isEditing, setIsEditing] = useState(false);
+    const titleRef = useRef<HTMLHeadingElement>(null);
 
     return (
         <>
@@ -28,7 +29,17 @@ export default function MyProfileDialog(props: Props) {
                         setIsEditing(false);
                     }
                 }}>
-                <DialogContent className="sm:max-w-sm gap-6" showCloseButton={false}>
+                <DialogContent
+                    className="sm:max-w-sm gap-6"
+                    showCloseButton={false}
+                    onOpenAutoFocus={(event) => {
+                        const title = titleRef.current;
+                        if (!title) return;
+
+                        event.preventDefault();
+                        title.focus({ preventScroll: true });
+                    }}
+                >
                     <div className="flex absolute top-4 right-4 gap-3 mb-4">
                         {!isEditing &&
                             <>
@@ -54,10 +65,26 @@ export default function MyProfileDialog(props: Props) {
 
                     </div>
                     {isEditing ?
-                        <EditUserProfile user={props.user} onCloseRequest={() => setIsEditing(false)} />
+                        <>
+                            <DialogHeader className="mt-6">
+                                <DialogTitle tabIndex={-1} className="outline-none">Edit profile</DialogTitle>
+                                <DialogDescription>
+                                    Make changes to your profile here. Click save when you&apos;re
+                                    done.
+                                </DialogDescription>
+                            </DialogHeader>
+
+                            <EditUserProfileForm user={props.user} onCloseRequest={() => setIsEditing(false)} />
+                        </>
                         :
                         <>
-                            <AvatarDialogHeader title={props.user?.displayName} description="Last seen recently" avatarUri={props.user?.avatarUri} />
+                            <AvatarDialogHeader
+                                title={props.user?.displayName || "My Profile"}
+                                ref={titleRef}
+                                titleTabIndex={-1}
+                                description="Last seen recently"
+                                avatarUri={props.user?.avatarUri}
+                            />
                             <UserProfileInfo user={props.user} />
                         </>
                     }

@@ -10,7 +10,7 @@ import { subscribeCurrentUserChange } from "@/services/backend-event.ts";
 import * as backend from '@/services/backend.ts';
 import { useQuery } from "@tanstack/react-query";
 import { AlignJustify } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import BlockedListDialog from "../blocked-list-dialog/BlockedListDialog.tsx";
 import CreateGroupDialog from "../create-group-dialog/CreateGroupDialog.tsx";
 import MediaAvatar from "../media-avatar/MediaAvatar.tsx";
@@ -30,6 +30,8 @@ export default function Menu(props: Props) {
     const [newGroupState, setNewGroupState] = useState({ open: false, sessionId: 0 });
     const [isBlockedListOpen, setIsBlockedListOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const titleRef = useRef<HTMLHeadingElement>(null);
+
     const {
         data: currentUser,
         isLoading,
@@ -67,21 +69,35 @@ export default function Menu(props: Props) {
                 </SheetTrigger>
 
                 {/* Opend Menu */}
-                <SheetContent showCloseButton={false} side="left" className="gap-3">
+                <SheetContent
+                    showCloseButton={false}
+                    side="left"
+                    className="gap-3"
+                    onOpenAutoFocus={(event) => {
+                        const title = titleRef.current;
+                        if (!title) return;
+
+                        event.preventDefault();
+                        title.focus({ preventScroll: true });
+                    }}>
                     <SheetHeader className="gap-4 pb-0">
                         {isLoading
                             ? <div className="flex flex-col items-start gap-4">
                                 <Skeleton className="h-12 w-12 rounded-full" />
                                 <Skeleton className="h-4 w-50" />
                             </div>
-                            : <>
-                                <MediaAvatar avatarUri={currentUser?.avatarUri} size="size-13" name={currentUser?.displayName} />
-                                <SheetTitle>{isError ? "Faild to load user" : currentUser?.displayName}</SheetTitle>
-                                <SheetDescription className="sr-only">
-                                    User profile and account settings
-                                </SheetDescription>
-                            </>
+                            : <MediaAvatar avatarUri={currentUser?.avatarUri} size="size-13" name={currentUser?.displayName} />
                         }
+                        <SheetTitle
+                            ref={titleRef}
+                            tabIndex={-1}
+                            className={isLoading ? "sr-only outline-none" : "outline-none"}
+                        >
+                            {isError ? "Failed to load user" : currentUser?.displayName || "Account settings"}
+                        </SheetTitle>
+                        <SheetDescription className="sr-only">
+                            User profile and account settings
+                        </SheetDescription>
                     </SheetHeader>
 
                     <SidebarMenuActions
