@@ -30,7 +30,7 @@ export default function MyProfileDialog(props: Props) {
                     }
                 }}>
                 <DialogContent
-                    className="sm:max-w-sm gap-6"
+                    className="sm:max-w-sm"
                     showCloseButton={false}
                     onOpenAutoFocus={(event) => {
                         const title = titleRef.current;
@@ -40,43 +40,30 @@ export default function MyProfileDialog(props: Props) {
                         title.focus({ preventScroll: true });
                     }}
                 >
-                    <div className="flex absolute top-4 right-4 gap-3 mb-4">
-                        {!isEditing &&
-                            <>
+                    {!isEditing &&
+                        <div className="flex justify-end gap-5">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className='size-fit'
+                                onClick={() => setIsEditing(true)}>
+                                <Pencil className="" />
+                            </Button>
+                            <DialogClose asChild>
                                 <Button
+                                    type='button'
                                     variant="ghost"
                                     size="icon"
-                                    onClick={() => setIsEditing(true)}>
-                                    <Pencil className="size-4" />
+                                    className="rounded-full size-fit"
+                                    aria-label="Close dialog"
+                                >
+                                    <X className="" />
                                 </Button>
-                                <DialogClose asChild>
-                                    <Button
-                                        type='button'
-                                        variant="ghost"
-                                        size="icon"
-                                        className="rounded-full"
-                                        aria-label="Close dialog"
-                                    >
-                                        <X className="size-4" />
-                                    </Button>
-                                </DialogClose>
-                            </>
-                        }
+                            </DialogClose>
+                        </div>
+                    }
 
-                    </div>
-                    {isEditing ?
-                        <>
-                            <DialogHeader className="mt-6">
-                                <DialogTitle tabIndex={-1} className="outline-none">Edit profile</DialogTitle>
-                                <DialogDescription>
-                                    Make changes to your profile here. Click save when you&apos;re
-                                    done.
-                                </DialogDescription>
-                            </DialogHeader>
-
-                            <EditUserProfileForm user={props.user} onCloseRequest={() => setIsEditing(false)} />
-                        </>
-                        :
+                    {!isEditing ?
                         <>
                             <AvatarDialogHeader
                                 title={props.user?.displayName || "My Profile"}
@@ -86,6 +73,18 @@ export default function MyProfileDialog(props: Props) {
                                 avatarUri={props.user?.avatarUri}
                             />
                             <UserProfileInfo user={props.user} />
+                        </>
+                        :
+                        <>
+                            <DialogHeader className="lg:mt-6">
+                                <DialogTitle tabIndex={-1} className="outline-none">Edit profile</DialogTitle>
+                                <DialogDescription>
+                                    Make changes to your profile here. Click save when you&apos;re
+                                    done.
+                                </DialogDescription>
+                            </DialogHeader>
+
+                            <EditUserProfileForm user={props.user} onCloseRequest={() => setIsEditing(false)} />
                         </>
                     }
                 </DialogContent>

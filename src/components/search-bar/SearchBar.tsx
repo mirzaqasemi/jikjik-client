@@ -20,7 +20,7 @@ export default function SearchBar(props: Props) {
                 placeholder={props.placeholder}
                 value={props.value}
                 onChange={(e) => props.onChange(e.target.value)} 
-                className="pl-9"
+                className="pl-9 placeholder:text-sm"
                 />
             <InputGroupAddon align="inline-start" className="">
                 <SearchIcon className="text-muted-foreground" />

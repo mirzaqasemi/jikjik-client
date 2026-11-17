@@ -20,7 +20,7 @@ export default function UserProfileInfo(props: Props) {
             {/* User Information */}
 
             <div className="flex flex-col flex-1 -mx-6 no-scrollbar overflow-y-auto rounded-[10px]">
-                <div className="flex flex-col px-6 py-4 gap-3">
+                <div className="flex flex-col px-6 gap-3">
                     <Item className="items-center p-0!">
                         <ItemMedia variant="icon" className="self-center! size-10 rounded-lg bg-muted border-0">
                             <UserRound className="size-4 text-foreground" />

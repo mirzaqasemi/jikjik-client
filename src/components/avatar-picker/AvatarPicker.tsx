@@ -9,7 +9,12 @@ import { Button } from "../ui/button";
 // null: The user clicked "Remove photo". Hide the avatar and mark it for removal.
 // string: A new file is selected. Show its object URL as the preview.
 
-export default function AvatarPicker(props: { initialAvatar: string | undefined }) {
+type Props = {
+    initialAvatar: string | undefined;
+    sizeClassName?: string;
+}
+
+export default function AvatarPicker(props: Props) {
     const [previewUrl, setPreviewUrl] = useState<string | undefined | null>(undefined);
     const hasInitialAvatar = props.initialAvatar ? true : false;
     const inputRef = useRef<HTMLInputElement>(null);
@@ -33,16 +38,16 @@ export default function AvatarPicker(props: { initialAvatar: string | undefined 
         <div className="flex flex-col items-center gap-2 shrink-0">
             <label
                 htmlFor={inputId}
-                className="group relative inline-block size-20 cursor-pointer"
+                className={`group relative inline-block lg:size-20 cursor-pointer ${props.sizeClassName ?? "size-20"}`}
             >
                 <Avatar className="size-full">
-                    <AvatarImage src={previewUrl === null ? undefined : previewUrl ?? props.initialAvatar} />
+                    <AvatarImage src={previewUrl === null ? undefined : previewUrl ?? props.initialAvatar} className="size-full object-cover" />
                     <input
                         type="hidden"
                         name="removeAvatar"
                         value={removeAvatar ? "true" : "false"}
                     />
-                    <AvatarFallback className="bg-muted">
+                    <AvatarFallback className="bg-muted size-full object-cover">
                         <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-100">
                             <Camera className="size-6 text-white" />
                         </div>
@@ -72,7 +77,7 @@ export default function AvatarPicker(props: { initialAvatar: string | undefined 
                 disabled={(previewUrl === null) || (previewUrl === undefined) && (!hasInitialAvatar)}
                 size="sm"
                 onClick={handleRemoveAvatar}
-                className="text-xs hover:bg-transparent text-muted-foreground hover:text-destructive"
+                className="h-fit mt-1.5 text-xs hover:bg-transparent text-muted-foreground hover:text-destructive"
             >
                 <Trash2 className="size-3.5" />
                 Remove photo

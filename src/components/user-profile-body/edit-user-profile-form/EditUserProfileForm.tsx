@@ -73,7 +73,7 @@ export default function EditUserProfileForm(props: Props) {
             <form onSubmit={handleSubmit}>
                 <FieldGroup>
                     <Field className="items-center *:w-auto!">
-                        <AvatarPicker initialAvatar={mediaUrl} />
+                        <AvatarPicker sizeClassName="size-16" initialAvatar={mediaUrl} />
                     </Field>
                     <Field data-invalid={!!nameError}>
                         <label htmlFor="firstName">First Name</label>
@@ -92,7 +92,7 @@ export default function EditUserProfileForm(props: Props) {
                     </Field>
                 </FieldGroup>
 
-                <DialogFooter className="mt-5">
+                <DialogFooter className="mt-5 flex-row justify-end">
                     <Button type="button" variant="outline" onClick={props.onCloseRequest} disabled={editProfileMutation.isPending}>Cancel</Button>
                     <Button type="submit" disabled={editProfileMutation.isPending}>Save</Button>
                 </DialogFooter>

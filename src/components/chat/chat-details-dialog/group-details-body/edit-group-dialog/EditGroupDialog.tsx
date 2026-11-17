@@ -1,6 +1,6 @@
 import RoomDetailsFields from "@/components/room-details-fields/RoomDetailsFields";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { RoomFormDetails, RoomFormLabel } from "@/models/room-form";
 import * as backend from "@/services/backend";
 import { normalizeError } from "@/utilities/normalized-error";
@@ -71,18 +71,20 @@ export default function EditGroupDialog(props: Props) {
     });
 
     return (
-        <Dialog open={props.open} onOpenChange={(nextOpen) => {
-            if (!nextOpen && !editGroupMutation.isPending) {
-                props.onCloseRequest();
-            }
-        }}>
-            <DialogHeader />
+        <Dialog open={props.open}
+            onOpenChange={(nextOpen) => {
+                if (!nextOpen && !editGroupMutation.isPending) {
+                    props.onCloseRequest();
+                }
+            }}>
+            <DialogHeader className="sr-only" />
             <DialogContent
                 slot="edit-group-dialog"
                 showCloseButton={false}
-                className=" max-w-sm md:max-w-100!"
+                className=" max-w-xs md:max-w-100! max-lg:gap-3"
             >
-                <DialogTitle />
+                <DialogTitle className="sr-only" />
+                <DialogDescription className="sr-only"/>
                 <form className="w-full items-center" onSubmit={handleSubmit}>
 
                     <RoomDetailsFields
@@ -94,18 +96,19 @@ export default function EditGroupDialog(props: Props) {
                             avatar: props.chat.avatarUrl
                         }} />
 
-                    <DialogFooter className="grid grid-cols-4 mt-5">
+                    <DialogFooter className="mt-5 flex-row justify-end">
                         <Button
                             type="button"
                             disabled={editGroupMutation.isPending}
-                            className="col-start-3"
                             variant="outline"
-                            onClick={() => props.onCloseRequest()}>Cancel
+                            onClick={props.onCloseRequest}
+                        >
+                            Cancel
                         </Button>
                         <Button
                             type="submit"
-                            disabled={editGroupMutation.isPending}
-                            className="col-start-4">Save
+                            disabled={editGroupMutation.isPending}>
+                            Save
                         </Button>
                     </DialogFooter>
                 </form>

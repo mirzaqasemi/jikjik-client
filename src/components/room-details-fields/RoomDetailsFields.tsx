@@ -3,6 +3,7 @@ import type { RoomFormLabel } from "@/models/room-form";
 import AvatarPicker from "../avatar-picker/AvatarPicker";
 import { Field, FieldDescription, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "../ui/field";
 import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
 
 type Props = {
     formTitle?: string;
@@ -20,11 +21,11 @@ export default function RoomDetailsFields(props: Props) {
     return (
         <FieldSet>
             <FieldLegend>{props.formTitle}</FieldLegend>
-            <FieldDescription></FieldDescription>
-            <FieldGroup className="flex flex-row">
+            <FieldDescription className="sr-only"></FieldDescription>
+            <FieldGroup>
                 {/* Group/Channel avatar */}
                 <Field className="w-auto shrink-0">
-                    <AvatarPicker initialAvatar={mediaUrl} />
+                    <AvatarPicker initialAvatar={mediaUrl} sizeClassName="max-lg:size-16" />
                 </Field>
 
                 {/* Group/Channel name */}
@@ -36,20 +37,17 @@ export default function RoomDetailsFields(props: Props) {
                         type="text"
                         placeholder="" required
                         defaultValue={props.initialValues?.title ?? ""}
+                        className="text-sm"
                     />
                 </Field>
-            </FieldGroup>
-
-            {/* Optional description */}
-            <FieldGroup>
+                {/* Optional description */}
                 <Field>
-                    <Input
+                    <Textarea
                         id="description"
                         name="description"
-                        type="text"
-                        placeholder={props.formLabel?.description}
                         defaultValue={props.initialValues?.description ?? ""}
-                        className="placeholder:text-muted-foreground placeholder:font-light"
+                        placeholder={props.formLabel?.description}
+                        className="placeholder:text-muted-foreground placeholder:text-xs! text-sm placeholder:font-light"
                     />
                 </Field>
 

@@ -28,15 +28,15 @@ export default function GroupDetailsBody(props: Props) {
                 <Item variant="muted" size="xs">
                     <ItemContent>
                         <ItemTitle className="font-semibold">Description</ItemTitle>
-                        <ItemDescription>
+                        <ItemDescription className="text-[13px]">
                             {props.chat.topic}
                         </ItemDescription>
                     </ItemContent>
                 </Item>
             }
             {/* Members List */}
-            <div className="flex flex-col -mx-6 my-2">
-                <div className="flex flex-col px-5 lg:py-4 gap-2.5">
+            <div className="flex flex-col w-full">
+                <div className="flex flex-col lg:py-4 gap-2.5">
                     <div className="flex items-center">
                         <div className="w-12">
                             <UsersRound className='size-5 ml-2 text-muted-foreground' />

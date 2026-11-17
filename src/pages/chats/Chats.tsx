@@ -13,13 +13,13 @@ export default function Chats() {
             {/* Left Section */}
             <div className={`w-full h-full 
                 ${chatId || ((draftMode === "draft")) ? "hidden lg:block" : "block"}
-                lg:w-[25%] lg:border-r`}>
+                lg:w-[30%] lg:border-r`}>
                 <ChatsComponent />
             </div>
 
             {/* Right Section */}
             <div className={`${(chatId || (draftMode === "draft")) ? "flex" : "hidden lg:flex"} 
-                            chat-background w-full h-full items-center justify-center lg:w-[75%]`}>
+                            chat-background w-full h-full items-center justify-center lg:w-[70%]`}>
                 <div className="chat-background-content flex w-full h-full items-center justify-center">
                     {/* “Render my matched child route here(inside <Outlet/>).” */}
                     <Outlet />

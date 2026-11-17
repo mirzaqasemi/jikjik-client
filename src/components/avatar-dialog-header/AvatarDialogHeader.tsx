@@ -16,7 +16,7 @@ type Props = {
 
 export default function AvatarDialogHeader({ ref, titleTabIndex, ...props }: Props) {
     return (
-        <DialogHeader className="flex justify-center items-center pb-2">
+        <DialogHeader className="flex justify-center items-center">
             <MediaAvatar avatarUri={props.avatarUri} size="size-20">
             </MediaAvatar>
             <DialogTitle
