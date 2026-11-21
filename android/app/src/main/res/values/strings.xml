@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">JikJik</string>
+    <string name="title_activity_main">JikJik</string>
+    <string name="package_name">com.jikjik.app</string>
+    <string name="custom_url_scheme">com.jikjik.app</string>
+</resources>
