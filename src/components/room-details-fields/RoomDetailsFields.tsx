@@ -1,5 +1,6 @@
 import { useMediaUrl } from "@/hooks/useMediaUrl";
 import type { RoomFormLabel } from "@/models/room-form";
+import { useState } from "react";
 import AvatarPicker from "../avatar-picker/AvatarPicker";
 import { Field, FieldDescription, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "../ui/field";
 import { Input } from "../ui/input";
@@ -17,6 +18,7 @@ type Props = {
 
 export default function RoomDetailsFields(props: Props) {
     const mediaUrl = useMediaUrl(props.initialValues?.avatar);
+    const [description, setDescription] = useState(props.initialValues?.description ?? "");
 
     return (
         <FieldSet>
@@ -47,8 +49,11 @@ export default function RoomDetailsFields(props: Props) {
                         name="description"
                         defaultValue={props.initialValues?.description ?? ""}
                         placeholder={props.formLabel?.description}
-                        className="placeholder:text-muted-foreground placeholder:text-xs! text-sm placeholder:font-light"
+                        maxLength={200}
+                        onChange={(e) => setDescription(e.target.value)}
+                        className="placeholder:text-muted-foreground max-h-40 overflow-y-auto placeholder:text-xs! text-sm placeholder:font-light"
                     />
+                    <p className="w-full text-end -mt-0.5 text-xs font-light text-muted-foreground">{description.length} / 200</p>
                 </Field>
 
             </FieldGroup>

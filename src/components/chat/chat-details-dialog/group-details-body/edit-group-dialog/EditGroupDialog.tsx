@@ -81,10 +81,10 @@ export default function EditGroupDialog(props: Props) {
             <DialogContent
                 slot="edit-group-dialog"
                 showCloseButton={false}
-                className=" max-w-xs md:max-w-100! max-lg:gap-3"
+                className="max-w-xs md:max-w-100! max-lg:gap-3 max-h-[calc(100dvh-4rem)] overflow-y-auto"
             >
                 <DialogTitle className="sr-only" />
-                <DialogDescription className="sr-only"/>
+                <DialogDescription className="sr-only" />
                 <form className="w-full items-center" onSubmit={handleSubmit}>
 
                     <RoomDetailsFields
