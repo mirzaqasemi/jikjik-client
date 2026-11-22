@@ -1,3 +1,4 @@
+import { AlertDestructive } from "@/components/alert-destructive/AlertDestructive.tsx";
 import { Button } from "@/components/ui/button";
 import {
     Field,
@@ -16,15 +17,14 @@ import {
     ItemTitle
 } from "@/components/ui/item";
 import { CHATS_ROUTE } from "@/router.tsx";
+import { normalizeError } from "@/utilities/normalized-error.ts";
 import { useMutation } from "@tanstack/react-query";
-import { ChevronRight, EyeIcon, EyeOffIcon, LockKeyhole, MessageSquareMore, UserRound, Users } from "lucide-react";
+import { EyeIcon, EyeOffIcon, LockKeyhole, MessageSquareMore, UserRound, Users } from "lucide-react";
 import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
 import * as backend from '../../services/backend.ts';
 import './login.css';
-import { normalizeError } from "@/utilities/normalized-error.ts";
-import { AlertDestructive } from "@/components/alert-destructive/AlertDestructive.tsx";
 
 
 export default function Login() {
@@ -69,9 +69,9 @@ export default function Login() {
             <div className="flex items-center justify-center w-full h-full xl:w-[90%] max-w-7xl xl:max-h-150 xl:rounded-4xl overflow-hidden login-page-inner-container">
                 {/* DESKTOP VIEW - LEFT SIDE */}
                 <div className="relative hidden xl:flex xl:flex-col xl:w-[52%] items-center h-full justify-center py-8 overflow-hidden login-left-side">
-                    <div className='max-w-150 relative z-10 text-start'>
-                        <h1 className="leading-none">Simple Chats.</h1>
-                        <h1 className="mb-2.5">Real connections.</h1>
+                    <div className='max-w-150 relative z-10 text-start px-6'>
+                        <h1 className="leading-none font-bold text-2xl">Simple Chats.</h1>
+                        <h1 className="mb-2.5 font-bold text-2xl">Real connections.</h1>
                         <span>Jik Jik makes it easy to stay in touch</span>
                         <span>with the people who matter.</span>
                         <div className="flex w-xl gap-4 mt-9 login-card">
@@ -171,23 +171,24 @@ export default function Login() {
                             </FieldGroup>
                         </form>
 
-                        <div className="flex flex-col w-full max-w-md  gap-2.5">
-                            {/* DIVIDED LINE */}
-                            <div className="flex w-full max-w-md items-center gap-4">
+                        {/* TODO handle sign up feature  */}
+                        {/* <div className="flex flex-col w-full max-w-md  gap-2.5"> */}
+                        {/* DIVIDED LINE */}
+                        {/* <div className="flex w-full max-w-md items-center gap-4">
                                 <div className="h-px flex-1 bg-border"></div>
                                 <span className="text-xs text-muted-foreground">or</span>
                                 <div className="h-px flex-1 bg-border"></div>
-                            </div>
+                            </div> */}
 
-                            {/* SIGN UP SECTION */}
-                            <div className="flex items-center justify-center">
+                        {/* SIGN UP SECTION */}
+                        {/* <div className="flex items-center justify-center">
                                 <span className="text-muted-foreground">Don't have an account?</span>
                                 <Button variant="link" className="text-chart-2 text-sm gap-1 hover:no-underline">
                                     Sign up
                                     <ChevronRight className="text-chart-2 w-5 h-5" />
                                 </Button>
-                            </div>
-                        </div>
+                            </div> */}
+                        {/* </div> */}
                     </div>
                 </div>
             </div>
