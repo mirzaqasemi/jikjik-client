@@ -192,7 +192,8 @@ export default function Chat() {
                 <Spinner className="flex-1 m-auto size-9 opacity-30" />
                 :
                 <div className="flex flex-col messages-area">
-                    <div className="flex justify-center items-center date-separator bg-black/25 font-medium">Today</div>
+                    {/* TODO add messages timeline */}
+                    {/* <div className="flex justify-center items-center date-separator bg-black/25 font-medium">Today</div> */}
                     {serverMessages.map((serverMsg) => {
                         const message = {
                             sender: serverMsg.sender,

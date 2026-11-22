@@ -61,13 +61,14 @@ export default function ChatList(params: Params) {
                                         <span className="text-muted-foreground chat-meta unread-time">{utils.formatDate(chat.lastMsg?.date)}</span>
                                     </div>
                                     <div className="flex label-row">
-                                        <div className="chat-preview unread-text">{chat.lastMsg != null ? chat.lastMsg.content
-                                            : chat.isDm ?
-                                                `Do you want to chat with`
-                                                : `Do you want to join`}
-                                            <span className="font-medium">{` `}{chat.title}</span>
+                                        <div className="chat-preview unread-text">
+                                            {chat.lastMsg != null
+                                                ? chat.lastMsg.content
+                                                : "Start chatting..."
+                                            }
                                         </div>
-                                        <div className="w-4 h-4 flex justify-center rounded-full shrink-0 unread-badge">2</div>
+                                        {/* TODO handle empty last message*/}
+                                        {/* <div className="w-4 h-4 flex justify-center rounded-full shrink-0 unread-badge">2</div> */}
                                     </div>
                                 </div>
                             </button>
