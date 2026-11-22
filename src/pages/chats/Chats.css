@@ -1,10 +1,28 @@
 .chat-background {
+    --chat-wash: #cbd387;
+    --chat-green: #93bc87;
+    --chat-deep-green: #79aa8a;
+    --chat-contour: color-mix(in oklab, var(--background) 9%, transparent);
+    --chat-contour-spacing: clamp(2rem, 5vmin, 4rem);
+
     position: relative;
     overflow: hidden;
-    background-image: url('../../assets/chat-page-background.png');
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: cover;
+    background-color: var(--chat-green);
+    background-image:
+        repeating-radial-gradient(
+            ellipse 140% 85% at -24% -12%,
+            transparent 0 calc(var(--chat-contour-spacing) - 1px),
+            var(--chat-contour) calc(var(--chat-contour-spacing) - 1px) var(--chat-contour-spacing)
+        ),
+        radial-gradient(ellipse 105% 125% at 0% 0%, var(--chat-wash) 25%, transparent 78%),
+        radial-gradient(ellipse 100% 65% at 45% 110%, var(--chat-deep-green) 30%, transparent 100%);
+}
+
+.dark .chat-background {
+    --chat-wash: color-mix(in oklab, var(--background), var(--primary) 17%);
+    --chat-green: color-mix(in oklab, var(--background), var(--chart-4) 36%);
+    --chat-deep-green: color-mix(in oklab, var(--background), var(--chart-5) 28%);
+    --chat-contour: color-mix(in oklab, var(--foreground) 5%, transparent);
 }
 
 .chat-background-content {

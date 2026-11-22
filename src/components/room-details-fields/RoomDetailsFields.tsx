@@ -1,8 +1,10 @@
 import { useMediaUrl } from "@/hooks/useMediaUrl";
 import type { RoomFormLabel } from "@/models/room-form";
+import { useState } from "react";
 import AvatarPicker from "../avatar-picker/AvatarPicker";
 import { Field, FieldDescription, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "../ui/field";
 import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
 
 type Props = {
     formTitle?: string;
@@ -16,15 +18,16 @@ type Props = {
 
 export default function RoomDetailsFields(props: Props) {
     const mediaUrl = useMediaUrl(props.initialValues?.avatar);
+    const [description, setDescription] = useState(props.initialValues?.description ?? "");
 
     return (
         <FieldSet>
             <FieldLegend>{props.formTitle}</FieldLegend>
-            <FieldDescription></FieldDescription>
-            <FieldGroup className="flex flex-row">
+            <FieldDescription className="sr-only"></FieldDescription>
+            <FieldGroup>
                 {/* Group/Channel avatar */}
                 <Field className="w-auto shrink-0">
-                    <AvatarPicker initialAvatar={mediaUrl} />
+                    <AvatarPicker initialAvatar={mediaUrl} sizeClassName="max-lg:size-16" />
                 </Field>
 
                 {/* Group/Channel name */}
@@ -36,21 +39,21 @@ export default function RoomDetailsFields(props: Props) {
                         type="text"
                         placeholder="" required
                         defaultValue={props.initialValues?.title ?? ""}
+                        className="text-sm"
                     />
                 </Field>
-            </FieldGroup>
-
-            {/* Optional description */}
-            <FieldGroup>
+                {/* Optional description */}
                 <Field>
-                    <Input
+                    <Textarea
                         id="description"
                         name="description"
-                        type="text"
-                        placeholder={props.formLabel?.description}
                         defaultValue={props.initialValues?.description ?? ""}
-                        className="placeholder:text-muted-foreground placeholder:font-light"
+                        placeholder={props.formLabel?.description}
+                        maxLength={200}
+                        onChange={(e) => setDescription(e.target.value)}
+                        className="placeholder:text-muted-foreground max-h-40 overflow-y-auto placeholder:text-xs! text-sm placeholder:font-light"
                     />
+                    <p className="w-full text-end -mt-0.5 text-xs font-light text-muted-foreground">{description.length} / 200</p>
                 </Field>
 
             </FieldGroup>

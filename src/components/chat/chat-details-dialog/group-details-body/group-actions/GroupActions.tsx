@@ -31,8 +31,8 @@ export default function GroupActions(props: Props) {
         }
     });
     return (
-        <div id="GroupActions" className="flex flex-col pb-2">
-            <div className="flex gap-4 h-17">
+        <div id="GroupActions" className="flex flex-col h-17">
+            <div className="flex gap-4 h-full">
                 <ChatActionButton
                     title="Manage"
                     icon={Settings2}

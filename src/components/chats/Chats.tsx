@@ -119,9 +119,9 @@ export default function Chats() {
     } else if (isError) {
         content =
             <div className="grid grid-rows-3 h-full px-4">
-                <div className=" self-end">
+                <div className=" self-end text-center">
                     <h3 className="font-semibold mb-3">Failed to load chats</h3>
-                    <span className="inline-block font-normal muted-text tracking-wide xl:px-3">{normalizeError(error).message}</span>
+                    <span className="inline-block font-normal text-[14px] muted-text tracking-wide xl:px-3">{normalizeError(error).message}</span>
                 </div>
             </div>
     } else {
@@ -160,14 +160,17 @@ export default function Chats() {
             {/* <!-- Top: Header Section --> */}
             <div className="flex w-full px-4 items-center gap-4 pb-4">
                 {/* <!-- Hamburger Menu --> */}
-                <Menu logout={logout} userId={userId}/>
+                <Menu logout={logout} userId={userId} />
 
                 {/* <!-- Search Bar --> */}
-                <SearchBar onChange={setSearchQuery} value={searchQuery} placeholder="Search chats, people, groups..."/>
+                <SearchBar onChange={setSearchQuery} value={searchQuery} placeholder="Search chats, people, groups..." />
             </div>
 
             {/* <!-- Middle: Chat List --> */}
-            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">{content}</div>
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+                {content}
+            </div>
+
             <ConfirmationDialog
                 confirmAction="Join chat"
                 rejectAction="Cancel"

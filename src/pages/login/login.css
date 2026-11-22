@@ -6,7 +6,13 @@
 }
 
 .login-left-side {
-    background: no-repeat left bottom / cover url('../../assets/login-page-background.svg');
+    min-height: 100dvh;
+    background-color: #fffbef;
+    /* هماهنگ با رنگ بالای SVG */
+    background-image: url('../../assets/login-page-background.svg');
+    background-repeat: no-repeat;
+    background-position: center bottom;
+    background-size: 100% auto;
 }
 
 .login-left-side span {
